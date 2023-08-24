@@ -26,7 +26,7 @@ import java.util.Iterator;
 
 import junit.framework.TestCase;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ddlutils.model.CascadeActionEnum;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;

@@ -19,11 +19,11 @@ package org.apache.ddlutils.alteration;
  * under the License.
  */
 
-import java.util.List;
-
 import org.apache.ddlutils.model.CloneHelper;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
+
+import java.util.List;
 
 /**
  * Represents the recreation of a table, i.e. creating a temporary table using the target table definition,
@@ -38,7 +38,7 @@ public class RecreateTableChange extends TableChangeImplBase
     /** The target table definition. */
     private Table _targetTable;
     /** The original table changes, one of which is unsupported by the current platform. */
-    private List  _originalChanges;
+    private List<TableChange>  _originalChanges;
 
     /**
      * Creates a new change object for recreating a table. This change is used to specify that a table needs
@@ -51,7 +51,7 @@ public class RecreateTableChange extends TableChangeImplBase
      *                        change object
      * @param originalChanges The original changes that this change object replaces
      */
-    public RecreateTableChange(String tableName, Table targetTable, List originalChanges)
+    public RecreateTableChange(String tableName, Table targetTable, List<TableChange> originalChanges)
     {
         super(tableName);
         _targetTable     = targetTable;
@@ -63,7 +63,7 @@ public class RecreateTableChange extends TableChangeImplBase
      * 
      * @return The table changes
      */
-    public List getOriginalChanges()
+    public List<TableChange> getOriginalChanges()
     {
         return _originalChanges;
     }

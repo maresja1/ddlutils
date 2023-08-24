@@ -19,7 +19,7 @@ package org.apache.ddlutils.task;
  * under the License.
  */
 
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.Level;
 import org.apache.tools.ant.types.EnumeratedAttribute;
 
 /**

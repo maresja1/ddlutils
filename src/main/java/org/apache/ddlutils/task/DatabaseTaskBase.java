@@ -19,23 +19,21 @@ package org.apache.ddlutils.task;
  * under the License.
  */
 
+import org.apache.commons.dbcp2.BasicDataSource;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.ddlutils.Platform;
+import org.apache.ddlutils.model.Database;
+import org.apache.tools.ant.AntClassLoader;
+import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.Task;
+
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Properties;
-
-import org.apache.commons.dbcp.BasicDataSource;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.ddlutils.Platform;
-import org.apache.ddlutils.model.Database;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.PropertyConfigurator;
-import org.apache.tools.ant.AntClassLoader;
-import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.Task;
+import java.util.logging.Level;
 
 /**
  * Base class for DdlUtils Ant tasks that operate on a database.
@@ -312,9 +310,9 @@ public abstract class DatabaseTaskBase extends Task
             props.setProperty("log4j.appender.A.layout.ConversionPattern", "%m%n");
             // we don't want debug logging from Digester
             props.setProperty("log4j.logger.org.apache.commons", "WARN");
-    
-            LogManager.resetConfiguration();
-            PropertyConfigurator.configure(props);
+
+			// TODO
+//            PropertyConfigurator.configure(props);
         }
         _log = LogFactory.getLog(getClass());
     }

@@ -24,12 +24,12 @@ package org.apache.ddlutils.alteration;
  * 
  * @version $Revision: $
  */
-public class Pair
+public class Pair<TLeft, TRight>
 {
     /** The first object. */
-    private final Object _firstObj;
+    private final TLeft _firstObj;
     /** The first object. */
-    private final Object _secondObj;
+    private final TRight _secondObj;
 
     /**
      * Creates a pair object.
@@ -37,7 +37,7 @@ public class Pair
      * @param firstObj  The first object
      * @param secondObj The second object
      */
-    public Pair(Object firstObj, Object secondObj)
+    public Pair(TLeft firstObj, TRight secondObj)
     {
         _firstObj  = firstObj;
         _secondObj = secondObj;
@@ -48,7 +48,7 @@ public class Pair
      * 
      * @return The first object
      */
-    public Object getFirst()
+    public TLeft getFirst()
     {
         return _firstObj;
     }
@@ -58,7 +58,7 @@ public class Pair
      * 
      * @return The second object
      */
-    public Object getSecond()
+    public TRight getSecond()
     {
         return _secondObj;
     }

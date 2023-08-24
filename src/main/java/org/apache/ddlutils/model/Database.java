@@ -19,6 +19,13 @@ package org.apache.ddlutils.model;
  * under the License.
  */
 
+import org.apache.commons.beanutils.DynaBean;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.ddlutils.dynabean.DynaClassCache;
+import org.apache.ddlutils.dynabean.SqlDynaClass;
+import org.apache.ddlutils.dynabean.SqlDynaException;
+
 import java.io.Serializable;
 import java.sql.Types;
 import java.util.ArrayList;
@@ -28,13 +35,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-
-import org.apache.commons.beanutils.DynaBean;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.ddlutils.dynabean.DynaClassCache;
-import org.apache.ddlutils.dynabean.SqlDynaClass;
-import org.apache.ddlutils.dynabean.SqlDynaException;
 
 /**
  * Represents the database model, ie. the tables in the database. It also

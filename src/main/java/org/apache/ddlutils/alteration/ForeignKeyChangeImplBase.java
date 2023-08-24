@@ -19,13 +19,13 @@ package org.apache.ddlutils.alteration;
  * under the License.
  */
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Reference;
 import org.apache.ddlutils.model.Table;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The base class for changes affecting foreign keys.
@@ -36,7 +36,7 @@ public abstract class ForeignKeyChangeImplBase extends    TableChangeImplBase
                                                implements ForeignKeyChange
 {
     /** List of pairs of local and corresponding foreign column names that make up the foreign key. */
-    private List _referenceColumnNames = new ArrayList();
+    private final List<Pair<String, String>> _referenceColumnNames = new ArrayList<>();
 
     /**
      * Creates a new change object.
@@ -52,7 +52,7 @@ public abstract class ForeignKeyChangeImplBase extends    TableChangeImplBase
         {
             Reference ref = foreignKey.getReference(refIdx);
 
-            _referenceColumnNames.add(new Pair(ref.getLocalColumnName(), ref.getForeignColumnName()));
+            _referenceColumnNames.add(new Pair<>(ref.getLocalColumnName(), ref.getForeignColumnName()));
         }
     }
 
@@ -74,20 +74,20 @@ public abstract class ForeignKeyChangeImplBase extends    TableChangeImplBase
                     for (int refIdx = 0; refIdx < curFk.getReferenceCount(); refIdx++)
                     {
                         Reference ref      = curFk.getReference(refIdx);
-                        Pair      colNames = (Pair)_referenceColumnNames.get(refIdx);
+                        Pair<String, String>      colNames = _referenceColumnNames.get(refIdx);
 
                         if (caseSensitive)
                         {
-                            if (ref.getLocalColumnName().equals((String)colNames.getFirst()) &&
-                                ref.getForeignColumnName().equals((String)colNames.getSecond()))
+                            if (ref.getLocalColumnName().equals(colNames.getFirst()) &&
+                                ref.getForeignColumnName().equals(colNames.getSecond()))
                             {
                                 return curFk;
                             }
                         }
                         else
                         {
-                            if (ref.getLocalColumnName().equalsIgnoreCase((String)colNames.getFirst()) &&
-                                ref.getForeignColumnName().equalsIgnoreCase((String)colNames.getSecond()))
+                            if (ref.getLocalColumnName().equalsIgnoreCase(colNames.getFirst()) &&
+                                ref.getForeignColumnName().equalsIgnoreCase(colNames.getSecond()))
                             {
                                 return curFk;
                             }

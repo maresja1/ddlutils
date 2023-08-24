@@ -19,24 +19,7 @@ package org.apache.ddlutils.io;
  * under the License.
  */
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Reader;
-import java.io.StringReader;
-import java.io.Writer;
-
-import javax.xml.namespace.QName;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-import javax.xml.transform.stream.StreamSource;
-
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.model.CascadeActionEnum;
@@ -50,6 +33,21 @@ import org.apache.ddlutils.model.Reference;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.UniqueIndex;
 import org.xml.sax.InputSource;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.Writer;
+import javax.xml.namespace.QName;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.transform.stream.StreamSource;
 
 /**
  * This class provides functions to read and write database models from/to XML.
@@ -1040,11 +1038,11 @@ public class DatabaseIO
         writeAttribute(xmlWriter, QNAME_ATTRIBUTE_NAME,          foreignKey.getName());
         if (foreignKey.getOnUpdate() != CascadeActionEnum.NONE)
         {
-            writeAttribute(xmlWriter, QNAME_ATTRIBUTE_ON_UPDATE, foreignKey.getOnUpdate().getName());
+            writeAttribute(xmlWriter, QNAME_ATTRIBUTE_ON_UPDATE, foreignKey.getOnUpdate().name());
         }
         if (foreignKey.getOnDelete() != CascadeActionEnum.NONE)
         {
-            writeAttribute(xmlWriter, QNAME_ATTRIBUTE_ON_DELETE, foreignKey.getOnDelete().getName());
+            writeAttribute(xmlWriter, QNAME_ATTRIBUTE_ON_DELETE, foreignKey.getOnDelete().name());
         }
         if (foreignKey.getReferenceCount() > 0)
         {

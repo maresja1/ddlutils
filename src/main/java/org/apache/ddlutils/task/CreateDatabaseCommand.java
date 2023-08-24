@@ -24,7 +24,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.model.Database;
 import org.apache.tools.ant.BuildException;

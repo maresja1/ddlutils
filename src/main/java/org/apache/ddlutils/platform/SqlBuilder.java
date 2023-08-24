@@ -19,18 +19,8 @@ package org.apache.ddlutils.platform;
  * under the License.
  */
 
-import java.io.IOException;
-import java.io.Writer;
-import java.rmi.server.UID;
-import java.sql.Types;
-import java.text.DateFormat;
-import java.text.NumberFormat;
-import java.util.Iterator;
-import java.util.Locale;
-import java.util.Map;
-
 import org.apache.commons.collections.map.ListOrderedMap;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.DdlUtilsException;
@@ -46,6 +36,16 @@ import org.apache.ddlutils.model.ModelException;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.TypeMap;
 import org.apache.ddlutils.util.StringUtilsExt;
+
+import java.io.IOException;
+import java.io.Writer;
+import java.rmi.server.UID;
+import java.sql.Types;
+import java.text.DateFormat;
+import java.text.NumberFormat;
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * This class is a collection of Strategy methods for creating the DDL required to create and drop 
@@ -1976,27 +1976,16 @@ public abstract class SqlBuilder
         if (action != getPlatformInfo().getDefaultOnDeleteAction())
         {
             print(" ON DELETE ");
-            switch (action.getValue())
-            {
-                case CascadeActionEnum.VALUE_CASCADE:
-                    print("CASCADE");
-                    break;
-                case CascadeActionEnum.VALUE_SET_NULL:
-                    print("SET NULL");
-                    break;
-                case CascadeActionEnum.VALUE_SET_DEFAULT:
-                    print("SET DEFAULT");
-                    break;
-                case CascadeActionEnum.VALUE_RESTRICT:
-                    print("RESTRICT");
-                    break;
-                case CascadeActionEnum.VALUE_NONE:
-                    print("NO ACTION");
-                    break;
-                default:
-                    throw new ModelException("Unsupported cascade value '" + action +
-                                             "' for onDelete in foreign key in table " + table.getName());
-            }
+			switch (action) {
+				case CASCADE -> print("CASCADE");
+				case SET_NULL -> print("SET NULL");
+				case SET_DEFAULT -> print("SET DEFAULT");
+				case RESTRICT -> print("RESTRICT");
+				case NONE -> print("NO ACTION");
+				default -> throw new ModelException(
+					"Unsupported cascade value '" + action + "' for onDelete in foreign key in table " +
+						table.getName());
+			}
         }
     }
 
@@ -2026,27 +2015,16 @@ public abstract class SqlBuilder
         if (action != getPlatformInfo().getDefaultOnUpdateAction())
         {
             print(" ON UPDATE ");
-            switch (action.getValue())
-            {
-                case CascadeActionEnum.VALUE_CASCADE:
-                    print("CASCADE");
-                    break;
-                case CascadeActionEnum.VALUE_SET_NULL:
-                    print("SET NULL");
-                    break;
-                case CascadeActionEnum.VALUE_SET_DEFAULT:
-                    print("SET DEFAULT");
-                    break;
-                case CascadeActionEnum.VALUE_RESTRICT:
-                    print("RESTRICT");
-                    break;
-                case CascadeActionEnum.VALUE_NONE:
-                    print("NO ACTION");
-                    break;
-                default:
-                    throw new ModelException("Unsupported cascade value '" + action +
-                                             "' for onUpdate in foreign key in table " + table.getName());
-            }
+			switch (action) {
+				case CASCADE -> print("CASCADE");
+				case SET_NULL -> print("SET NULL");
+				case SET_DEFAULT -> print("SET DEFAULT");
+				case RESTRICT -> print("RESTRICT");
+				case NONE -> print("NO ACTION");
+				default -> throw new ModelException(
+					"Unsupported cascade value '" + action + "' for onUpdate in foreign key in table " +
+						table.getName());
+			}
         }
     }
 

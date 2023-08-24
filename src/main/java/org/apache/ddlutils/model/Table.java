@@ -19,19 +19,19 @@ package org.apache.ddlutils.model;
  * under the License.
  */
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import java.io.Serializable;
 import java.text.Collator;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Collection;
-
-import org.apache.commons.collections.Predicate;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
 
 /**
  * Represents a table in the database model.
