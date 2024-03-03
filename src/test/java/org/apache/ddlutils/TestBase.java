@@ -19,21 +19,21 @@ package org.apache.ddlutils;
  * under the License.
  */
 
-import java.io.StringReader;
-
-import junit.framework.TestCase;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
+
+import java.io.StringReader;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Base class for DdlUtils tests.
  * 
  * @version $Revision: $
  */
-public abstract class TestBase extends TestCase
+public abstract class TestBase
 {
     /** The log for the tests. */
     private final Log _log = LogFactory.getLog(getClass());

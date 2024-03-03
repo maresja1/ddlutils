@@ -19,18 +19,13 @@ package org.apache.ddlutils.platform.mssql;
  * under the License.
  */
 
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Collection;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.alteration.AddColumnChange;
 import org.apache.ddlutils.alteration.AddPrimaryKeyChange;
 import org.apache.ddlutils.alteration.ColumnDefinitionChange;
+import org.apache.ddlutils.alteration.ModelChange;
 import org.apache.ddlutils.alteration.ModelComparator;
 import org.apache.ddlutils.alteration.PrimaryKeyChange;
 import org.apache.ddlutils.alteration.RemoveColumnChange;
@@ -44,6 +39,12 @@ import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.CreationParameters;
 import org.apache.ddlutils.platform.DefaultTableDefinitionChangesPredicate;
 import org.apache.ddlutils.platform.PlatformImplBase;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Collection;
 
 /**
  * The platform implementation for the Microsoft SQL Server database.
@@ -130,7 +131,7 @@ public class MSSqlPlatform extends PlatformImplBase
     {
         return isIdentityOverrideOn() &&
                getPlatformInfo().isIdentityOverrideAllowed() &&
-               (table.getAutoIncrementColumns().length > 0);
+               (table.getAutoIncrementColumns().findAny().isPresent());
     }
 
     /**
@@ -199,22 +200,21 @@ public class MSSqlPlatform extends PlatformImplBase
                 {
                     return true;
                 }
-                else if (change instanceof AddColumnChange)
+                else if (change instanceof final AddColumnChange addColumnChange)
                 {
-                    AddColumnChange addColumnChange = (AddColumnChange)change;
 
-                    // Sql Server can only add not insert columns, and the cannot be requird unless also
+					// Sql Server can only add not insert columns, and the cannot be requird unless also
                     // auto increment or with a DEFAULT value
                     return (addColumnChange.getNextColumn() == null) &&
                            (!addColumnChange.getNewColumn().isRequired() ||
                             addColumnChange.getNewColumn().isAutoIncrement() ||
                             !StringUtils.isEmpty(addColumnChange.getNewColumn().getDefaultValue()));
                 }
-                else if (change instanceof ColumnDefinitionChange)
+                else if (change instanceof final ColumnDefinitionChange colDefChange)
                 {
-                    ColumnDefinitionChange colDefChange = (ColumnDefinitionChange)change;
-                    Column                 curColumn    = intermediateTable.findColumn(colDefChange.getChangedColumn(), isDelimitedIdentifierModeOn());
-                    Column                 newColumn    = colDefChange.getNewColumn();
+					Column curColumn = intermediateTable.findColumn(colDefChange.getChangedColumn(), isDelimitedIdentifierModeOn())
+						.orElseThrow();
+                    Column newColumn = colDefChange.getNewColumn();
 
                     // Sql Server has no way of adding or removing an IDENTITY constraint
                     // Also, Sql Server cannot handle reducing the size (even with the CAST in place)
@@ -233,7 +233,7 @@ public class MSSqlPlatform extends PlatformImplBase
     /**
      * {@inheritDoc}
      */
-    protected Database processChanges(Database model, Collection changes, CreationParameters params) throws IOException, DdlUtilsException
+    protected Database processChanges(Database model, Collection<? extends ModelChange> changes, CreationParameters params) throws IOException, DdlUtilsException
     {
         if (!changes.isEmpty())
         {
@@ -255,7 +255,8 @@ public class MSSqlPlatform extends PlatformImplBase
                               RemoveColumnChange change) throws IOException
     {
         Table  changedTable  = findChangedTable(currentModel, change);
-        Column removedColumn = changedTable.findColumn(change.getChangedColumn(), isDelimitedIdentifierModeOn());
+        Column removedColumn = changedTable.findColumn(change.getChangedColumn(), isDelimitedIdentifierModeOn())
+			.orElseThrow();
 
         ((MSSqlBuilder)getSqlBuilder()).dropColumn(changedTable, removedColumn);
         change.apply(currentModel, isDelimitedIdentifierModeOn());
@@ -292,7 +293,8 @@ public class MSSqlPlatform extends PlatformImplBase
                               ColumnDefinitionChange change) throws IOException
     {
         Table  changedTable  = findChangedTable(currentModel, change);
-        Column changedColumn = changedTable.findColumn(change.getChangedColumn(), isDelimitedIdentifierModeOn());
+        Column changedColumn = changedTable.findColumn(change.getChangedColumn(), isDelimitedIdentifierModeOn())
+			.orElseThrow();
 
         ((MSSqlBuilder)getSqlBuilder()).recreateColumn(changedTable, changedColumn, change.getNewColumn());
     }
@@ -310,13 +312,11 @@ public class MSSqlPlatform extends PlatformImplBase
                               PrimaryKeyChange   change) throws IOException
     {
         Table    changedTable     = findChangedTable(currentModel, change);
-        String[] newPKColumnNames = change.getNewPrimaryKeyColumns();
-        Column[] newPKColumns     = new Column[newPKColumnNames.length];
+        var newPKColumns     = change.getNewPrimaryKeyColumns()
+			.stream()
+			.map(col -> changedTable.findColumn(col, isDelimitedIdentifierModeOn()).orElseThrow())
+			.toList();
 
-        for (int colIdx = 0; colIdx < newPKColumnNames.length; colIdx++)
-        {
-            newPKColumns[colIdx] = changedTable.findColumn(newPKColumnNames[colIdx], isDelimitedIdentifierModeOn());
-        }
         ((MSSqlBuilder)getSqlBuilder()).dropPrimaryKey(changedTable);
         getSqlBuilder().createPrimaryKey(changedTable, newPKColumns);
         change.apply(currentModel, isDelimitedIdentifierModeOn());

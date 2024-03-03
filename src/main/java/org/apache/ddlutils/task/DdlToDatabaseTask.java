@@ -19,15 +19,15 @@ package org.apache.ddlutils.task;
  * under the License.
  */
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Iterator;
-
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.types.FileSet;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Task for performing operations on a live database. Sub tasks e.g. create the
@@ -68,7 +68,7 @@ public class DdlToDatabaseTask extends DatabaseTaskBase
     /** A single schema file to read. */
     private File _singleSchemaFile = null;
     /** The input files. */
-    private ArrayList _fileSets = new ArrayList();
+    private final List<FileSet> _fileSets = new ArrayList<>();
     /** Whether XML input files are validated against the internal or an external DTD. */
     private boolean _useInternalDtd = true;
     /** Whether XML input files are validated at all. */
@@ -171,26 +171,6 @@ public class DdlToDatabaseTask extends DatabaseTaskBase
     }
 
     /**
-     * Adds the "write data to database"-command.
-     * 
-     * @param command The command
-     */
-    public void addWriteDataToDatabase(WriteDataToDatabaseCommand command)
-    {
-        addCommand(command);
-    }
-
-    /**
-     * Adds the "write data to file"-command.
-     * 
-     * @param command The command
-     */
-    public void addWriteDataToFile(WriteDataToFileCommand command)
-    {
-        addCommand(command);
-    }
-
-    /**
      * {@inheritDoc}
      */
     protected Database readModel()
@@ -210,34 +190,28 @@ public class DdlToDatabaseTask extends DatabaseTaskBase
         }
         else
         {
-            for (Iterator it = _fileSets.iterator(); it.hasNext();)
-            {
-                FileSet          fileSet    = (FileSet)it.next();
-                File             fileSetDir = fileSet.getDir(getProject());
-                DirectoryScanner scanner    = fileSet.getDirectoryScanner(getProject());
-                String[]         files      = scanner.getIncludedFiles();
-    
-                for (int idx = 0; (files != null) && (idx < files.length); idx++)
-                {
-                    Database curModel = readSingleSchemaFile(reader, new File(fileSetDir, files[idx]));
-    
-                    if (model == null)
-                    {
-                        model = curModel;
-                    }
-                    else if (curModel != null)
-                    {
-                        try
-                        {
-                            model.mergeWith(curModel);
-                        }
-                        catch (IllegalArgumentException ex)
-                        {
-                            throw new BuildException("Could not merge with schema from file "+files[idx]+": "+ex.getLocalizedMessage(), ex);
-                        }
-                    }
-                }
-            }
+			for (final var fileSet : _fileSets) {
+				File fileSetDir = fileSet.getDir(getProject());
+				DirectoryScanner scanner = fileSet.getDirectoryScanner(getProject());
+				String[] files = scanner.getIncludedFiles();
+
+				for (int idx = 0; (files != null) && (idx < files.length); idx++) {
+					Database curModel = readSingleSchemaFile(reader, new File(fileSetDir, files[idx]));
+
+					if (model == null) {
+						model = curModel;
+					} else if (curModel != null) {
+						try {
+							model.mergeWith(curModel);
+						} catch (IllegalArgumentException ex) {
+							throw new BuildException(
+								"Could not merge with schema from file " + files[idx] + ": " + ex.getLocalizedMessage(),
+								ex
+							);
+						}
+					}
+				}
+			}
         }
         return model;
     }

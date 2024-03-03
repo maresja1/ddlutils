@@ -105,7 +105,8 @@ public class AddColumnChange extends TableChangeImplBase
 
         if (_previousColumnName != null)
         {
-            Column prevColumn = table.findColumn(_previousColumnName, caseSensitive);
+            Column prevColumn = table.findColumn(_previousColumnName, caseSensitive)
+				.orElseThrow();
             int    idx        = table.getColumnIndex(prevColumn) + 1;
 
             table.addColumn(idx, newColumn);

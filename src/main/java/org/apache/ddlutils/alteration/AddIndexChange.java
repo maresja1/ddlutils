@@ -70,7 +70,7 @@ public class AddIndexChange extends TableChangeImplBase
             IndexColumn idxColumn = _newIndex.getColumn(idx);
             Column      tmpColumn = idxColumn.getColumn();
 
-            idxColumn.setColumn(table.findColumn(tmpColumn.getName(), caseSensitive));
+            idxColumn.setColumn(table.findColumn(tmpColumn.getName(), caseSensitive).orElseThrow());
         }
     }
 }

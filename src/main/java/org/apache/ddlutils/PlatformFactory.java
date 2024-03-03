@@ -19,9 +19,6 @@ package org.apache.ddlutils;
  * under the License.
  */
 
-import java.util.HashMap;
-import java.util.Map;
-import javax.sql.DataSource;
 import org.apache.ddlutils.platform.axion.AxionPlatform;
 import org.apache.ddlutils.platform.cloudscape.CloudscapePlatform;
 import org.apache.ddlutils.platform.db2.Db2Platform;
@@ -33,8 +30,8 @@ import org.apache.ddlutils.platform.interbase.InterbasePlatform;
 import org.apache.ddlutils.platform.maxdb.MaxDbPlatform;
 import org.apache.ddlutils.platform.mckoi.MckoiPlatform;
 import org.apache.ddlutils.platform.mssql.MSSqlPlatform;
-import org.apache.ddlutils.platform.mysql.MySqlPlatform;
 import org.apache.ddlutils.platform.mysql.MySql50Platform;
+import org.apache.ddlutils.platform.mysql.MySqlPlatform;
 import org.apache.ddlutils.platform.oracle.Oracle10Platform;
 import org.apache.ddlutils.platform.oracle.Oracle8Platform;
 import org.apache.ddlutils.platform.oracle.Oracle9Platform;
@@ -42,6 +39,12 @@ import org.apache.ddlutils.platform.postgresql.PostgreSqlPlatform;
 import org.apache.ddlutils.platform.sapdb.SapDbPlatform;
 import org.apache.ddlutils.platform.sybase.SybaseASE15Platform;
 import org.apache.ddlutils.platform.sybase.SybasePlatform;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import javax.sql.DataSource;
 
 /**
  * A factory of {@link org.apache.ddlutils.Platform} instances based on a case
@@ -53,19 +56,19 @@ import org.apache.ddlutils.platform.sybase.SybasePlatform;
 public class PlatformFactory
 {
     /** The database name -> platform map. */
-    private static Map _platforms = null;
+    private static Map<String, Class<? extends Platform>> _platforms = null;
 
     /**
      * Returns the platform map.
      * 
      * @return The platform list
      */
-    private static synchronized Map getPlatforms()
+    private static synchronized Map<String, Class<? extends Platform>> getPlatforms()
     {
         if (_platforms == null)
         {
             // lazy initialization
-            _platforms = new HashMap();
+            _platforms = new HashMap<>();
             registerPlatforms();
         }
         return _platforms;
@@ -78,13 +81,13 @@ public class PlatformFactory
      * @param databaseName The name of the database (case is not important)
      * @return The platform or <code>null</code> if the database is not supported
      */
-    public static synchronized Platform createNewPlatformInstance(String databaseName) throws DdlUtilsException
+    public static synchronized Optional<Platform> createNewPlatformInstance(String databaseName) throws DdlUtilsException
     {
-        Class platformClass = (Class)getPlatforms().get(databaseName.toLowerCase());
+        var platformClass = getPlatforms().get(databaseName.toLowerCase());
 
         try
         {
-            return platformClass != null ? (Platform)platformClass.newInstance() : null;
+            return platformClass != null ? Optional.of(platformClass.newInstance()) : Optional.empty();
         }
         catch (Exception ex)
         {
@@ -102,7 +105,7 @@ public class PlatformFactory
      * @param jdbcConnectionUrl The connection url
      * @return The platform or <code>null</code> if the database is not supported
      */
-    public static synchronized Platform createNewPlatformInstance(String jdbcDriver, String jdbcConnectionUrl) throws DdlUtilsException
+    public static synchronized Optional<Platform> createNewPlatformInstance(String jdbcDriver, String jdbcConnectionUrl) throws DdlUtilsException
     {
         return createNewPlatformInstance(new PlatformUtils().determineDatabaseType(jdbcDriver, jdbcConnectionUrl));
     }
@@ -116,12 +119,13 @@ public class PlatformFactory
      * @param dataSource The data source for the database
      * @return The platform or <code>null</code> if the database is not supported
      */
-    public static synchronized Platform createNewPlatformInstance(DataSource dataSource) throws DdlUtilsException
+    public static synchronized Optional<Platform> createNewPlatformInstance(DataSource dataSource) throws DdlUtilsException
     {
-        Platform platform = createNewPlatformInstance(new PlatformUtils().determineDatabaseType(dataSource));
-
-        platform.setDataSource(dataSource);
-        return platform;
+        return createNewPlatformInstance(new PlatformUtils().determineDatabaseType(dataSource))
+			.map(platform -> {
+				platform.setDataSource(dataSource);
+				return platform;
+			});
     }
 
     /**
@@ -135,14 +139,15 @@ public class PlatformFactory
      * @param password   The password to use for connecting to the database
      * @return The platform or <code>null</code> if the database is not supported
      */
-    public static synchronized Platform createNewPlatformInstance(DataSource dataSource, String username, String password) throws DdlUtilsException
+    public static synchronized Optional<Platform> createNewPlatformInstance(DataSource dataSource, String username, String password) throws DdlUtilsException
     {
-        Platform platform = createNewPlatformInstance(new PlatformUtils().determineDatabaseType(dataSource, username, password));
-
-        platform.setDataSource(dataSource);
-        platform.setUsername(username);
-        platform.setPassword(password);
-        return platform;
+        return createNewPlatformInstance(new PlatformUtils().determineDatabaseType(dataSource, username, password))
+			.map(platform -> {
+				platform.setDataSource(dataSource);
+				platform.setUsername(username);
+				platform.setPassword(password);
+				return platform;
+			});
     }
 
     /**
@@ -150,9 +155,9 @@ public class PlatformFactory
      * 
      * @return The names of the currently registered platforms
      */
-    public static synchronized String[] getSupportedPlatforms()
+    public static synchronized Set<String> getSupportedPlatforms()
     {
-        return (String[])getPlatforms().keySet().toArray(new String[0]);
+        return getPlatforms().keySet();
     }
 
     /**
@@ -172,7 +177,7 @@ public class PlatformFactory
      * @param platformName  The platform name
      * @param platformClass The platform class which must implement the {@link Platform} interface
      */
-    public static synchronized void registerPlatform(String platformName, Class platformClass)
+    public static synchronized void registerPlatform(String platformName, Class<? extends Platform> platformClass)
     {
         addPlatform(getPlatforms(), platformName, platformClass);
     }
@@ -211,7 +216,7 @@ public class PlatformFactory
      * @param platformName  The platform name
      * @param platformClass The platform class which must implement the {@link Platform} interface
      */
-    private static synchronized void addPlatform(Map platformMap, String platformName, Class platformClass)
+    private static synchronized void addPlatform(Map<String, Class<? extends Platform>> platformMap, String platformName, Class<? extends Platform> platformClass)
     {
         if (!Platform.class.isAssignableFrom(platformClass))
         {

@@ -19,44 +19,44 @@ package org.apache.ddlutils.io.converters;
  * under the License.
  */
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.sql.Time;
 import java.sql.Types;
 import java.util.Calendar;
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests the {@link TimeConverter}.
  *
  * @version $Revision: 1.0 $
  */
-public class TestTimeConverter extends TestCase
+public class TestTimeConverter
 {
 	/** The tested time converter. */
     private TimeConverter _timeConverter;
 
-    /**
-     * {@inheritDoc}
-     */
+
+	@BeforeEach
     protected void setUp() throws Exception
     {
-        super.setUp();
         _timeConverter = new TimeConverter();
     }
 
-    /**
-     * {@inheritDoc}
-     */
+	@AfterEach
     protected void tearDown() throws Exception
     {
         _timeConverter = null;
-        super.tearDown();
     }
 
     /**
      * Tests a normal time string.
      */
-    public void testNormalConvertFromHoursMinutesSecondsTimeString()
+    @Test
+	public void testNormalConvertFromHoursMinutesSecondsTimeString()
     {
         String   textRep = "02:15:59";
         Calendar cal     = Calendar.getInstance();

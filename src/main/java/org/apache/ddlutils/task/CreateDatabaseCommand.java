@@ -19,15 +19,15 @@ package org.apache.ddlutils.task;
  * under the License.
  */
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.model.Database;
 import org.apache.tools.ant.BuildException;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * The sub task for creating the target database. Note that this is only supported on some database
@@ -41,7 +41,7 @@ import org.apache.tools.ant.BuildException;
 public class CreateDatabaseCommand extends DatabaseCommand
 {
     /** The additional creation parameters. */
-    private ArrayList _parameters = new ArrayList();
+    private final List<Parameter> _parameters = new ArrayList<>();
 
     /**
      * Adds a parameter which is a name-value pair.
@@ -103,19 +103,15 @@ public class CreateDatabaseCommand extends DatabaseCommand
      * @param platformName The name of the platform
      * @return The filtered parameters
      */
-    private Map getFilteredParameters(String platformName)
+    private Map<String, String> getFilteredParameters(String platformName)
     {
-        LinkedHashMap parameters = new LinkedHashMap();
+        Map<String, String> parameters = new LinkedHashMap<>();
 
-        for (Iterator it = _parameters.iterator(); it.hasNext();)
-        {
-            Parameter param = (Parameter)it.next();
-
-            if (param.isForPlatform(platformName))
-            {
-                parameters.put(param.getName(), param.getValue());
-            }
-        }
+		for (Parameter param : _parameters) {
+			if (param.isForPlatform(platformName)) {
+				parameters.put(param.getName(), param.getValue());
+			}
+		}
         return parameters;
     }
 }

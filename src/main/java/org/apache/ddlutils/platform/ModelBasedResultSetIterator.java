@@ -19,6 +19,12 @@ package org.apache.ddlutils.platform;
  * under the License.
  */
 
+import org.apache.commons.lang3.NotImplementedException;
+import org.apache.ddlutils.DatabaseOperationException;
+import org.apache.ddlutils.model.Column;
+import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.Table;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -26,21 +32,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-
-import org.apache.commons.beanutils.BasicDynaBean;
-import org.apache.commons.beanutils.BasicDynaClass;
-import org.apache.commons.beanutils.DynaBean;
-import org.apache.commons.beanutils.DynaClass;
-import org.apache.commons.beanutils.DynaProperty;
-import org.apache.commons.collections.map.ListOrderedMap;
-import org.apache.ddlutils.DatabaseOperationException;
-import org.apache.ddlutils.dynabean.SqlDynaBean;
-import org.apache.ddlutils.dynabean.SqlDynaClass;
-import org.apache.ddlutils.model.Column;
-import org.apache.ddlutils.model.Database;
-import org.apache.ddlutils.model.Table;
 
 /**
  * This is an iterator that is specifically targeted at traversing result sets.
@@ -50,20 +44,17 @@ import org.apache.ddlutils.model.Table;
  * 
  * @version $Revision: 289996 $
  */
-public class ModelBasedResultSetIterator implements Iterator
+public class ModelBasedResultSetIterator implements Iterator<Map<String, Object>>
 {
     /** The platform. */
     private PlatformImplBase _platform;
     /** The base result set. */
     private ResultSet _resultSet;
-    /** The dyna class to use for creating beans. */
-    private DynaClass _dynaClass;
     /** Whether the case of identifiers matters. */
     private boolean _caseSensitive;
     /** Maps column names to table objects as given by the query hints. */
-    private Map _preparedQueryHints;
-    /** Maps column names to properties. */
-    private Map _columnsToProperties = new ListOrderedMap();
+    private Map<String, Table> _preparedQueryHints;
+
     /** Whether the next call to hasNext or next needs advancement. */
     private boolean _needsAdvancing = true;
     /** Whether we're already at the end of the result set. */
@@ -71,7 +62,9 @@ public class ModelBasedResultSetIterator implements Iterator
     /** Whether to close the statement and connection after finishing. */
     private boolean _cleanUpAfterFinish;
 
-    /**
+	private Table _table;
+
+	/**
      * Creates a new iterator.
      * 
      * @param platform           The platform
@@ -82,7 +75,7 @@ public class ModelBasedResultSetIterator implements Iterator
      * @param cleanUpAfterFinish Whether to close the statement and connection after finishing
      *                           the iteration, upon on exception, or when this iterator is garbage collected
      */
-    public ModelBasedResultSetIterator(PlatformImplBase platform, Database model, ResultSet resultSet, Table[] queryHints, boolean cleanUpAfterFinish) throws DatabaseOperationException
+    public ModelBasedResultSetIterator(PlatformImplBase platform, Database model, ResultSet resultSet, List<Table> queryHints, boolean cleanUpAfterFinish) throws DatabaseOperationException
     {
         if (resultSet != null)
         {
@@ -133,7 +126,8 @@ public class ModelBasedResultSetIterator implements Iterator
                     tableOfColumn = tableOfColumn.substring(1, tableOfColumn.length() - 1);
                 }
                 // the JDBC driver gave us enough meta data info
-                table = model.findTable(tableOfColumn, _caseSensitive);
+                table = model.findTable(tableOfColumn, _caseSensitive)
+					.orElseThrow();
             }
             if (table == null)
             {
@@ -150,34 +144,14 @@ public class ModelBasedResultSetIterator implements Iterator
             {
                 singleKnownTable = false;
             }
-
-            String propName = columnName;
-
-            if (table != null)
-            {
-                Column column = table.findColumn(columnName, _caseSensitive);
-
-                if (column != null)
-                {
-                    propName = column.getName();
-                }
-            }
-            _columnsToProperties.put(columnName, propName);
         }
         if (singleKnownTable && (tableName != null))
         {
-            _dynaClass = model.getDynaClassFor(tableName);
+            _table = model.findTable(tableName).orElseThrow();
         }
         else
         {
-            DynaProperty[] props = new DynaProperty[_columnsToProperties.size()];
-            int            idx   = 0;
-
-            for (Iterator it = _columnsToProperties.values().iterator(); it.hasNext(); idx++)
-            {
-                props[idx] = new DynaProperty((String)it.next());
-            }
-            _dynaClass = new BasicDynaClass("result", BasicDynaBean.class, props);
+			throw new NotImplementedException("Not implemented yet.");
         }
     }
 
@@ -188,26 +162,22 @@ public class ModelBasedResultSetIterator implements Iterator
      * @param queryHints The query hints
      * @return The column name -> table map
      */
-    private Map prepareQueryHints(Table[] queryHints)
+    private Map<String, Table> prepareQueryHints(List<Table> queryHints)
     {
-        Map result = new HashMap();
+        Map<String, Table> result = new HashMap<>();
 
-        for (int tableIdx = 0; (queryHints != null) && (tableIdx < queryHints.length); tableIdx++)
-        {
-            for (int columnIdx = 0; columnIdx < queryHints[tableIdx].getColumnCount(); columnIdx++)
-            {
-                String columnName = queryHints[tableIdx].getColumn(columnIdx).getName();
+		for (final Table queryHint : queryHints) {
+			for (int columnIdx = 0; columnIdx < queryHint.getColumnCount(); columnIdx++) {
+				String columnName = queryHint.getColumn(columnIdx).getName();
 
-                if (!_caseSensitive)
-                {
-                    columnName = columnName.toLowerCase();
-                }
-                if (!result.containsKey(columnName))
-                {
-                    result.put(columnName, queryHints[tableIdx]);
-                }
-            }
-        }
+				if (!_caseSensitive) {
+					columnName = columnName.toLowerCase();
+				}
+				if (!result.containsKey(columnName)) {
+					result.put(columnName, queryHint);
+				}
+			}
+		}
         return result;
     }
     
@@ -223,52 +193,42 @@ public class ModelBasedResultSetIterator implements Iterator
     /**
      * {@inheritDoc}
      */
-    public Object next() throws DatabaseOperationException
+    public Map<String, Object> next() throws DatabaseOperationException
     {
         advanceIfNecessary();
         if (_isAtEnd)
         {
             throw new NoSuchElementException("No more elements in the resultset");
         }
-        else
-        {
-            try
-            {
-                DynaBean bean  = _dynaClass.newInstance();
-                Table    table = null;
 
-                if (bean instanceof SqlDynaBean)
-                {
-                    SqlDynaClass dynaClass = (SqlDynaClass)((SqlDynaBean)bean).getDynaClass();
+		try
+		{
+			Table    table = _table;
+			var result = new HashMap<String, Object>(_resultSet.getMetaData().getColumnCount());
 
-                    table = dynaClass.getTable();
-                }
+			for (Column column : table.getColumns()) {
 
-                for (Iterator it = _columnsToProperties.entrySet().iterator(); it.hasNext();)
-                {
-                    Map.Entry entry      = (Map.Entry)it.next();
-                    String    columnName = (String)entry.getKey();
-                    String    propName   = (String)entry.getValue();
-                    Table     curTable   = table;
-
-                    if (curTable == null)
-                    {
-                        curTable = (Table)_preparedQueryHints.get(_caseSensitive ? columnName : columnName.toLowerCase());
-                    }
-
-                    Object value = _platform.getObjectFromResultSet(_resultSet, columnName, curTable);
-
-                    bean.set(propName, value);
-                }
-                _needsAdvancing = true;
-                return bean;
-            }
-            catch (Exception ex)
-            {
-                cleanUp();
-                throw new DatabaseOperationException("Exception while reading the row from the resultset", ex);
-            }
-        }
+				// old code handling queryHints
+//				Map.Entry entry      = (Map.Entry)it.next();
+//				String    columnName = (String)entry.getKey();
+//				String    propName   = (String)entry.getValue();
+//				Table     curTable   = table;
+//
+//				if (curTable == null)
+//				{
+//					curTable = (Table)_preparedQueryHints.get(_caseSensitive ? columnName : columnName.toLowerCase());
+//				}
+				Object value = _platform.getObjectFromResultSet(_resultSet, column.getName(), _table);
+				result.put(column.getName(), value);
+			}
+			_needsAdvancing = true;
+			return result;
+		}
+		catch (Exception ex)
+		{
+			cleanUp();
+			throw new DatabaseOperationException("Exception while reading the row from the resultset", ex);
+		}
     }
 
     /**

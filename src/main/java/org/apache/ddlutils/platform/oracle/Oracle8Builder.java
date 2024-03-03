@@ -19,12 +19,6 @@ package org.apache.ddlutils.platform.oracle;
  * under the License.
  */
 
-import java.io.IOException;
-import java.sql.Types;
-import java.util.Map;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
-
 import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.alteration.ColumnDefinitionChange;
@@ -36,6 +30,12 @@ import org.apache.ddlutils.model.TypeMap;
 import org.apache.ddlutils.platform.SqlBuilder;
 import org.apache.ddlutils.util.StringUtilsExt;
 
+import java.io.IOException;
+import java.sql.Types;
+import java.util.Map;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+
 /**
  * The SQL Builder for Oracle.
  *
@@ -44,11 +44,11 @@ import org.apache.ddlutils.util.StringUtilsExt;
 public class Oracle8Builder extends SqlBuilder
 {
 	/** The regular expression pattern for ISO dates, i.e. 'YYYY-MM-DD'. */
-	private Pattern _isoDatePattern;
+	private final Pattern _isoDatePattern;
 	/** The regular expression pattern for ISO times, i.e. 'HH:MI:SS'. */
-	private Pattern _isoTimePattern;
+	private final Pattern _isoTimePattern;
 	/** The regular expression pattern for ISO timestamps, i.e. 'YYYY-MM-DD HH:MI:SS.fffffffff'. */
-	private Pattern _isoTimestampPattern;
+	private final Pattern _isoTimestampPattern;
 
 	/**
      * Creates a new builder instance.
@@ -75,22 +75,20 @@ public class Oracle8Builder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    public void createTable(Database database, Table table, Map parameters) throws IOException
+    public void createTable(Database database, Table table, Map<?, ?> parameters) throws IOException
     {
         // lets create any sequences
-        Column[] columns = table.getAutoIncrementColumns();
+        var columns = table.getAutoIncrementColumns().toList();
 
-        for (int idx = 0; idx < columns.length; idx++)
-        {
-            createAutoIncrementSequence(table, columns[idx]);
-        }
+		for (final Column column : columns) {
+			createAutoIncrementSequence(table, column);
+		}
 
         super.createTable(database, table, parameters);
 
-        for (int idx = 0; idx < columns.length; idx++)
-        {
-            createAutoIncrementTrigger(table, columns[idx]);
-        }
+		for (final Column column : columns) {
+			createAutoIncrementTrigger(table, column);
+		}
     }
 
     /**
@@ -98,13 +96,12 @@ public class Oracle8Builder extends SqlBuilder
      */
     public void dropTable(Table table) throws IOException
     {
-        Column[] columns = table.getAutoIncrementColumns();
+        var columns = table.getAutoIncrementColumns().toList();
 
-        for (int idx = 0; idx < columns.length; idx++)
-        {
-            dropAutoIncrementTrigger(table, columns[idx]);
-            dropAutoIncrementSequence(table, columns[idx]);
-        }
+		for (final Column column : columns) {
+			dropAutoIncrementTrigger(table, column);
+			dropAutoIncrementSequence(table, column);
+		}
 
         print("DROP TABLE ");
         printIdentifier(getTableName(table));
@@ -218,7 +215,7 @@ public class Oracle8Builder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    protected void createTemporaryTable(Database database, Table table, Map parameters) throws IOException
+    protected void createTemporaryTable(Database database, Table table, Map<?, ?> parameters) throws IOException
     {
         createTable(database, table, parameters);
     }
@@ -324,20 +321,20 @@ public class Oracle8Builder extends SqlBuilder
      */
     public String getSelectLastIdentityValues(Table table)
     {
-        Column[] columns = table.getAutoIncrementColumns();
+        var columns = table.getAutoIncrementColumns().toList();
 
-        if (columns.length > 0)
+        if (!columns.isEmpty())
         {
-            StringBuffer result = new StringBuffer();
+            StringBuilder result = new StringBuilder();
 
             result.append("SELECT ");
-            for (int idx = 0; idx < columns.length; idx++)
+            for (int idx = 0; idx < columns.size(); idx++)
             {
                 if (idx > 0)
                 {
                     result.append(",");
                 }
-                result.append(getDelimitedIdentifier(getConstraintName("seq", table, columns[idx].getName(), null)));
+                result.append(getDelimitedIdentifier(getConstraintName("seq", table, columns.get(idx).getName(), null)));
                 result.append(".currval");
             }
             result.append(" FROM dual");

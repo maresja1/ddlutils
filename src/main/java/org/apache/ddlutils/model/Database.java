@@ -19,20 +19,17 @@ package org.apache.ddlutils.model;
  * under the License.
  */
 
-import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.ddlutils.dynabean.DynaClassCache;
-import org.apache.ddlutils.dynabean.SqlDynaClass;
-import org.apache.ddlutils.dynabean.SqlDynaException;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.sql.Types;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -46,7 +43,8 @@ import java.util.regex.PatternSyntaxException;
 public class Database implements Serializable
 {
     /** Unique ID for serialization purposes. */
-    private static final long serialVersionUID = -3160443396757573868L;
+    @Serial
+	private static final long serialVersionUID = -3160443396757573868L;
 
     /** The name of the database model. */
     private String _name;
@@ -55,9 +53,7 @@ public class Database implements Serializable
     /** The version of the model. */
     private String _version;
     /** The tables. */
-    private ArrayList _tables = new ArrayList();
-    /** The dyna class cache for this model. */
-    private transient DynaClassCache _dynaClassCache = null;
+    private final List<Table> _tables = new ArrayList<>();
 
     /**
      * Creates an empty model without a name.
@@ -89,7 +85,7 @@ public class Database implements Serializable
         {
             Table table = otherDb.getTable(tableIdx);
 
-            if (findTable(table.getName()) != null)
+            if (findTable(table.getName()).isPresent())
             {
                 // TODO: It might make more sense to log a warning and overwrite the table (or merge them) ?
                 throw new ModelException("Cannot merge the models because table "+table.getName()+" already defined in this model");
@@ -102,7 +98,8 @@ public class Database implements Serializable
         for (int tableIdx = 0; tableIdx < otherDb.getTableCount(); tableIdx++)
         {
             Table otherTable = otherDb.getTable(tableIdx);
-            Table localTable = findTable(otherTable.getName());
+            Table localTable = findTable(otherTable.getName())
+				.orElseThrow();
 
             for (int fkIdx = 0; fkIdx < otherTable.getForeignKeyCount(); fkIdx++)
             {
@@ -189,9 +186,9 @@ public class Database implements Serializable
      * 
      * @return The tables
      */
-    public Table[] getTables()
+    public List<Table> getTables()
     {
-        return (Table[])_tables.toArray(new Table[_tables.size()]);
+        return _tables;
     }
 
     /**
@@ -237,12 +234,11 @@ public class Database implements Serializable
      * 
      * @param tables The tables to add
      */
-    public void addTables(Collection tables)
+    public void addTables(Collection<Table> tables)
     {
-        for (Iterator it = tables.iterator(); it.hasNext();)
-        {
-            addTable((Table)it.next());
-        }
+		for (final Table table : tables) {
+			addTable(table);
+		}
     }
 
     /**
@@ -273,9 +269,9 @@ public class Database implements Serializable
      * 
      * @param tables The tables to remove
      */
-    public void removeTables(Table[] tables)
+    public void removeTables(List<Table> tables)
     {
-        _tables.removeAll(Arrays.asList(tables));
+        _tables.removeAll(tables);
     }
 
     /**
@@ -284,11 +280,11 @@ public class Database implements Serializable
      * 
      * @param tables The tables to keep
      */
-    public void removeAllTablesExcept(Table[] tables)
+    public void removeAllTablesExcept(List<Table> tables)
     {
-        ArrayList allTables = new ArrayList(_tables);
+        var allTables = new ArrayList<>(_tables);
 
-        allTables.removeAll(Arrays.asList(tables));
+        allTables.removeAll(tables);
         _tables.removeAll(allTables);
     }
 
@@ -306,22 +302,22 @@ public class Database implements Serializable
         // * columns in foreign key references
         // * columns in indices
         // * columns in uniques
-        HashSet namesOfProcessedTables  = new HashSet();
-        HashSet namesOfProcessedColumns = new HashSet();
-        HashSet namesOfProcessedFks     = new HashSet();
-        HashSet namesOfProcessedIndices = new HashSet();
+        var namesOfProcessedTables  = new HashSet<String>();
+        var namesOfProcessedColumns = new HashSet<String>();
+        var namesOfProcessedFks     = new HashSet<String>();
+        var namesOfProcessedIndices = new HashSet<String>();
         int     tableIdx = 0;
 
-        if ((getName() == null) || (getName().length() == 0))
+        if ((getName() == null) || (getName().isEmpty()))
         {
             throw new ModelException("The database model has no name");
         }
 
-        for (Iterator tableIt = _tables.iterator(); tableIt.hasNext(); tableIdx++)
+        for (var tableIt = _tables.iterator(); tableIt.hasNext(); tableIdx++)
         {
             Table curTable = (Table)tableIt.next();
 
-            if ((curTable.getName() == null) || (curTable.getName().length() == 0))
+            if ((curTable.getName() == null) || (curTable.getName().isEmpty()))
             {
                 throw new ModelException("The table nr. "+tableIdx+" has no name");
             }
@@ -339,7 +335,7 @@ public class Database implements Serializable
             {
                 Column column = curTable.getColumn(idx);
 
-                if ((column.getName() == null) || (column.getName().length() == 0))
+                if ((column.getName() == null) || (column.getName().isEmpty()))
                 {
                     throw new ModelException("The column nr. "+idx+" in table "+curTable.getName()+" has no name");
                 }
@@ -349,7 +345,7 @@ public class Database implements Serializable
                 }
                 namesOfProcessedColumns.add(column.getName());
 
-                if ((column.getType() == null) || (column.getType().length() == 0))
+                if ((column.getType() == null) || (column.getType().isEmpty()))
                 {
                     throw new ModelException("The column nr. "+idx+" in table "+curTable.getName()+" has no type");
                 }
@@ -364,9 +360,9 @@ public class Database implements Serializable
             {
                 ForeignKey fk     = curTable.getForeignKey(idx);
                 String     fkName = (fk.getName() == null ? "" : fk.getName());
-                String     fkDesc = (fkName.length() == 0 ? "nr. " + idx : fkName);
+                String     fkDesc = (fkName.isEmpty() ? "nr. " + idx : fkName);
 
-                if (fkName.length() > 0)
+                if (!fkName.isEmpty())
                 {
                     if (namesOfProcessedFks.contains(fkName))
                     {
@@ -377,16 +373,10 @@ public class Database implements Serializable
 
                 if (fk.getForeignTable() == null)
                 {
-                    Table targetTable = findTable(fk.getForeignTableName(), true);
+                    Table targetTable = findTable(fk.getForeignTableName(), true)
+						.orElseThrow(() -> new ModelException("The foreignkey "+fkDesc+" in table "+curTable.getName()+" references the undefined table "+fk.getForeignTableName()));
 
-                    if (targetTable == null)
-                    {
-                        throw new ModelException("The foreignkey "+fkDesc+" in table "+curTable.getName()+" references the undefined table "+fk.getForeignTableName());
-                    }
-                    else
-                    {
-                        fk.setForeignTable(targetTable);
-                    }
+					fk.setForeignTable(targetTable);
                 }
                 if (fk.getReferenceCount() == 0)
                 {
@@ -398,29 +388,17 @@ public class Database implements Serializable
 
                     if (ref.getLocalColumn() == null)
                     {
-                        Column localColumn = curTable.findColumn(ref.getLocalColumnName(), true);
+                        Column localColumn = curTable.findColumn(ref.getLocalColumnName(), true)
+							.orElseThrow(() -> new ModelException("The foreignkey "+fkDesc+" in table "+curTable.getName()+" references the undefined local column "+ref.getLocalColumnName()));
 
-                        if (localColumn == null)
-                        {
-                            throw new ModelException("The foreignkey "+fkDesc+" in table "+curTable.getName()+" references the undefined local column "+ref.getLocalColumnName());
-                        }
-                        else
-                        {
-                            ref.setLocalColumn(localColumn);
-                        }
+						ref.setLocalColumn(localColumn);
                     }
                     if (ref.getForeignColumn() == null)
                     {
-                        Column foreignColumn = fk.getForeignTable().findColumn(ref.getForeignColumnName(), true);
+                        Column foreignColumn = fk.getForeignTable().findColumn(ref.getForeignColumnName(), true)
+							.orElseThrow(() -> new ModelException("The foreignkey "+fkDesc+" in table "+curTable.getName()+" references the undefined local column "+ref.getForeignColumnName()+" in table "+fk.getForeignTable().getName()));
 
-                        if (foreignColumn == null)
-                        {
-                            throw new ModelException("The foreignkey "+fkDesc+" in table "+curTable.getName()+" references the undefined local column "+ref.getForeignColumnName()+" in table "+fk.getForeignTable().getName());
-                        }
-                        else
-                        {
-                            ref.setForeignColumn(foreignColumn);
-                        }
+						ref.setForeignColumn(foreignColumn);
                     }
                 }
             }
@@ -429,9 +407,9 @@ public class Database implements Serializable
             {
                 Index  index     = curTable.getIndex(idx);
                 String indexName = (index.getName() == null ? "" : index.getName());
-                String indexDesc = (indexName.length() == 0 ? "nr. " + idx : indexName);
+                String indexDesc = (indexName.isEmpty() ? "nr. " + idx : indexName);
 
-                if (indexName.length() > 0)
+                if (!indexName.isEmpty())
                 {
                     if (namesOfProcessedIndices.contains(indexName))
                     {
@@ -447,16 +425,10 @@ public class Database implements Serializable
                 for (int indexColumnIdx = 0; indexColumnIdx < index.getColumnCount(); indexColumnIdx++)
                 {
                     IndexColumn indexColumn = index.getColumn(indexColumnIdx);
-                    Column      column      = curTable.findColumn(indexColumn.getName(), true);
+                    Column      column      = curTable.findColumn(indexColumn.getName(), true)
+						.orElseThrow(() -> new ModelException("The index "+indexDesc+" in table "+curTable.getName()+" references the undefined column "+indexColumn.getName()));
 
-                    if (column == null)
-                    {
-                        throw new ModelException("The index "+indexDesc+" in table "+curTable.getName()+" references the undefined column "+indexColumn.getName());
-                    }
-                    else
-                    {
-                        indexColumn.setColumn(column);
-                    }
+					indexColumn.setColumn(column);
                 }
             }
         }
@@ -470,7 +442,7 @@ public class Database implements Serializable
      * @param name The name of the table to find
      * @return The table or <code>null</code> if there is no such table
      */
-    public Table findTable(String name)
+    public Optional<Table> findTable(String name)
     {
         return findTable(name, false);
     }
@@ -484,28 +456,20 @@ public class Database implements Serializable
      * @param caseSensitive Whether case matters for the names
      * @return The table or <code>null</code> if there is no such table
      */
-    public Table findTable(String name, boolean caseSensitive)
+    public Optional<Table> findTable(String name, boolean caseSensitive)
     {
-        for (Iterator iter = _tables.iterator(); iter.hasNext();)
-        {
-            Table table = (Table) iter.next();
-
-            if (caseSensitive)
-            {
-                if (table.getName().equals(name))
-                {
-                    return table;
-                }
-            }
-            else
-            {
-                if (table.getName().equalsIgnoreCase(name))
-                {
-                    return table;
-                }
-            }
-        }
-        return null;
+		for (Table table : _tables) {
+			if (caseSensitive) {
+				if (table.getName().equals(name)) {
+					return Optional.of(table);
+				}
+			} else {
+				if (table.getName().equalsIgnoreCase(name)) {
+					return Optional.of(table);
+				}
+			}
+		}
+        return Optional.empty();
     }
 
     /**
@@ -515,23 +479,18 @@ public class Database implements Serializable
      * @param caseSensitive Whether the case of the table names matters
      * @return The tables
      */
-    public Table[] findTables(String[] tableNames, boolean caseSensitive)
+    public List<Table> findTables(List<String> tableNames, boolean caseSensitive)
     {
-        ArrayList tables = new ArrayList();
+        var tables = new ArrayList<Table>();
 
         if (tableNames != null)
         {
-            for (int idx = 0; idx < tableNames.length; idx++)
-            {
-                Table table = findTable(tableNames[idx], caseSensitive);
-
-                if (table != null)
-                {
-                    tables.add(table);
-                }
-            }
+			for (String tableName : tableNames) {
+				findTable(tableName, caseSensitive)
+					.ifPresent(tables::add);
+			}
         }
-        return (Table[])tables.toArray(new Table[tables.size()]);
+        return tables;
     }
 
     /**
@@ -543,105 +502,27 @@ public class Database implements Serializable
      * @return The tables
      * @throws PatternSyntaxException If the regular expression is invalid
      */
-    public Table[] findTables(String tableNameRegExp, boolean caseSensitive) throws PatternSyntaxException
+    public List<Table> findTables(String tableNameRegExp, boolean caseSensitive) throws PatternSyntaxException
     {
-        ArrayList tables = new ArrayList();
+        var tables = new ArrayList<Table>();
 
         if (tableNameRegExp != null)
         {
             Pattern pattern = Pattern.compile(tableNameRegExp);
 
-            for (Iterator tableIt = _tables.iterator(); tableIt.hasNext();)
-            {
-                Table  table     = (Table)tableIt.next();
-                String tableName = table.getName();
+			for (Table table : _tables) {
+				String tableName = table.getName();
 
-                if (!caseSensitive)
-                {
-                    tableName = tableName.toUpperCase();
-                }
-                if (pattern.matcher(tableName).matches())
-                {
-                    tables.add(table);
-                }
-            }
+				if (!caseSensitive) {
+					tableName = tableName.toUpperCase();
+				}
+				if (pattern.matcher(tableName).matches()) {
+					tables.add(table);
+				}
+			}
         }
-        return (Table[])tables.toArray(new Table[tables.size()]);
+        return tables;
     }
-
-    /**
-     * Returns the dyna class cache. If none is available yet, a new one will be created.
-     * 
-     * @return The dyna class cache
-     */
-    private DynaClassCache getDynaClassCache()
-    {
-        if (_dynaClassCache == null)
-        {
-            _dynaClassCache = new DynaClassCache();
-        }
-        return _dynaClassCache;
-    }
-
-    /**
-     * Resets the dyna class cache. This should be done for instance when a column
-     * has been added or removed to a table.
-     */
-    public void resetDynaClassCache()
-    {
-        _dynaClassCache = null;
-    }
-    
-    /**
-     * Returns the {@link org.apache.ddlutils.dynabean.SqlDynaClass} for the given table name. If the it does not
-     * exist yet, a new one will be created based on the Table definition.
-     * 
-     * @param tableName The name of the table to create the bean for
-     * @return The <code>SqlDynaClass</code> for the indicated table or <code>null</code>
-     *         if the model contains no such table
-     */
-    public SqlDynaClass getDynaClassFor(String tableName)
-    {
-        Table table = findTable(tableName);
-
-        return table != null ? getDynaClassCache().getDynaClass(table) : null;
-    }
-
-    /**
-     * Returns the {@link org.apache.ddlutils.dynabean.SqlDynaClass} for the given dyna bean.
-     * 
-     * @param bean The dyna bean
-     * @return The <code>SqlDynaClass</code> for the given bean
-     */
-    public SqlDynaClass getDynaClassFor(DynaBean bean)
-    {
-        return getDynaClassCache().getDynaClass(bean);
-    }
-
-    /**
-     * Creates a new dyna bean for the given table.
-     * 
-     * @param table The table to create the bean for
-     * @return The new dyna bean
-     */
-    public DynaBean createDynaBeanFor(Table table) throws SqlDynaException
-    {
-        return getDynaClassCache().createNewInstance(table);
-    }
-
-    /**
-     * Convenience method that combines {@link #createDynaBeanFor(Table)} and
-     * {@link #findTable(String, boolean)}.
-     * 
-     * @param tableName     The name of the table to create the bean for
-     * @param caseSensitive Whether case matters for the names
-     * @return The new dyna bean
-     */
-    public DynaBean createDynaBeanFor(String tableName, boolean caseSensitive) throws SqlDynaException
-    {
-        return getDynaClassCache().createNewInstance(findTable(tableName, caseSensitive));
-    }
-
     /**
      * {@inheritDoc}
      */

@@ -23,6 +23,9 @@ import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Represents the addition of a primary key to a table which does not have one.
  * 
@@ -31,7 +34,7 @@ import org.apache.ddlutils.model.Table;
 public class AddPrimaryKeyChange extends TableChangeImplBase
 {
     /** The names of the columns making up the primary key. */
-    private String[] _primaryKeyColumns;
+    private List<String> _primaryKeyColumns;
 
     /**
      * Creates a new change object.
@@ -39,18 +42,16 @@ public class AddPrimaryKeyChange extends TableChangeImplBase
      * @param tableName         The name of the table to add the primary key to
      * @param primaryKeyColumns The names of the columns making up the primary key
      */
-    public AddPrimaryKeyChange(String tableName, String[] primaryKeyColumns)
+    public AddPrimaryKeyChange(String tableName, List<String> primaryKeyColumns)
     {
         super(tableName);
         if (primaryKeyColumns == null)
         {
-            _primaryKeyColumns = new String[0];
+            _primaryKeyColumns = List.of();
         }
         else
         {
-            _primaryKeyColumns = new String[primaryKeyColumns.length];
-
-            System.arraycopy(primaryKeyColumns, 0, _primaryKeyColumns, 0, primaryKeyColumns.length);
+            _primaryKeyColumns = new ArrayList<>(primaryKeyColumns);
         }
     }
 
@@ -59,12 +60,9 @@ public class AddPrimaryKeyChange extends TableChangeImplBase
      *
      * @return The primary key column names
      */
-    public String[] getPrimaryKeyColumns()
+    public List<String> getPrimaryKeyColumns()
     {
-        String[] result = new String[_primaryKeyColumns.length];
-
-        System.arraycopy(_primaryKeyColumns, 0, result, 0, _primaryKeyColumns.length);
-        return result;
+        return _primaryKeyColumns;
     }
 
     /**
@@ -74,11 +72,10 @@ public class AddPrimaryKeyChange extends TableChangeImplBase
     {
         Table table = findChangedTable(model, caseSensitive);
 
-        for (int idx = 0; idx < _primaryKeyColumns.length; idx++)
-        {
-            Column column = table.findColumn(_primaryKeyColumns[idx], caseSensitive);
-
-            column.setPrimaryKey(true);
-        }
+		for (String primaryKeyColumn : _primaryKeyColumns) {
+			Column column = table.findColumn(primaryKeyColumn, caseSensitive)
+				.orElseThrow();
+			column.setPrimaryKey(true);
+		}
     }
 }

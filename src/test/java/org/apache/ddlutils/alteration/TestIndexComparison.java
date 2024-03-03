@@ -19,11 +19,14 @@ package org.apache.ddlutils.alteration;
  * under the License.
  */
 
+import org.apache.ddlutils.io.DatabaseIO;
+import org.apache.ddlutils.model.Database;
+
 import java.sql.Types;
 import java.util.List;
 
-import org.apache.ddlutils.io.DatabaseIO;
-import org.apache.ddlutils.model.Database;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Tests the model comparison.

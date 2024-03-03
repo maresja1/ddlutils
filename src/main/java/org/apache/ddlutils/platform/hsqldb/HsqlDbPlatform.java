@@ -131,17 +131,19 @@ public class HsqlDbPlatform extends PlatformImplBase
             {
                 if (change instanceof RemoveColumnChange)
                 {
-                    Column column = intermediateTable.findColumn(((RemoveColumnChange)change).getChangedColumn(),
-                                                                 isDelimitedIdentifierModeOn());
+                    Column column = intermediateTable.findColumn(
+						((RemoveColumnChange)change).getChangedColumn(),
+                        isDelimitedIdentifierModeOn()
+					)
+						.orElseThrow();
 
                     // HsqlDb can only drop columns that are not part of a primary key
                     return !column.isPrimaryKey();
                 }
-                else if (change instanceof AddColumnChange)
+                else if (change instanceof final AddColumnChange addColumnChange)
                 {
-                    AddColumnChange addColumnChange = (AddColumnChange)change; 
 
-                    // adding IDENTITY columns is not supported without a table rebuild because they have to
+					// adding IDENTITY columns is not supported without a table rebuild because they have to
                     // be PK columns, but we add them to the PK later
                     return addColumnChange.isAtEnd() &&
                            (!addColumnChange.getNewColumn().isRequired() ||
@@ -176,7 +178,8 @@ public class HsqlDbPlatform extends PlatformImplBase
 
         if (change.getNextColumn() != null)
         {
-            nextColumn = changedTable.findColumn(change.getNextColumn(), isDelimitedIdentifierModeOn());
+            nextColumn = changedTable.findColumn(change.getNextColumn(), isDelimitedIdentifierModeOn())
+				.orElseThrow();
         }
         ((HsqlDbBuilder)getSqlBuilder()).insertColumn(changedTable, change.getNewColumn(), nextColumn);
         change.apply(currentModel, isDelimitedIdentifierModeOn());
@@ -195,7 +198,8 @@ public class HsqlDbPlatform extends PlatformImplBase
                               RemoveColumnChange change) throws IOException
     {
         Table  changedTable  = findChangedTable(currentModel, change);
-        Column removedColumn = changedTable.findColumn(change.getChangedColumn(), isDelimitedIdentifierModeOn());
+        Column removedColumn = changedTable.findColumn(change.getChangedColumn(), isDelimitedIdentifierModeOn())
+			.orElseThrow();
 
         ((HsqlDbBuilder)getSqlBuilder()).dropColumn(changedTable, removedColumn);
         change.apply(currentModel, isDelimitedIdentifierModeOn());

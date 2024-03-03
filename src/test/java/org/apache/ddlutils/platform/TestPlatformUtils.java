@@ -19,8 +19,6 @@ package org.apache.ddlutils.platform;
  * under the License.
  */
 
-import junit.framework.TestCase;
-
 import org.apache.ddlutils.PlatformUtils;
 import org.apache.ddlutils.platform.axion.AxionPlatform;
 import org.apache.ddlutils.platform.cloudscape.CloudscapePlatform;
@@ -37,12 +35,14 @@ import org.apache.ddlutils.platform.postgresql.PostgreSqlPlatform;
 import org.apache.ddlutils.platform.sapdb.SapDbPlatform;
 import org.apache.ddlutils.platform.sybase.SybasePlatform;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 /**
  * Tests the {@link org.apache.ddlutils.PlatformUtils} class.
  * 
  * @version $Revision: 279421 $
  */
-public class TestPlatformUtils extends TestCase
+public class TestPlatformUtils
 {
     /** The tested platform utils object. */
     private PlatformUtils _platformUtils;

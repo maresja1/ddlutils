@@ -19,14 +19,12 @@ package org.apache.ddlutils.task;
  * under the License.
  */
 
+import org.apache.ddlutils.io.DatabaseIO;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
-
-import junit.framework.Test;
-
-import org.apache.ddlutils.io.DatabaseIO;
 
 /**
  * Tests the writeDataToDatabase sub task.
@@ -35,15 +33,6 @@ import org.apache.ddlutils.io.DatabaseIO;
  */
 public class TestWriteDataToDatabaseCommand extends TestTaskBase
 {
-    /**
-     * Parameterized test case pattern.
-     * 
-     * @return The tests
-     */
-    public static Test suite() throws Exception
-    {
-        return getTests(TestWriteDataToDatabaseCommand.class);
-    }
 
     /**
      * Adds the writeDataToDatabase sub task to the given task, executes it, and checks its output.
@@ -123,12 +112,12 @@ public class TestWriteDataToDatabaseCommand extends TestTaskBase
         List beans = getRows("roundtrip", "pk");
 
         assertEquals(3, beans.size());
-        assertEquals((Object)"val1", beans.get(0), "pk");
-        assertEquals(new Integer(1), beans.get(0), "avalue");
-        assertEquals((Object)"val2", beans.get(1), "pk");
-        assertEquals(new Integer(2), beans.get(1), "avalue");
-        assertEquals((Object)"val3", beans.get(2), "pk");
-        assertEquals(new Integer(3), beans.get(2), "avalue");
+        assertEqualsAttr((Object)"val1", beans.get(0), "pk");
+        assertEqualsAttr(1, beans.get(0), "avalue");
+        assertEqualsAttr((Object)"val2", beans.get(1), "pk");
+        assertEqualsAttr(2, beans.get(1), "avalue");
+        assertEqualsAttr((Object)"val3", beans.get(2), "pk");
+        assertEqualsAttr(3, beans.get(2), "avalue");
     }
 
     /**
@@ -168,8 +157,8 @@ public class TestWriteDataToDatabaseCommand extends TestTaskBase
         assertEquals(numObjs, beans.size());
         for (int idx = 0; idx < numObjs; idx++)
         {
-            assertEquals((Object)("val" + idx), beans.get(idx), "pk");
-            assertEquals(new Integer(idx),      beans.get(idx), "avalue");
+            assertEqualsAttr((Object)("val" + idx), beans.get(idx), "pk");
+            assertEqualsAttr(idx,      beans.get(idx), "avalue");
         }
     }
 }

@@ -19,9 +19,6 @@ package org.apache.ddlutils.platform.derby;
  * under the License.
  */
 
-import java.sql.SQLException;
-import java.util.Map;
-
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.ForeignKey;
@@ -30,6 +27,9 @@ import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.TypeMap;
 import org.apache.ddlutils.platform.DatabaseMetaDataWrapper;
 import org.apache.ddlutils.platform.JdbcModelReader;
+
+import java.sql.SQLException;
+import java.util.Map;
 
 /**
  * Reads a database model from a Derby database.
@@ -51,7 +51,7 @@ public class DerbyModelReader extends JdbcModelReader
     /**
      * {@inheritDoc}
      */
-    protected Column readColumn(DatabaseMetaDataWrapper metaData, Map values) throws SQLException
+    protected Column readColumn(DatabaseMetaDataWrapper metaData, Map<String, Object> values) throws SQLException
     {
         Column column       = super.readColumn(metaData, values);
         String defaultValue = column.getDefaultValue();

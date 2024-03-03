@@ -19,9 +19,6 @@ package org.apache.ddlutils.platform.db2;
  * under the License.
  */
 
-import java.io.IOException;
-import java.sql.Types;
-
 import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.alteration.AddColumnChange;
 import org.apache.ddlutils.alteration.ModelComparator;
@@ -39,11 +36,15 @@ import org.apache.ddlutils.platform.DefaultTableDefinitionChangesPredicate;
 import org.apache.ddlutils.platform.PlatformImplBase;
 import org.apache.ddlutils.util.StringUtilsExt;
 
+import java.io.IOException;
+import java.sql.Types;
+
 /**
  * The DB2 platform implementation.
  * 
  * @version $Revision: 231306 $
  */
+@SuppressWarnings("unused")
 public class Db2Platform extends PlatformImplBase
 {
     /** Database name of this platform. */
@@ -139,11 +140,10 @@ public class Db2Platform extends PlatformImplBase
                 {
                     return true;
                 }
-                else if (change instanceof AddColumnChange)
+                else if (change instanceof final AddColumnChange addColumnChange)
                 {
-                    AddColumnChange addColumnChange = (AddColumnChange)change;
 
-                    // DB2 cannot add IDENTITY columns, and required columns need a default value
+					// DB2 cannot add IDENTITY columns, and required columns need a default value
                     return (addColumnChange.getNextColumn() == null) &&
                            !addColumnChange.getNewColumn().isAutoIncrement() &&
                            (!addColumnChange.getNewColumn().isRequired() || !StringUtilsExt.isEmpty(addColumnChange.getNewColumn().getDefaultValue()));
@@ -169,7 +169,8 @@ public class Db2Platform extends PlatformImplBase
                               RemoveColumnChange change) throws IOException
     {
         Table  changedTable  = findChangedTable(currentModel, change);
-        Column removedColumn = changedTable.findColumn(change.getChangedColumn(), isDelimitedIdentifierModeOn());
+        Column removedColumn = changedTable.findColumn(change.getChangedColumn(), isDelimitedIdentifierModeOn())
+			.orElseThrow();
 
         ((Db2Builder)getSqlBuilder()).dropColumn(changedTable, removedColumn);
         change.apply(currentModel, isDelimitedIdentifierModeOn());
@@ -206,13 +207,11 @@ public class Db2Platform extends PlatformImplBase
                               PrimaryKeyChange   change) throws IOException
     {
         Table    changedTable     = findChangedTable(currentModel, change);
-        String[] newPKColumnNames = change.getNewPrimaryKeyColumns();
-        Column[] newPKColumns     = new Column[newPKColumnNames.length];
+        var newPKColumnNames = change.getNewPrimaryKeyColumns();
+        var newPKColumns     = newPKColumnNames.stream()
+			.map(pkColumn -> changedTable.findColumn(pkColumn, isDelimitedIdentifierModeOn()).orElseThrow())
+			.toList();
 
-        for (int colIdx = 0; colIdx < newPKColumnNames.length; colIdx++)
-        {
-            newPKColumns[colIdx] = changedTable.findColumn(newPKColumnNames[colIdx], isDelimitedIdentifierModeOn());
-        }
         ((Db2Builder)getSqlBuilder()).dropPrimaryKey(changedTable);
         getSqlBuilder().createPrimaryKey(changedTable, newPKColumns);
         change.apply(currentModel, isDelimitedIdentifierModeOn());

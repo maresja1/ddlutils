@@ -19,6 +19,15 @@ package org.apache.ddlutils.platform.mssql;
  * under the License.
  */
 
+import org.apache.ddlutils.DdlUtilsException;
+import org.apache.ddlutils.Platform;
+import org.apache.ddlutils.model.Column;
+import org.apache.ddlutils.model.Index;
+import org.apache.ddlutils.model.Table;
+import org.apache.ddlutils.model.TypeMap;
+import org.apache.ddlutils.platform.DatabaseMetaDataWrapper;
+import org.apache.ddlutils.platform.JdbcModelReader;
+
 import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -30,15 +39,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import org.apache.ddlutils.DdlUtilsException;
-import org.apache.ddlutils.Platform;
-import org.apache.ddlutils.model.Column;
-import org.apache.ddlutils.model.Index;
-import org.apache.ddlutils.model.Table;
-import org.apache.ddlutils.model.TypeMap;
-import org.apache.ddlutils.platform.DatabaseMetaDataWrapper;
-import org.apache.ddlutils.platform.JdbcModelReader;
-
 /**
  * Reads a database model from a Microsoft Sql Server database.
  *
@@ -49,9 +49,9 @@ public class MSSqlModelReader extends JdbcModelReader
     /** Known system tables that Sql Server creates (e.g. automatic maintenance). */
     private static final String[] KNOWN_SYSTEM_TABLES = { "dtproperties" };
 	/** The regular expression pattern for the ISO dates. */
-	private Pattern _isoDatePattern;
+	private final Pattern _isoDatePattern;
 	/** The regular expression pattern for the ISO times. */
-	private Pattern _isoTimePattern;
+	private final Pattern _isoTimePattern;
 
 	/**
      * Creates a new model reader for Microsoft Sql Server databases.
@@ -80,17 +80,15 @@ public class MSSqlModelReader extends JdbcModelReader
     /**
      * {@inheritDoc}
      */
-	protected Table readTable(DatabaseMetaDataWrapper metaData, Map values) throws SQLException
+	protected Table readTable(DatabaseMetaDataWrapper metaData, Map<String, Object> values) throws SQLException
 	{
         String tableName = (String)values.get("TABLE_NAME");
 
-        for (int idx = 0; idx < KNOWN_SYSTEM_TABLES.length; idx++)
-        {
-            if (KNOWN_SYSTEM_TABLES[idx].equals(tableName))
-            {
-                return null;
-            }
-        }
+		for (final String knownSystemTable : KNOWN_SYSTEM_TABLES) {
+			if (knownSystemTable.equals(tableName)) {
+				return null;
+			}
+		}
 
         Table table = super.readTable(metaData, values);
 

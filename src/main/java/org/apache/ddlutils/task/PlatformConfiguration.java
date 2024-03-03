@@ -20,6 +20,7 @@ package org.apache.ddlutils.task;
  */
 
 import org.apache.commons.dbcp2.BasicDataSource;
+import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.PlatformUtils;
@@ -207,27 +208,21 @@ public class PlatformConfiguration
                 {
                     throw new BuildException("No database specified.");
                 }
-                if (_databaseType == null)
-                {
-                    _databaseType = new PlatformUtils().determineDatabaseType(_dataSource.getDriverClassName(),
-                                                                              _dataSource.getUrl());
-                }
-                if (_databaseType == null)
+				_databaseType = new PlatformUtils()
+					.determineDatabaseType(_dataSource.getDriverClassName(), _dataSource.getUrl());
+				if (_databaseType == null)
                 {
                     _databaseType = new PlatformUtils().determineDatabaseType(_dataSource);
                 }
             }
             try
             {
-                _platform = PlatformFactory.createNewPlatformInstance(_databaseType);
+                _platform = PlatformFactory.createNewPlatformInstance(_databaseType)
+					.orElseThrow(() -> new BuildException("Database type "+_databaseType+" is not supported."));
             }
-            catch (Exception ex)
+            catch (DdlUtilsException ex)
             {
                 throw new BuildException("Database type "+_databaseType+" is not supported.", ex);
-            }
-            if (_platform == null)
-            {
-                throw new BuildException("Database type "+_databaseType+" is not supported.");
             }
             _platform.setDataSource(_dataSource);
             _platform.setDelimitedIdentifierModeOn(isUseDelimitedSqlIdentifiers());

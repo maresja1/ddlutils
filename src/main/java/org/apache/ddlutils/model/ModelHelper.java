@@ -20,8 +20,6 @@ package org.apache.ddlutils.model;
  */
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -39,20 +37,18 @@ public class ModelHelper
      * @param tables The tables
      * @throws ModelException If such a foreign key exists
      */
-    public void checkForForeignKeysToAndFromTables(Database model, Table[] tables) throws ModelException
+    public void checkForForeignKeysToAndFromTables(Database model, List<Table> tables) throws ModelException
     {
-        List tableList = Arrays.asList(tables);
-
         for (int tableIdx = 0; tableIdx < model.getTableCount(); tableIdx++)
         {
             Table   curTable         = model.getTable(tableIdx);
-            boolean curTableIsInList = tableList.contains(curTable);
+            boolean curTableIsInList = tables.contains(curTable);
 
             for (int fkIdx = 0; fkIdx < curTable.getForeignKeyCount(); fkIdx++)
             {
                 ForeignKey curFk = curTable.getForeignKey(fkIdx);
 
-                if (curTableIsInList != tableList.contains(curFk.getForeignTable()))
+                if (curTableIsInList != tables.contains(curFk.getForeignTable()))
                 {
                     throw new ModelException("The table " + curTable.getName() + " has a foreign key to table " + curFk.getForeignTable().getName());
                 }
@@ -67,28 +63,25 @@ public class ModelHelper
      * @param model  The database model
      * @param tables The tables
      */
-    public void removeForeignKeysToAndFromTables(Database model, Table[] tables)
+    public void removeForeignKeysToAndFromTables(Database model, List<Table> tables)
     {
-        List tableList = Arrays.asList(tables);
-
         for (int tableIdx = 0; tableIdx < model.getTableCount(); tableIdx++)
         {
             Table     curTable         = model.getTable(tableIdx);
-            boolean   curTableIsInList = tableList.contains(curTable);
-            ArrayList fksToRemove      = new ArrayList();
+            boolean   curTableIsInList = tables.contains(curTable);
+            var fksToRemove      = new ArrayList<ForeignKey>();
 
             for (int fkIdx = 0; fkIdx < curTable.getForeignKeyCount(); fkIdx++)
             {
                 ForeignKey curFk = curTable.getForeignKey(fkIdx);
 
-                if (curTableIsInList != tableList.contains(curFk.getForeignTable()))
+                if (curTableIsInList != tables.contains(curFk.getForeignTable()))
                 {
                     fksToRemove.add(curFk);
                 }
-                for (Iterator fkIt = fksToRemove.iterator(); fkIt.hasNext();)
-                {
-                    curTable.removeForeignKey((ForeignKey)fkIt.next());
-                }
+				for (final ForeignKey foreignKey : fksToRemove) {
+					curTable.removeForeignKey(foreignKey);
+				}
             }
         }
     }

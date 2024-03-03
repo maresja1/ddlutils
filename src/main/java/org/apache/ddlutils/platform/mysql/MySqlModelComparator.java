@@ -19,12 +19,6 @@ package org.apache.ddlutils.platform.mysql;
  * under the License.
  */
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
 import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.alteration.AddForeignKeyChange;
 import org.apache.ddlutils.alteration.ColumnDefinitionChange;
@@ -39,6 +33,12 @@ import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.Reference;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.util.StringUtilsExt;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 /**
  * A model comparator customized for MySql.
@@ -115,7 +115,8 @@ public class MySqlModelComparator extends ModelComparator
             if (change instanceof ColumnDefinitionChange)
             {
                 ColumnDefinitionChange colDefChange = (ColumnDefinitionChange)change;
-                Column                 sourceColumn = sourceTable.findColumn(colDefChange.getChangedColumn(), isCaseSensitive());
+                Column                 sourceColumn = sourceTable.findColumn(colDefChange.getChangedColumn(), isCaseSensitive())
+					.orElseThrow();
 
                 if (ColumnDefinitionChange.isTypeChanged(getPlatformInfo(), sourceColumn, colDefChange.getNewColumn()))
                 {
@@ -147,24 +148,22 @@ public class MySqlModelComparator extends ModelComparator
         for (int fkIdx = 0; fkIdx < targetTable.getForeignKeyCount(); fkIdx++)
         {
             ForeignKey targetFk       = targetTable.getForeignKey(fkIdx);
-            ForeignKey intermediateFk = intermediateTable.findForeignKey(targetFk, isCaseSensitive());
+			intermediateTable.findForeignKey(targetFk, isCaseSensitive())
+				.ifPresent(intermediateFk -> {
+					for (int refIdx = 0; refIdx < intermediateFk.getReferenceCount(); refIdx++)
+					{
+						Reference ref = intermediateFk.getReference(refIdx);
 
-            if (intermediateFk != null)
-            {
-                for (int refIdx = 0; refIdx < intermediateFk.getReferenceCount(); refIdx++)
-                {
-                    Reference ref = intermediateFk.getReference(refIdx);
-
-                    for (Iterator colNameIt = columnNames.iterator(); colNameIt.hasNext();)
-                    {
-                        if (StringUtilsExt.equals(ref.getLocalColumnName(), (String)colNameIt.next(), isCaseSensitive()))
-                        {
-                            newChanges.add(new RemoveForeignKeyChange(intermediateTable.getName(), intermediateFk));
-                            newChanges.add(new AddForeignKeyChange(intermediateTable.getName(), intermediateFk));
-                        }
-                    }
-                }
-            }
+						for (Iterator colNameIt = columnNames.iterator(); colNameIt.hasNext();)
+						{
+							if (StringUtilsExt.equals(ref.getLocalColumnName(), (String)colNameIt.next(), isCaseSensitive()))
+							{
+								newChanges.add(new RemoveForeignKeyChange(intermediateTable.getName(), intermediateFk));
+								newChanges.add(new AddForeignKeyChange(intermediateTable.getName(), intermediateFk));
+							}
+						}
+					}
+				});
         }
         return newChanges;
     }

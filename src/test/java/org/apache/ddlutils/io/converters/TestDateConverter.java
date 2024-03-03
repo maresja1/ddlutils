@@ -19,43 +19,42 @@ package org.apache.ddlutils.io.converters;
  * under the License.
  */
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.sql.Date;
 import java.sql.Types;
 import java.util.Calendar;
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests the {@link DateConverter}.
  *
  * @version $Revision: 1.0 $
  */
-public class TestDateConverter extends TestCase
+public class TestDateConverter
 {
 	/** The tested date converter. */
     private DateConverter _dateConverter;
 
-    /**
-     * {@inheritDoc}
-     */
+	@BeforeEach
     protected void setUp() throws Exception
     {
-        super.setUp();
         _dateConverter = new DateConverter();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    protected void tearDown() throws Exception
+	@AfterEach
+	protected void tearDown() throws Exception
     {
         _dateConverter = null;
-        super.tearDown();
     }
 
     /**
      * Tests a normal date string.
      */
+   @Test
     public void testNormalConvertFromYearMonthDateString()
     {
         String   textRep = "2005-12-19";

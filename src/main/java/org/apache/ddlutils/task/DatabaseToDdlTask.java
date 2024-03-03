@@ -19,13 +19,14 @@ package org.apache.ddlutils.task;
  * under the License.
  */
 
-import java.util.ArrayList;
-import java.util.StringTokenizer;
-
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.ModelHelper;
 import org.apache.ddlutils.model.Table;
 import org.apache.tools.ant.BuildException;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
 
 /**
  * Task for getting structural info and data from a live database. Eg. it has sub tasks for
@@ -63,11 +64,11 @@ public class DatabaseToDdlTask extends DatabaseTaskBase
     /** The name of the model read from the database. */
     private String _modelName = "unnamed";
     /** The names of the tables to read. */
-    private String[] _includeTableNames; 
+    private List<String> _includeTableNames; 
     /** The regular expression matching the names of the tables to read. */
     private String _includeTableNameRegExp;
     /** The names of the tables to ignore. */
-    private String[] _excludeTableNames; 
+    private List<String> _excludeTableNames; 
     /** The regular expression matching the names of the tables to ignore. */
     private String _excludeTableNameRegExp;
 
@@ -75,7 +76,7 @@ public class DatabaseToDdlTask extends DatabaseTaskBase
      * Specifies the table types to be processed. More precisely, all tables that are of a
      * type not in this list, will be ignored by the task and its sub tasks. For details and
      * typical table types see
-     * <a href="http://java.sun.com/j2se/1.4.2/docs/api/java/sql/DatabaseMetaData.html#getTables(java.lang.String,%20java.lang.String,%20java.lang.String,%20java.lang.String[])">java.sql.DatabaseMetaData#getTables</a>.
+     * <a href="http://java.sun.com/j2se/1.4.2/docs/api/java/sql/DatabaseMetaData.html#getTables(java.lang.String,%20java.lang.String,%20java.lang.String,%20java.lang.List<String>)">java.sql.DatabaseMetaData#getTables</a>.
      * 
      * @param tableTypes The table types as a comma-separated list
      * @ant.not-required By default, only tables of type <code>TABLE</code> are used by the task.
@@ -194,26 +195,6 @@ public class DatabaseToDdlTask extends DatabaseTaskBase
     }
 
     /**
-     * Adds the "write data into database"-command.
-     * 
-     * @param command The command
-     */
-    public void addWriteDataToDatabase(WriteDataToDatabaseCommand command)
-    {
-        addCommand(command);
-    }
-
-    /**
-     * Adds the "write data into file"-command.
-     * 
-     * @param command The command
-     */
-    public void addWriteDataToFile(WriteDataToFileCommand command)
-    {
-        addCommand(command);
-    }
-
-    /**
      * Adds the "drop tables"-command.
      * 
      * @param command The command
@@ -228,26 +209,26 @@ public class DatabaseToDdlTask extends DatabaseTaskBase
      * 
      * @return The table types
      */
-    private String[] getTableTypes()
+    private List<String> getTableTypes()
     {
-        if ((_tableTypes == null) || (_tableTypes.length() == 0))
+        if ((_tableTypes == null) || (_tableTypes.isEmpty()))
         {
-            return new String[0];
+            return List.of();
         }
 
         StringTokenizer tokenizer = new StringTokenizer(_tableTypes, ",");
-        ArrayList       result    = new ArrayList();
+        var result = new ArrayList<String>();
 
         while (tokenizer.hasMoreTokens())
         {
             String token = tokenizer.nextToken().trim();
 
-            if (token.length() > 0)
+            if (!token.isEmpty())
             {
                 result.add(token);
             }
         }
-        return (String[])result.toArray(new String[result.size()]);
+        return result;
     }
 
     /**
@@ -274,28 +255,28 @@ public class DatabaseToDdlTask extends DatabaseTaskBase
 
                 if (_includeTableNames != null)
                 {
-                    Table[] tables = model.findTables(_includeTableNames, getPlatformConfiguration().isUseDelimitedSqlIdentifiers());
+                    List<Table> tables = model.findTables(_includeTableNames, getPlatformConfiguration().isUseDelimitedSqlIdentifiers());
 
                     helper.checkForForeignKeysToAndFromTables(model, tables);
                     model.removeAllTablesExcept(tables);
                 }
                 else if (_includeTableNameRegExp != null)
                 {
-                    Table[] tables = model.findTables(_includeTableNameRegExp, getPlatformConfiguration().isUseDelimitedSqlIdentifiers());
+                    List<Table> tables = model.findTables(_includeTableNameRegExp, getPlatformConfiguration().isUseDelimitedSqlIdentifiers());
 
                     helper.checkForForeignKeysToAndFromTables(model, tables);
                     model.removeAllTablesExcept(tables);
                 }
                 if (_excludeTableNames != null)
                 {
-                    Table[] tables = model.findTables(_excludeTableNames, getPlatformConfiguration().isUseDelimitedSqlIdentifiers());
+                    List<Table> tables = model.findTables(_excludeTableNames, getPlatformConfiguration().isUseDelimitedSqlIdentifiers());
 
                     helper.checkForForeignKeysToAndFromTables(model, tables);
                     model.removeTables(tables);
                 }
                 else if (_excludeTableNameRegExp != null)
                 {
-                    Table[] tables = model.findTables(_excludeTableNameRegExp, getPlatformConfiguration().isUseDelimitedSqlIdentifiers());
+                    List<Table> tables = model.findTables(_excludeTableNameRegExp, getPlatformConfiguration().isUseDelimitedSqlIdentifiers());
 
                     helper.checkForForeignKeysToAndFromTables(model, tables);
                     model.removeTables(tables);

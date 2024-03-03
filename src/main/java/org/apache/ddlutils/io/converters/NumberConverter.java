@@ -19,10 +19,10 @@ package org.apache.ddlutils.io.converters;
  * under the License.
  */
 
+import jodd.typeconverter.TypeConverterManager;
+
 import java.math.BigDecimal;
 import java.sql.Types;
-
-import org.apache.commons.beanutils.ConvertUtils;
 
 /**
  * Converts between the various number types (including boolean types) and {@link java.lang.String}.
@@ -42,37 +42,18 @@ public class NumberConverter implements SqlTypeConverter
         }
         else
         {
-            Class targetClass = null;
+            Class<?> targetClass = switch (sqlTypeCode) {
+				case Types.BIGINT -> Long.class;
+				case Types.BIT, Types.BOOLEAN -> Boolean.class;
+				case Types.DECIMAL, Types.NUMERIC -> BigDecimal.class;
+				case Types.DOUBLE, Types.FLOAT -> Double.class;
+				case Types.INTEGER -> Integer.class;
+				case Types.REAL -> Float.class;
+				case Types.SMALLINT, Types.TINYINT -> Short.class;
+				default -> null;
+			};
 
-            switch (sqlTypeCode)
-            {
-                case Types.BIGINT:
-                    targetClass = Long.class;
-                    break;
-                case Types.BIT:
-                case Types.BOOLEAN:
-                    targetClass = Boolean.class;
-                    break;
-                case Types.DECIMAL:
-                case Types.NUMERIC:
-                    targetClass = BigDecimal.class;
-                    break;
-                case Types.DOUBLE:
-                case Types.FLOAT:
-                    targetClass = Double.class;
-                    break;
-                case Types.INTEGER:
-                    targetClass = Integer.class;
-                    break;
-                case Types.REAL:
-                    targetClass = Float.class;
-                    break;
-                case Types.SMALLINT:
-                case Types.TINYINT:
-                    targetClass = Short.class;
-                    break;
-            }
-            return targetClass == null ? textRep : ConvertUtils.convert(textRep, targetClass);
+			return targetClass == null ? textRep : TypeConverterManager.get().convertType(textRep, targetClass);
         }
     }
 
@@ -87,7 +68,7 @@ public class NumberConverter implements SqlTypeConverter
         }
         else if (sqlTypeCode == Types.BIT)
         {
-            return ((Boolean)obj).booleanValue() ? "1" : "0";
+            return (Boolean) obj ? "1" : "0";
         }
         else
         {

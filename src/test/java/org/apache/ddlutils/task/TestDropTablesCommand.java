@@ -19,8 +19,6 @@ package org.apache.ddlutils.task;
  * under the License.
  */
 
-import junit.framework.Test;
-
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
 
@@ -31,15 +29,6 @@ import org.apache.ddlutils.model.Database;
  */
 public class TestDropTablesCommand extends TestTaskBase
 {
-    /**
-     * Parameterized test case pattern.
-     * 
-     * @return The tests
-     */
-    public static Test suite() throws Exception
-    {
-        return getTests(TestDropTablesCommand.class);
-    }
 
     /**
      * Tests the task against an empty database. 

@@ -19,10 +19,6 @@ package org.apache.ddlutils.platform.oracle;
  * under the License.
  */
 
-import java.io.IOException;
-import java.sql.Types;
-import java.util.Map;
-
 import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.alteration.AddColumnChange;
 import org.apache.ddlutils.alteration.AddPrimaryKeyChange;
@@ -38,6 +34,11 @@ import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.CreationParameters;
 import org.apache.ddlutils.platform.DefaultTableDefinitionChangesPredicate;
 import org.apache.ddlutils.platform.PlatformImplBase;
+
+import java.io.IOException;
+import java.sql.Types;
+import java.util.List;
+import java.util.Map;
 
 /**
  * The platform for Oracle 8.
@@ -136,19 +137,18 @@ public class Oracle8Platform extends PlatformImplBase
                 {
                     return true;
                 }
-                else if (change instanceof RemoveColumnChange)
+                else if (change instanceof final RemoveColumnChange removeColumnChange)
                 {
                     // TODO: for now we trigger recreating the table, but ideally we should simply add the necessary pk changes
-                    RemoveColumnChange removeColumnChange = (RemoveColumnChange)change;
-                    Column             column             = intermediateTable.findColumn(removeColumnChange.getChangedColumn(), isDelimitedIdentifierModeOn());
+					Column column = intermediateTable.findColumn(removeColumnChange.getChangedColumn(), isDelimitedIdentifierModeOn())
+						.orElseThrow();
 
                     return !column.isPrimaryKey();
                 }
-                else if (change instanceof AddColumnChange)
+                else if (change instanceof final AddColumnChange addColumnChange)
                 {
-                    AddColumnChange addColumnChange = (AddColumnChange)change;
 
-                    // Oracle can only add not insert columns
+					// Oracle can only add not insert columns
                     // Also, we cannot add NOT NULL columns unless they have a default value
                     return addColumnChange.isAtEnd() &&
                            (!addColumnChange.getNewColumn().isRequired() || (addColumnChange.getNewColumn().getDefaultValue() != null));
@@ -174,7 +174,8 @@ public class Oracle8Platform extends PlatformImplBase
                               RemoveColumnChange change) throws IOException
     {
         Table  changedTable  = findChangedTable(currentModel, change);
-        Column removedColumn = changedTable.findColumn(change.getChangedColumn(), isDelimitedIdentifierModeOn());
+        Column removedColumn = changedTable.findColumn(change.getChangedColumn(), isDelimitedIdentifierModeOn())
+			.orElseThrow();
 
         ((Oracle8Builder)getSqlBuilder()).dropColumn(changedTable, removedColumn);
         change.apply(currentModel, isDelimitedIdentifierModeOn());
@@ -211,14 +212,11 @@ public class Oracle8Platform extends PlatformImplBase
                               PrimaryKeyChange   change) throws IOException
     {
         Table    changedTable     = findChangedTable(currentModel, change);
-        String[] newPKColumnNames = change.getNewPrimaryKeyColumns();
-        Column[] newPKColumns     = new Column[newPKColumnNames.length];
+        var newPKColumnNames = change.getNewPrimaryKeyColumns();
+        List<Column> newPKColumns     = newPKColumnNames.stream()
+			.map(col -> changedTable.findColumn(col, isDelimitedIdentifierModeOn()).orElseThrow())
+			.toList();
 
-        for (int colIdx = 0; colIdx < newPKColumnNames.length; colIdx++)
-        {
-            newPKColumns[colIdx] = changedTable.findColumn(newPKColumnNames[colIdx], isDelimitedIdentifierModeOn());
-        }
-        
         ((Oracle8Builder)getSqlBuilder()).dropPrimaryKey(changedTable);
         getSqlBuilder().createPrimaryKey(changedTable, newPKColumns);
         change.apply(currentModel, isDelimitedIdentifierModeOn());

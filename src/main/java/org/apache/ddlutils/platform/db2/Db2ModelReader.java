@@ -19,16 +19,6 @@ package org.apache.ddlutils.platform.db2;
  * under the License.
  */
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
-
 import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.model.Column;
@@ -37,6 +27,17 @@ import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.TypeMap;
 import org.apache.ddlutils.platform.DatabaseMetaDataWrapper;
 import org.apache.ddlutils.platform.JdbcModelReader;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * Reads a database model from a Db2 UDB database.
@@ -48,9 +49,9 @@ public class Db2ModelReader extends JdbcModelReader
 	/** Known system tables that Db2 creates (e.g. automatic maintenance). */
 	private static final String[] KNOWN_SYSTEM_TABLES = { "STMG_DBSIZE_INFO", "HMON_ATM_INFO", "HMON_COLLECTION", "POLICY" };
 	/** The regular expression pattern for the time values that Db2 returns. */
-	private Pattern _db2TimePattern;
+	private final Pattern _db2TimePattern;
 	/** The regular expression pattern for the timestamp values that Db2 returns. */
-	private Pattern _db2TimestampPattern;
+	private final Pattern _db2TimestampPattern;
 
 	/**
      * Creates a new model reader for Db2 databases.
@@ -77,17 +78,15 @@ public class Db2ModelReader extends JdbcModelReader
     /**
      * {@inheritDoc}
      */
-	protected Table readTable(DatabaseMetaDataWrapper metaData, Map values) throws SQLException
+	protected Table readTable(DatabaseMetaDataWrapper metaData, Map<String, Object> values) throws SQLException
 	{
         String tableName = (String)values.get("TABLE_NAME");
 
-        for (int idx = 0; idx < KNOWN_SYSTEM_TABLES.length; idx++)
-        {
-        	if (KNOWN_SYSTEM_TABLES[idx].equals(tableName))
-        	{
-        		return null;
-        	}
-        }
+		for (final String knownSystemTable : KNOWN_SYSTEM_TABLES) {
+			if (knownSystemTable.equals(tableName)) {
+				return null;
+			}
+		}
 
         Table table = super.readTable(metaData, values);
 
@@ -102,7 +101,7 @@ public class Db2ModelReader extends JdbcModelReader
 	/**
 	 * {@inheritDoc}
 	 */
-    protected Column readColumn(DatabaseMetaDataWrapper metaData, Map values) throws SQLException
+    protected Column readColumn(DatabaseMetaDataWrapper metaData, Map<String, Object> values) throws SQLException
     {
 		Column column = super.readColumn(metaData, values);
 
@@ -115,20 +114,16 @@ public class Db2ModelReader extends JdbcModelReader
 				// Db2 returns "HH24.MI.SS"
 				if (matcher.matches())
 				{
-					StringBuffer newDefault = new StringBuffer();
 
-					newDefault.append("'");
-					// the hour
-					newDefault.append(matcher.group(1));
-					newDefault.append(":");
-					// the minute
-					newDefault.append(matcher.group(2));
-					newDefault.append(":");
-					// the second
-					newDefault.append(matcher.group(3));
-					newDefault.append("'");
+					final String newDefault = "'" +
+						// the hour
+						matcher.group(1) + ":" +
+						// the minute
+						matcher.group(2) + ":" +
+						// the second
+						matcher.group(3) + "'";
 
-					column.setDefaultValue(newDefault.toString());
+					column.setDefaultValue(newDefault);
 				}
 			}
 			else if (column.getTypeCode() == Types.TIMESTAMP)
@@ -138,7 +133,7 @@ public class Db2ModelReader extends JdbcModelReader
 				// Db2 returns "YYYY-MM-DD-HH24.MI.SS.FF"
 				if (matcher.matches())
 				{
-					StringBuffer newDefault = new StringBuffer();
+					StringBuilder newDefault = new StringBuilder();
 
 					newDefault.append("'");
 					// group 1 is the date which has the correct format
@@ -190,12 +185,8 @@ public class Db2ModelReader extends JdbcModelReader
             while (rs.next())
             {
                 String colName = rs.getString(1).trim();
-                Column column  = table.findColumn(colName, getPlatform().isDelimitedIdentifierModeOn());
-
-                if (column != null)
-                {
-                    column.setAutoIncrement(true);
-                }
+                table.findColumn(colName, getPlatform().isDelimitedIdentifierModeOn())
+					.ifPresent(col -> col.setAutoIncrement(true));
             }
         }
         finally
@@ -229,16 +220,15 @@ public class Db2ModelReader extends JdbcModelReader
             // we'll compare the index name to the names of all primary keys
             // TODO: Once primary key names are supported, this can be done easier via the table object
             ResultSet pkData  = null;
-            HashSet   pkNames = new HashSet();
+            Set<String> pkNames = new HashSet<>();
 
             try
             {
                 pkData = metaData.getPrimaryKeys(metaData.escapeForSearch(table.getName()));
                 while (pkData.next())
                 {
-                    Map values = readColumns(pkData, getColumnsForPK());
-
-                    pkNames.add(values.get("PK_NAME"));
+                    var values = readColumns(pkData, getColumnsForPK());
+                    pkNames.add((String) values.get("PK_NAME"));
                 }
             }
             finally

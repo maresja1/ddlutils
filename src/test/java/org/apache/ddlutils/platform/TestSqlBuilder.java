@@ -19,13 +19,15 @@ package org.apache.ddlutils.platform;
  * under the License.
  */
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.ddlutils.TestBase;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Test the base SqlBuilder class.
@@ -54,7 +56,7 @@ public class TestSqlBuilder extends TestBase
         Map          map        = new HashMap();
 
         map.put("name", "ddlutils");
-        map.put("id", new Integer(0));
+        map.put("id", 0);
 
         platform.setDelimitedIdentifierModeOn(true);
         
@@ -84,10 +86,10 @@ public class TestSqlBuilder extends TestBase
         Map          oldMap     = new HashMap();
         Map          newMap     = new HashMap();
 
-        oldMap.put("id", new Integer(0));
+        oldMap.put("id", 0);
 
         newMap.put("name", "ddlutils");
-        newMap.put("id", new Integer(1));
+        newMap.put("id", 1);
 
         platform.setDelimitedIdentifierModeOn(true);
         

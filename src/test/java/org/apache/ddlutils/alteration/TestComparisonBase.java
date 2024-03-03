@@ -19,8 +19,6 @@ package org.apache.ddlutils.alteration;
  * under the License.
  */
 
-import java.sql.Types;
-
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.TestBase;
@@ -29,6 +27,10 @@ import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.TestPlatform;
+
+import java.sql.Types;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Base class for model comparison tests.

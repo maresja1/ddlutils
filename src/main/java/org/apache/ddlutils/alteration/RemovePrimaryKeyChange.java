@@ -19,9 +19,7 @@ package org.apache.ddlutils.alteration;
  * under the License.
  */
 
-import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
-import org.apache.ddlutils.model.Table;
 
 /**
  * Represents the removal of the primary key from a table.
@@ -45,12 +43,11 @@ public class RemovePrimaryKeyChange extends TableChangeImplBase
      */
     public void apply(Database model, boolean caseSensitive)
     {
-        Table    table  = findChangedTable(model, caseSensitive);
-        Column[] pkCols = table.getPrimaryKeyColumns();
+        var table = findChangedTable(model, caseSensitive);
+        var pkCols = table.getPrimaryKeyColumns().toList();
 
-        for (int idx = 0; idx < pkCols.length; idx++)
-        {
-            pkCols[idx].setPrimaryKey(false);
-        }
+		for (var pkCol : pkCols) {
+			pkCol.setPrimaryKey(false);
+		}
     }
 }

@@ -19,18 +19,6 @@ package org.apache.ddlutils.platform.interbase;
  * under the License.
  */
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-
 import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.alteration.AddColumnChange;
@@ -46,6 +34,18 @@ import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.CreationParameters;
 import org.apache.ddlutils.platform.DefaultTableDefinitionChangesPredicate;
 import org.apache.ddlutils.platform.PlatformImplBase;
+
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * The platform implementation for the Interbase database.
@@ -229,35 +229,27 @@ public class InterbasePlatform extends PlatformImplBase
                 // key columns have been added within the same session
                 if (super.areSupported(intermediateTable, changes))
                 {
-                    HashSet  addedColumns = new HashSet();
-                    String[] pkColNames   = null;
+                    Set<String> addedColumns = new HashSet<>();
+                    List<String> pkColNames = null;
 
-                    for (Iterator it = changes.iterator(); it.hasNext();)
-                    {
-                        TableChange change = (TableChange)it.next();
+					for (final Object o : changes) {
+						TableChange change = (TableChange) o;
 
-                        if (change instanceof AddColumnChange)
-                        {
-                            addedColumns.add(((AddColumnChange)change).getNewColumn().getName());
-                        }
-                        else if (change instanceof AddPrimaryKeyChange)
-                        {
-                            pkColNames = ((AddPrimaryKeyChange)change).getPrimaryKeyColumns();
-                        }
-                        else if (change instanceof PrimaryKeyChange)
-                        {
-                            pkColNames = ((PrimaryKeyChange)change).getNewPrimaryKeyColumns();
-                        }
-                    }
+						if (change instanceof AddColumnChange) {
+							addedColumns.add(((AddColumnChange) change).getNewColumn().getName());
+						} else if (change instanceof AddPrimaryKeyChange) {
+							pkColNames = ((AddPrimaryKeyChange) change).getPrimaryKeyColumns();
+						} else if (change instanceof PrimaryKeyChange) {
+							pkColNames = ((PrimaryKeyChange) change).getNewPrimaryKeyColumns();
+						}
+					}
                     if (pkColNames != null)
                     {
-                        for (int colIdx = 0; colIdx < pkColNames.length; colIdx++)
-                        {
-                            if (addedColumns.contains(pkColNames[colIdx]))
-                            {
-                                return false;
-                            }
-                        }
+						for (String pkColName : pkColNames) {
+							if (addedColumns.contains(pkColName)) {
+								return false;
+							}
+						}
                     }
                     return true;
                 }
@@ -303,7 +295,8 @@ public class InterbasePlatform extends PlatformImplBase
 
         if (change.getPreviousColumn() != null)
         {
-            prevColumn = changedTable.findColumn(change.getPreviousColumn(), isDelimitedIdentifierModeOn());
+            prevColumn = changedTable.findColumn(change.getPreviousColumn(), isDelimitedIdentifierModeOn())
+				.orElseThrow();
         }
         ((InterbaseBuilder)getSqlBuilder()).insertColumn(currentModel,
                                                          changedTable,
@@ -325,7 +318,8 @@ public class InterbasePlatform extends PlatformImplBase
                               RemoveColumnChange change) throws IOException
     {
         Table  changedTable  = findChangedTable(currentModel, change);
-        Column droppedColumn = changedTable.findColumn(change.getChangedColumn(), isDelimitedIdentifierModeOn());
+        Column droppedColumn = changedTable.findColumn(change.getChangedColumn(), isDelimitedIdentifierModeOn())
+			.orElseThrow();
 
         ((InterbaseBuilder)getSqlBuilder()).dropColumn(changedTable, droppedColumn);
         change.apply(currentModel, isDelimitedIdentifierModeOn());

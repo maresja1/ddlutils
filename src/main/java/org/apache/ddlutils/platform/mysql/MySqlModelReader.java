@@ -19,10 +19,6 @@ package org.apache.ddlutils.platform.mysql;
  * under the License.
  */
 
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Map;
-
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.ForeignKey;
@@ -30,6 +26,10 @@ import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.DatabaseMetaDataWrapper;
 import org.apache.ddlutils.platform.JdbcModelReader;
+
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Map;
 
 /**
  * Reads a database model from a MySql database.
@@ -54,7 +54,7 @@ public class MySqlModelReader extends JdbcModelReader
     /**
      * {@inheritDoc}
      */
-    protected Table readTable(DatabaseMetaDataWrapper metaData, Map values) throws SQLException
+    protected Table readTable(DatabaseMetaDataWrapper metaData, Map<String, Object> values) throws SQLException
     {
         // TODO This needs some more work, since table names can be case sensitive or lowercase
         //      depending on the platform (really cute).
@@ -64,7 +64,7 @@ public class MySqlModelReader extends JdbcModelReader
 
         if (table != null)
         {
-            determineAutoIncrementFromResultSetMetaData(table, table.getPrimaryKeyColumns());
+            determineAutoIncrementFromResultSetMetaData(table, table.getPrimaryKeyColumns().toList());
         }
         return table;
     }
@@ -72,7 +72,7 @@ public class MySqlModelReader extends JdbcModelReader
     /**
      * {@inheritDoc}
      */
-    protected Column readColumn(DatabaseMetaDataWrapper metaData, Map values) throws SQLException
+    protected Column readColumn(DatabaseMetaDataWrapper metaData, Map<String, Object> values) throws SQLException
     {
         Column column = super.readColumn(metaData, values);
 

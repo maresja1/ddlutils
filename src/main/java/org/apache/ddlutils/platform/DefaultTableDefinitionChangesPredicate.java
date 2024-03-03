@@ -19,15 +19,14 @@ package org.apache.ddlutils.platform;
  * under the License.
  */
 
-import java.util.Iterator;
-import java.util.List;
-
 import org.apache.ddlutils.alteration.AddColumnChange;
 import org.apache.ddlutils.alteration.AddPrimaryKeyChange;
 import org.apache.ddlutils.alteration.ModelComparator;
 import org.apache.ddlutils.alteration.TableChange;
 import org.apache.ddlutils.alteration.TableDefinitionChangesPredicate;
 import org.apache.ddlutils.model.Table;
+
+import java.util.List;
 
 /**
  * This is the default predicate for filtering supported table definition changes
@@ -41,17 +40,13 @@ public class DefaultTableDefinitionChangesPredicate implements TableDefinitionCh
     /**
      * {@inheritDoc}
      */
-    public boolean areSupported(Table intermediateTable, List changes)
+    public boolean areSupported(Table intermediateTable, List<? extends TableChange> changes)
     {
-        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();)
-        {
-            TableChange change = (TableChange)changeIt.next();
-
-            if (!isSupported(intermediateTable, change))
-            {
-                return false;
-            }
-        }
+		for (var change : changes) {
+			if (!isSupported(intermediateTable, change)) {
+				return false;
+			}
+		}
         return true;
     }
 
@@ -64,22 +59,14 @@ public class DefaultTableDefinitionChangesPredicate implements TableDefinitionCh
      */
     protected boolean isSupported(Table intermediateTable, TableChange change)
     {
-        if (change instanceof AddColumnChange)
-        {
-            AddColumnChange addColumnChange = (AddColumnChange)change; 
-
-            return addColumnChange.isAtEnd() &&
+        if (change instanceof final AddColumnChange addColumnChange) {
+			return addColumnChange.isAtEnd() &&
                    (!addColumnChange.getNewColumn().isRequired() ||
                     (addColumnChange.getNewColumn().getDefaultValue() != null) ||
                     addColumnChange.getNewColumn().isAutoIncrement());
         }
-        else if (change instanceof AddPrimaryKeyChange)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        else {
+			return change instanceof AddPrimaryKeyChange;
+		}
     }
 }

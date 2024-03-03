@@ -82,7 +82,7 @@ public class SybaseModelReader extends JdbcModelReader
     /**
      * {@inheritDoc}
      */
-	protected Table readTable(DatabaseMetaDataWrapper metaData, Map values) throws SQLException
+	protected Table readTable(DatabaseMetaDataWrapper metaData, Map<String, Object> values) throws SQLException
 	{
         Table table = super.readTable(metaData, values);
 
@@ -97,7 +97,7 @@ public class SybaseModelReader extends JdbcModelReader
 	/**
      * {@inheritDoc}
      */
-    protected Column readColumn(DatabaseMetaDataWrapper metaData, Map values) throws SQLException
+    protected Column readColumn(DatabaseMetaDataWrapper metaData, Map<String, Object> values) throws SQLException
     {
 		Column column = super.readColumn(metaData, values);
 
@@ -143,7 +143,7 @@ public class SybaseModelReader extends JdbcModelReader
     /**
 	 * {@inheritDoc}
 	 */
-	protected void readIndex(DatabaseMetaDataWrapper metaData, Map values, Map knownIndices) throws SQLException
+	protected void readIndex(DatabaseMetaDataWrapper metaData, Map<String, Object> values, Map<String, Index> knownIndices) throws SQLException
 	{
 		if (getPlatform().isDelimitedIdentifierModeOn())
 		{
@@ -155,7 +155,7 @@ public class SybaseModelReader extends JdbcModelReader
 	        {
 		        String delimiter = getPlatformInfo().getDelimiterToken();
 
-				if ((indexName != null) && indexName.startsWith(delimiter) && indexName.endsWith(delimiter))
+				if (indexName.startsWith(delimiter) && indexName.endsWith(delimiter))
 				{
 					indexName = indexName.substring(delimiter.length(), indexName.length() - delimiter.length());
 					values.put("INDEX_NAME", indexName);
@@ -168,7 +168,7 @@ public class SybaseModelReader extends JdbcModelReader
 	/**
      * {@inheritDoc}
      */
-    protected Collection readForeignKeys(DatabaseMetaDataWrapper metaData, String tableName) throws SQLException
+    protected Collection<ForeignKey> readForeignKeys(DatabaseMetaDataWrapper metaData, String tableName) throws SQLException
     {
         // Sybase (or jConnect) does not return the foreign key names, thus we have to
         // read the foreign keys manually from the system tables
@@ -185,9 +185,9 @@ public class SybaseModelReader extends JdbcModelReader
         final String refObjQuery = 
             "SELECT name FROM syscolumns WHERE id = ? AND colid = ?";
 
-        PreparedStatement colStmt    = null;
+        PreparedStatement colStmt = null;
         PreparedStatement refObjStmt = null;
-        ArrayList         result     = new ArrayList();
+        ArrayList<ForeignKey> result = new ArrayList<>();
 
         try
         {

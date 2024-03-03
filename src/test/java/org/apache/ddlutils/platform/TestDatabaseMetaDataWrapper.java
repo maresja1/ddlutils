@@ -19,11 +19,14 @@ package org.apache.ddlutils.platform;
  * under the License.
  */
 
+import org.apache.ddlutils.TestBase;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.DatabaseMetaData;
-import org.apache.ddlutils.TestBase;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests for the utility methods in the {@link DatabaseMetaDataWrapper} class.

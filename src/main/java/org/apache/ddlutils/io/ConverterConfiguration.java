@@ -19,9 +19,6 @@ package org.apache.ddlutils.io;
  * under the License.
  */
 
-import java.sql.Types;
-import java.util.HashMap;
-
 import org.apache.ddlutils.io.converters.ByteArrayBase64Converter;
 import org.apache.ddlutils.io.converters.DateConverter;
 import org.apache.ddlutils.io.converters.NumberConverter;
@@ -30,6 +27,10 @@ import org.apache.ddlutils.io.converters.TimeConverter;
 import org.apache.ddlutils.io.converters.TimestampConverter;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Table;
+
+import java.sql.Types;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Contains the configuration for converters, which convert between the Java data types
@@ -40,9 +41,9 @@ import org.apache.ddlutils.model.Table;
 public class ConverterConfiguration
 {
     /** The converters per type. */
-    private HashMap  _convertersPerType = new HashMap();
+    private final Map<Integer, SqlTypeConverter>  _convertersPerType = new HashMap<>();
     /** The converters per table-column path. */
-    private HashMap  _convertersPerPath = new HashMap();
+    private final Map<String, SqlTypeConverter> _convertersPerPath = new HashMap<>();
 
     /**
      * Creates a new configuration object with the default converters.
@@ -80,7 +81,7 @@ public class ConverterConfiguration
      */
     public void registerConverter(int sqlTypeCode, SqlTypeConverter converter)
     {
-        _convertersPerType.put(new Integer(sqlTypeCode), converter);
+        _convertersPerType.put(sqlTypeCode, converter);
     }
 
     /**
@@ -104,11 +105,11 @@ public class ConverterConfiguration
      */
     public SqlTypeConverter getRegisteredConverter(Table table, Column column)
     {
-        SqlTypeConverter result = (SqlTypeConverter)_convertersPerPath.get(table.getName() + "/" + column.getName());
+        SqlTypeConverter result = _convertersPerPath.get(table.getName() + "/" + column.getName());
 
         if (result == null)
         {
-            result = (SqlTypeConverter)_convertersPerType.get(new Integer(column.getTypeCode()));
+            result = _convertersPerType.get(column.getTypeCode());
         }
         return result;
     }

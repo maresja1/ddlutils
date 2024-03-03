@@ -19,16 +19,16 @@ package org.apache.ddlutils.model;
  * under the License.
  */
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
-
-import org.apache.commons.beanutils.ConvertUtils;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /**
  * Represents a column in the database model.
@@ -38,7 +38,8 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 public class Column implements Serializable
 {
     /** Unique ID for serialization purposes. */
-    private static final long serialVersionUID = -6226348998874210093L;
+    @Serial
+	private static final long serialVersionUID = -6226348998874210093L;
 
     /** The name of the column. */
     private String _name;
@@ -64,6 +65,11 @@ public class Column implements Serializable
     private int _scale;
     /** The default value. */
     private String _defaultValue;
+
+	/**
+	 * Comment of the column stored in the DDL.
+	 */
+	private String comment;
 
     /**
      * Returns the name of the column.
@@ -241,7 +247,7 @@ public class Column implements Serializable
         }
         else
         {
-            _typeCode = typeCode.intValue();
+            _typeCode = typeCode;
             // we get the corresponding string value from the TypeMap in order
             // to detect extension types which we don't want in the model
             _type = TypeMap.getJdbcTypeName(_typeCode);
@@ -305,7 +311,7 @@ public class Column implements Serializable
      */
     public int getSizeAsInt()
     {
-        return _sizeAsInt == null ? 0 : _sizeAsInt.intValue();
+        return _sizeAsInt == null ? 0 : _sizeAsInt;
     }
 
     /**
@@ -325,11 +331,11 @@ public class Column implements Serializable
             if (pos < 0)
             {
                 _scale     = 0;
-                _sizeAsInt = new Integer(_size.trim());
+                _sizeAsInt = Integer.valueOf(_size.trim());
             }
             else
             {
-                _sizeAsInt = new Integer(size.substring(0, pos).trim());
+                _sizeAsInt = Integer.valueOf(size.substring(0, pos).trim());
                 _scale     = Integer.parseInt(size.substring(pos + 1).trim());
             }
         }
@@ -369,7 +375,7 @@ public class Column implements Serializable
      */
     public void setSizeAndScale(int size, int scale)
     {
-        _sizeAsInt = new Integer(size);
+        _sizeAsInt = size;
         _scale     = scale;
         _size      = String.valueOf(size);
         if (scale > 0)
@@ -395,7 +401,7 @@ public class Column implements Serializable
      */
     public void setPrecisionRadix(int precisionRadix)
     {
-        _sizeAsInt = new Integer(precisionRadix);
+        _sizeAsInt = precisionRadix;
         _size      = String.valueOf(precisionRadix);
     }
 
@@ -418,28 +424,24 @@ public class Column implements Serializable
      */
     public Object getParsedDefaultValue()
     {
-        if ((_defaultValue != null) && (_defaultValue.length() > 0))
+        if ((_defaultValue != null) && (!_defaultValue.isEmpty()))
         {
             try
             {
                 switch (_typeCode)
                 {
-                    case Types.TINYINT:
-                    case Types.SMALLINT:
-                        return new Short(_defaultValue);
-                    case Types.INTEGER:
-                        return new Integer(_defaultValue);
-                    case Types.BIGINT:
-                        return new Long(_defaultValue);
-                    case Types.DECIMAL:
+                    case Types.TINYINT,
+						Types.SMALLINT,
+						Types.REAL,
+						Types.INTEGER,
+						Types.BIGINT,
+						Types.DOUBLE,
+						Types.FLOAT:
+                        return _defaultValue;
+					case Types.DECIMAL:
                     case Types.NUMERIC:
                         return new BigDecimal(_defaultValue);
-                    case Types.REAL:
-                        return new Float(_defaultValue);
-                    case Types.DOUBLE:
-                    case Types.FLOAT:
-                        return new Double(_defaultValue);
-                    case Types.DATE:
+					case Types.DATE:
                         return Date.valueOf(_defaultValue);
                     case Types.TIME:
                         return Time.valueOf(_defaultValue);
@@ -447,12 +449,8 @@ public class Column implements Serializable
                         return Timestamp.valueOf(_defaultValue);
                     case Types.BIT:
                     case Types.BOOLEAN:
-                        return ConvertUtils.convert(_defaultValue, Boolean.class);
+                        return Boolean.valueOf(_defaultValue);
                 }
-            }
-            catch (NumberFormatException ex)
-            {
-                return null;
             }
             catch (IllegalArgumentException ex)
             {
@@ -479,10 +477,9 @@ public class Column implements Serializable
      */
     public boolean equals(Object obj)
     {
-        if (obj instanceof Column)
+        if (obj instanceof final Column other)
         {
-            Column        other      = (Column)obj;
-            EqualsBuilder comparator = new EqualsBuilder();
+			EqualsBuilder comparator = new EqualsBuilder();
 
             // Note that this compares case sensitive
             comparator.append(_name,                   other._name);
@@ -540,15 +537,7 @@ public class Column implements Serializable
      */
     public String toString()
     {
-        StringBuffer result = new StringBuffer();
-
-        result.append("Column [name=");
-        result.append(getName());
-        result.append("; type=");
-        result.append(getType());
-        result.append("]");
-
-        return result.toString();
+		return "Column [name=" + getName() + "; type=" + getType() + "]";
     }
 
     /**
@@ -558,32 +547,9 @@ public class Column implements Serializable
      */
     public String toVerboseString()
     {
-        StringBuffer result = new StringBuffer();
-
-        result.append("Column [name=");
-        result.append(getName());
-        result.append("; javaName=");
-        result.append(getJavaName());
-        result.append("; type=");
-        result.append(getType());
-        result.append("; typeCode=");
-        result.append(getTypeCode());
-        result.append("; size=");
-        result.append(getSize());
-        result.append("; required=");
-        result.append(isRequired());
-        result.append("; primaryKey=");
-        result.append(isPrimaryKey());
-        result.append("; autoIncrement=");
-        result.append(isAutoIncrement());
-        result.append("; defaultValue=");
-        result.append(getDefaultValue());
-        result.append("; precisionRadix=");
-        result.append(getPrecisionRadix());
-        result.append("; scale=");
-        result.append(getScale());
-        result.append("]");
-
-        return result.toString();
+		return "Column [name=" + getName() + "; javaName=" + getJavaName() + "; type=" + getType() + "; typeCode=" +
+				getTypeCode() + "; size=" + getSize() + "; required=" + isRequired() + "; primaryKey=" +
+				isPrimaryKey() + "; autoIncrement=" + isAutoIncrement() + "; defaultValue=" + getDefaultValue() +
+				"; precisionRadix=" + getPrecisionRadix() + "; scale=" + getScale() + "]";
     }
 }

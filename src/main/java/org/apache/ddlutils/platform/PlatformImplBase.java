@@ -19,35 +19,6 @@ package org.apache.ddlutils.platform;
  * under the License.
  */
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.math.BigDecimal;
-import java.sql.BatchUpdateException;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLWarning;
-import java.sql.Statement;
-import java.sql.Types;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.commons.beanutils.DynaBean;
-import org.apache.commons.beanutils.PropertyUtils;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.Predicate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.DatabaseOperationException;
@@ -74,8 +45,6 @@ import org.apache.ddlutils.alteration.RemovePrimaryKeyChange;
 import org.apache.ddlutils.alteration.RemoveTableChange;
 import org.apache.ddlutils.alteration.TableChange;
 import org.apache.ddlutils.alteration.TableDefinitionChangesPredicate;
-import org.apache.ddlutils.dynabean.SqlDynaClass;
-import org.apache.ddlutils.dynabean.SqlDynaProperty;
 import org.apache.ddlutils.model.CloneHelper;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
@@ -86,6 +55,30 @@ import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.TypeMap;
 import org.apache.ddlutils.util.JdbcSupport;
 import org.apache.ddlutils.util.SqlTokenizer;
+
+import java.io.IOException;
+import java.io.StringWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.SQLWarning;
+import java.sql.Statement;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
 /**
  * Base class for platform implementations.
@@ -632,9 +625,9 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
     /**
      * {@inheritDoc}
      */
-    public List getChanges(Database currentModel, Database desiredModel)
+    public List<? extends ModelChange> getChanges(Database currentModel, Database desiredModel)
     {
-        List changes = getModelComparator().compare(currentModel, desiredModel);
+        var changes = getModelComparator().compare(currentModel, desiredModel);
 
         return sortChanges(changes);
     }
@@ -646,46 +639,37 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
      * @param changes The original changes
      * @return The sorted changes - this can be the original list object or a new one
      */
-    protected List sortChanges(List changes)
+    protected List<? extends ModelChange> sortChanges(List<? extends ModelChange> changes)
     {
-        final Map typeOrder = new HashMap();
+        final Map<Class<?>, Integer> typeOrder = new HashMap<>();
 
-        typeOrder.put(RemoveForeignKeyChange.class, new Integer(0));
-        typeOrder.put(RemoveIndexChange.class,      new Integer(1));
-        typeOrder.put(RemoveTableChange.class,      new Integer(2));
-        typeOrder.put(RecreateTableChange.class,    new Integer(3));
-        typeOrder.put(RemovePrimaryKeyChange.class, new Integer(3));
-        typeOrder.put(RemoveColumnChange.class,     new Integer(4));
-        typeOrder.put(ColumnDefinitionChange.class, new Integer(5));
-        typeOrder.put(ColumnOrderChange.class,      new Integer(5));
-        typeOrder.put(AddColumnChange.class,        new Integer(5));
-        typeOrder.put(PrimaryKeyChange.class,       new Integer(5));
-        typeOrder.put(AddPrimaryKeyChange.class,    new Integer(6));
-        typeOrder.put(AddTableChange.class,         new Integer(7));
-        typeOrder.put(AddIndexChange.class,         new Integer(8));
-        typeOrder.put(AddForeignKeyChange.class,    new Integer(9));
+        typeOrder.put(RemoveForeignKeyChange.class, 0);
+        typeOrder.put(RemoveIndexChange.class,      1);
+        typeOrder.put(RemoveTableChange.class,      2);
+        typeOrder.put(RecreateTableChange.class,    3);
+        typeOrder.put(RemovePrimaryKeyChange.class, 3);
+        typeOrder.put(RemoveColumnChange.class,     4);
+        typeOrder.put(ColumnDefinitionChange.class, 5);
+        typeOrder.put(ColumnOrderChange.class,      5);
+        typeOrder.put(AddColumnChange.class,        5);
+        typeOrder.put(PrimaryKeyChange.class,       5);
+        typeOrder.put(AddPrimaryKeyChange.class,    6);
+        typeOrder.put(AddTableChange.class,         7);
+        typeOrder.put(AddIndexChange.class,         8);
+        typeOrder.put(AddForeignKeyChange.class,    9);
 
-        Collections.sort(changes, new Comparator()
-        {
-            public int compare(Object objA, Object objB)
-            {
-                Integer orderValueA = (Integer)typeOrder.get(objA.getClass());
-                Integer orderValueB = (Integer)typeOrder.get(objB.getClass());
+        changes.sort((objA, objB) -> {
+			Integer orderValueA = typeOrder.get(objA.getClass());
+			Integer orderValueB = typeOrder.get(objB.getClass());
 
-                if (orderValueA == null)
-                {
-                    return (orderValueB == null ? 0 : 1);
-                }
-                else if (orderValueB == null)
-                {
-                    return -1;
-                }
-                else
-                {
-                    return orderValueA.compareTo(orderValueB);
-                }
-            }
-        });
+			if (orderValueA == null) {
+				return (orderValueB == null ? 0 : 1);
+			} else if (orderValueB == null) {
+				return -1;
+			} else {
+				return orderValueA.compareTo(orderValueB);
+			}
+		});
     	return changes;
     }
 
@@ -730,7 +714,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
     /**
      * {@inheritDoc}
      */
-    public void alterTables(String catalog, String schema, String[] tableTypes, Database desiredModel, boolean continueOnError) throws DatabaseOperationException
+    public void alterTables(String catalog, String schema, List<String> tableTypes, Database desiredModel, boolean continueOnError) throws DatabaseOperationException
     {
         Connection connection = borrowConnection();
 
@@ -749,7 +733,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
     /**
      * {@inheritDoc}
      */
-    public void alterTables(String catalog, String schema, String[] tableTypes, Database desiredModel, CreationParameters params, boolean continueOnError) throws DatabaseOperationException
+    public void alterTables(String catalog, String schema, List<String> tableTypes, Database desiredModel, CreationParameters params, boolean continueOnError) throws DatabaseOperationException
     {
         Connection connection = borrowConnection();
 
@@ -788,7 +772,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
     /**
      * {@inheritDoc}
      */
-    public void alterTables(Connection connection, String catalog, String schema, String[] tableTypes, Database desiredModel, boolean continueOnError) throws DatabaseOperationException
+    public void alterTables(Connection connection, String catalog, String schema, List<String> tableTypes, Database desiredModel, boolean continueOnError) throws DatabaseOperationException
     {
         Database currentModel = readModelFromDatabase(connection, desiredModel.getName(), catalog, schema, tableTypes);
 
@@ -798,7 +782,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
     /**
      * {@inheritDoc}
      */
-    public void alterTables(Connection connection, String catalog, String schema, String[] tableTypes, Database desiredModel, CreationParameters params, boolean continueOnError) throws DatabaseOperationException
+    public void alterTables(Connection connection, String catalog, String schema, List<String> tableTypes, Database desiredModel, CreationParameters params, boolean continueOnError) throws DatabaseOperationException
     {
         Database currentModel = readModelFromDatabase(connection, desiredModel.getName(), catalog, schema, tableTypes);
 
@@ -846,7 +830,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
     /**
      * {@inheritDoc}
      */
-    public String getAlterTablesSql(String catalog, String schema, String[] tableTypes, Database desiredModel) throws DatabaseOperationException
+    public String getAlterTablesSql(String catalog, String schema, List<String> tableTypes, Database desiredModel) throws DatabaseOperationException
     {
         Connection connection = borrowConnection();
 
@@ -865,7 +849,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
     /**
      * {@inheritDoc}
      */
-    public String getAlterTablesSql(String catalog, String schema, String[] tableTypes, Database desiredModel, CreationParameters params) throws DatabaseOperationException
+    public String getAlterTablesSql(String catalog, String schema, List<String> tableTypes, Database desiredModel, CreationParameters params) throws DatabaseOperationException
     {
         Connection connection = borrowConnection();
 
@@ -904,7 +888,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
     /**
      * {@inheritDoc}
      */
-    public String getAlterTablesSql(Connection connection, String catalog, String schema, String[] tableTypes, Database desiredModel) throws DatabaseOperationException
+    public String getAlterTablesSql(Connection connection, String catalog, String schema, List<String> tableTypes, Database desiredModel) throws DatabaseOperationException
     {
         Database currentModel = readModelFromDatabase(connection, desiredModel.getName(), catalog, schema, tableTypes);
 
@@ -914,7 +898,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
     /**
      * {@inheritDoc}
      */
-    public String getAlterTablesSql(Connection connection, String catalog, String schema, String[] tableTypes, Database desiredModel, CreationParameters params) throws DatabaseOperationException
+    public String getAlterTablesSql(Connection connection, String catalog, String schema, List<String> tableTypes, Database desiredModel, CreationParameters params) throws DatabaseOperationException
     {
         Database currentModel = readModelFromDatabase(connection, desiredModel.getName(), catalog, schema, tableTypes);
 
@@ -1140,15 +1124,14 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
      * @return The changed database model
      */
     protected Database processChanges(Database           model,
-                                      Collection         changes,
+                                      Collection<? extends ModelChange>         changes,
                                       CreationParameters params) throws IOException, DdlUtilsException
     {
         Database currentModel = new CloneHelper().clone(model);
 
-        for (Iterator it = changes.iterator(); it.hasNext();)
-        {
-            invokeChangeHandler(currentModel, params, (ModelChange)it.next());
-        }
+		for (final var change : changes) {
+			invokeChangeHandler(currentModel, params, change);
+		}
         return currentModel;
     }
 
@@ -1225,17 +1208,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
      */
     protected Table findChangedTable(Database currentModel, TableChange change) throws ModelException
     {
-        Table table = currentModel.findTable(change.getChangedTable(),
-                                             getPlatformInfo().isDelimitedIdentifiersSupported());
-
-        if (table == null)
-        {
-            throw new ModelException("Could not find table " + change.getChangedTable() + " in the given model");
-        }
-        else
-        {
-            return table;
-        }
+        return currentModel.findTable(change.getChangedTable(), getPlatformInfo().isDelimitedIdentifiersSupported())
+			.orElseThrow(() -> new ModelException("Could not find table " + change.getChangedTable() + " in the given model"));
     }
 
     /**
@@ -1427,13 +1401,11 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
                               AddPrimaryKeyChange change) throws IOException
     {
         Table    changedTable  = findChangedTable(currentModel, change);
-        String[] pkColumnNames = change.getPrimaryKeyColumns();
-        Column[] pkColumns     = new Column[pkColumnNames.length];
+        var pkColumnNames = change.getPrimaryKeyColumns();
+        var pkColumns     = pkColumnNames.stream()
+			.map(keyColumn -> changedTable.findColumn(keyColumn, isDelimitedIdentifierModeOn()).orElseThrow())
+			.toList();
 
-        for (int colIdx = 0; colIdx < pkColumns.length; colIdx++)
-        {
-            pkColumns[colIdx] = changedTable.findColumn(pkColumnNames[colIdx], isDelimitedIdentifierModeOn());
-        }
         getSqlBuilder().createPrimaryKey(changedTable, pkColumns);
         change.apply(currentModel, isDelimitedIdentifierModeOn());
     }
@@ -1528,707 +1500,6 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
     }
 
     /**
-     * {@inheritDoc}
-     */
-    public Iterator query(Database model, String sql) throws DatabaseOperationException
-    {
-        return query(model, sql, (Table[])null);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Iterator query(Database model, String sql, Collection parameters) throws DatabaseOperationException
-    {
-        return query(model, sql, parameters, null);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Iterator query(Database model, String sql, Table[] queryHints) throws DatabaseOperationException
-    {
-        Connection connection = borrowConnection();
-        Statement  statement  = null;
-        ResultSet  resultSet  = null;
-        Iterator   answer     = null;
-
-        try
-        {
-            statement = connection.createStatement();
-            resultSet = statement.executeQuery(sql);
-            answer    = createResultSetIterator(model, resultSet, queryHints);
-            return answer;
-        }
-        catch (SQLException ex)
-        {
-            throw new DatabaseOperationException("Error while performing a query", ex);
-        }
-        finally
-        {
-            // if any exceptions are thrown, close things down
-            // otherwise we're leaving it open for the iterator
-            if (answer == null)
-            {
-                closeStatement(statement);
-                returnConnection(connection);
-            }
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Iterator query(Database model, String sql, Collection parameters, Table[] queryHints) throws DatabaseOperationException
-    {
-        Connection        connection = borrowConnection();
-        PreparedStatement statement  = null;
-        ResultSet         resultSet  = null;
-        Iterator          answer     = null;
-
-        try
-        {
-            statement = connection.prepareStatement(sql);
-
-            int paramIdx = 1;
-
-            for (Iterator iter = parameters.iterator(); iter.hasNext(); paramIdx++)
-            {
-                Object arg = iter.next();
-
-                if (arg instanceof BigDecimal)
-                {
-                    // to avoid scale problems because setObject assumes a scale of 0
-                    statement.setBigDecimal(paramIdx, (BigDecimal)arg);
-                }
-                else
-                {
-                    statement.setObject(paramIdx, arg);
-                }
-            }
-            resultSet = statement.executeQuery();
-            answer    = createResultSetIterator(model, resultSet, queryHints);
-            return answer;
-        }
-        catch (SQLException ex)
-        {
-            throw new DatabaseOperationException("Error while performing a query", ex);
-        }
-        finally
-        {
-            // if any exceptions are thrown, close things down
-            // otherwise we're leaving it open for the iterator
-            if (answer == null)
-            {
-                closeStatement(statement);
-                returnConnection(connection);
-            }
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public List fetch(Database model, String sql) throws DatabaseOperationException
-    {
-        return fetch(model, sql, (Table[])null, 0, -1);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public List fetch(Database model, String sql, Table[] queryHints) throws DatabaseOperationException
-    {
-        return fetch(model, sql, queryHints, 0, -1);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public List fetch(Database model, String sql, int start, int end) throws DatabaseOperationException
-    {
-        return fetch(model, sql, (Table[])null, start, end);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public List fetch(Database model, String sql, Table[] queryHints, int start, int end) throws DatabaseOperationException
-    {
-        Connection connection = borrowConnection();
-        Statement  statement  = null;
-        ResultSet  resultSet  = null;
-        List       result     = new ArrayList();
-
-        try
-        {
-            statement = connection.createStatement();
-            resultSet = statement.executeQuery(sql);
-
-            int rowIdx = 0;
-
-            for (ModelBasedResultSetIterator it = createResultSetIterator(model, resultSet, queryHints); ((end < 0) || (rowIdx <= end)) && it.hasNext(); rowIdx++)
-            {
-                if (rowIdx >= start)
-                {
-                    result.add(it.next());
-                }
-                else
-                {
-                    it.advance();
-                }
-            }
-        }
-        catch (SQLException ex)
-        {
-            throw new DatabaseOperationException("Error while fetching data from the database", ex);
-        } 
-        finally 
-        {
-            // the iterator should return the connection automatically
-            // so this is usually not necessary (but just in case)
-            closeStatement(statement);
-            returnConnection(connection);
-        }
-        return result;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public List fetch(Database model, String sql, Collection parameters) throws DatabaseOperationException
-    {
-        return fetch(model, sql, parameters, null, 0, -1);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public List fetch(Database model, String sql, Collection parameters, int start, int end) throws DatabaseOperationException
-    {
-        return fetch(model, sql, parameters, null, start, end);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public List fetch(Database model, String sql, Collection parameters, Table[] queryHints) throws DatabaseOperationException
-    {
-        return fetch(model, sql, parameters, queryHints, 0, -1);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public List fetch(Database model, String sql, Collection parameters, Table[] queryHints, int start, int end) throws DatabaseOperationException
-    {
-        Connection        connection = borrowConnection();
-        PreparedStatement statement  = null;
-        ResultSet         resultSet  = null;
-        List              result     = new ArrayList();
-
-        try
-        {
-            statement = connection.prepareStatement(sql);
-
-            int paramIdx = 1;
-
-            for (Iterator iter = parameters.iterator(); iter.hasNext(); paramIdx++)
-            {
-                Object arg = iter.next();
-
-                if (arg instanceof BigDecimal)
-                {
-                    // to avoid scale problems because setObject assumes a scale of 0
-                    statement.setBigDecimal(paramIdx, (BigDecimal)arg);
-                }
-                else
-                {
-                    statement.setObject(paramIdx, arg);
-                }
-            }
-            resultSet = statement.executeQuery();
-
-            int rowIdx = 0;
-
-            for (ModelBasedResultSetIterator it = createResultSetIterator(model, resultSet, queryHints); ((end < 0) || (rowIdx <= end)) && it.hasNext(); rowIdx++)
-            {
-                if (rowIdx >= start)
-                {
-                    result.add(it.next());
-                }
-                else
-                {
-                    it.advance();
-                }
-            }
-        }
-        catch (SQLException ex)
-        {
-            // any other exception comes from the iterator which closes the resources automatically
-            closeStatement(statement);
-            returnConnection(connection);
-            throw new DatabaseOperationException("Error while fetching data from the database", ex);
-        }
-        return result;
-    }
-
-    /**
-     * Creates the SQL for inserting an object of the given type. If a concrete bean is given,
-     * then a concrete insert statement is created, otherwise an insert statement usable in a
-     * prepared statement is build. 
-     *
-     * @param model      The database model
-     * @param dynaClass  The type
-     * @param properties The properties to write
-     * @param bean       Optionally the concrete bean to insert
-     * @return The SQL required to insert an instance of the class
-     */
-    protected String createInsertSql(Database model, SqlDynaClass dynaClass, SqlDynaProperty[] properties, DynaBean bean)
-    {
-        Table   table        = model.findTable(dynaClass.getTableName());
-        HashMap columnValues = toColumnValues(properties, bean);
-
-        return _builder.getInsertSql(table, columnValues, bean == null);
-    }
-
-    /**
-     * Creates the SQL for querying for the id generated by the last insert of an object of the given type.
-     * 
-     * @param model     The database model
-     * @param dynaClass The type
-     * @return The SQL required for querying for the id, or <code>null</code> if the database does not
-     *         support this
-     */
-    protected String createSelectLastInsertIdSql(Database model, SqlDynaClass dynaClass)
-    {
-        Table table = model.findTable(dynaClass.getTableName());
-
-        return _builder.getSelectLastIdentityValues(table);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public String getInsertSql(Database model, DynaBean dynaBean)
-    {
-        SqlDynaClass      dynaClass  = model.getDynaClassFor(dynaBean);
-        SqlDynaProperty[] properties = dynaClass.getSqlDynaProperties();
-
-        if (properties.length == 0)
-        {
-            _log.info("Cannot insert instances of type " + dynaClass + " because it has no properties");
-            return null;
-        }
-
-        return createInsertSql(model, dynaClass, properties, dynaBean);
-    }
-
-    /**
-     * Returns all properties where the column is not non-autoincrement and for which the bean
-     * either has a value or the column hasn't got a default value, for the given dyna class.
-     * 
-     * @param model     The database model
-     * @param dynaClass The dyna class
-     * @param bean      The bean
-     * @return The properties
-     */
-    private SqlDynaProperty[] getPropertiesForInsertion(Database model, SqlDynaClass dynaClass, final DynaBean bean)
-    {
-        SqlDynaProperty[] properties = dynaClass.getSqlDynaProperties();
-
-        Collection result = CollectionUtils.select(Arrays.asList(properties), new Predicate() {
-            public boolean evaluate(Object input) {
-                SqlDynaProperty prop = (SqlDynaProperty)input;
-
-                if (bean.get(prop.getName()) != null)
-                {
-                    // we ignore properties for which a value is present in the bean
-                    // only if they are identity and identity override is off or
-                    // the platform does not allow the override of the auto-increment
-                    // specification
-                    return !prop.getColumn().isAutoIncrement() ||
-                           (isIdentityOverrideOn() && getPlatformInfo().isIdentityOverrideAllowed());
-                }
-                else
-                {
-                    // we also return properties without a value in the bean
-                    // if they ain't auto-increment and don't have a default value
-                    // in this case, a NULL is inserted
-                    return !prop.getColumn().isAutoIncrement() &&
-                           (prop.getColumn().getDefaultValue() == null);
-                }
-            }
-        });
-
-        return (SqlDynaProperty[])result.toArray(new SqlDynaProperty[result.size()]);
-    }
-
-    /**
-     * Returns all identity properties whose value were defined by the database and which
-     * now need to be read back from the DB.
-     * 
-     * @param model     The database model
-     * @param dynaClass The dyna class
-     * @param bean      The bean
-     * @return The columns
-     */
-    private Column[] getRelevantIdentityColumns(Database model, SqlDynaClass dynaClass, final DynaBean bean)
-    {
-        SqlDynaProperty[] properties = dynaClass.getSqlDynaProperties();
-
-        Collection relevantProperties = CollectionUtils.select(Arrays.asList(properties), new Predicate() {
-            public boolean evaluate(Object input) {
-                SqlDynaProperty prop = (SqlDynaProperty)input;
-
-                // we only want those identity columns that were really specified by the DB
-                // if the platform allows specification of values for identity columns
-                // in INSERT/UPDATE statements, then we need to filter the corresponding
-                // columns out
-                return prop.getColumn().isAutoIncrement() &&
-                       (!isIdentityOverrideOn() || !getPlatformInfo().isIdentityOverrideAllowed() || (bean.get(prop.getName()) == null));
-            }
-        });
-
-        Column[] columns = new Column[relevantProperties.size()];
-        int      idx     = 0;
-
-        for (Iterator propIt = relevantProperties.iterator(); propIt.hasNext(); idx++)
-        {
-            columns[idx] = ((SqlDynaProperty)propIt.next()).getColumn();
-        }
-        return columns;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void insert(Connection connection, Database model, DynaBean dynaBean) throws DatabaseOperationException
-    {
-        SqlDynaClass      dynaClass       = model.getDynaClassFor(dynaBean);
-        SqlDynaProperty[] properties      = getPropertiesForInsertion(model, dynaClass, dynaBean);
-        Column[]          autoIncrColumns = getRelevantIdentityColumns(model, dynaClass, dynaBean);
-
-        if ((properties.length == 0) && (autoIncrColumns.length == 0))
-        {
-            _log.warn("Cannot insert instances of type " + dynaClass + " because it has no usable properties");
-            return;
-        }
-
-        String insertSql        = createInsertSql(model, dynaClass, properties, null);
-        String queryIdentitySql = null;
-
-        if (_log.isDebugEnabled())
-        {
-            _log.debug("About to execute SQL: " + insertSql);
-        }
-
-        if (autoIncrColumns.length > 0)
-        {
-            if (!getPlatformInfo().isLastIdentityValueReadable())
-            {
-                _log.warn("The database does not support querying for auto-generated column values");
-            }
-            else
-            {
-                queryIdentitySql = createSelectLastInsertIdSql(model, dynaClass);
-            }
-        }
-
-        boolean           autoCommitMode = false;
-        PreparedStatement statement      = null;
-
-        try
-        {
-            if (!getPlatformInfo().isAutoCommitModeForLastIdentityValueReading())
-            {
-                autoCommitMode = connection.getAutoCommit();
-                connection.setAutoCommit(false);
-            }
-
-            beforeInsert(connection, dynaClass.getTable());
-            
-            statement = connection.prepareStatement(insertSql);
-
-            for (int idx = 0; idx < properties.length; idx++ )
-            {
-                setObject(statement, idx + 1, dynaBean, properties[idx]);
-            }
-
-            int count = statement.executeUpdate();
-
-            afterInsert(connection, dynaClass.getTable());
-
-            if (count != 1)
-            {
-                _log.warn("Attempted to insert a single row " + dynaBean +
-                          " in table " + dynaClass.getTableName() +
-                          " but changed " + count + " row(s)");
-            }
-        }
-        catch (SQLException ex)
-        {
-            throw new DatabaseOperationException("Error while inserting into the database: " + ex.getMessage(), ex);
-        }
-        finally
-        {
-            closeStatement(statement);
-        }
-        if (queryIdentitySql != null)
-        {
-            Statement queryStmt       = null;
-            ResultSet lastInsertedIds = null;
-
-            try
-            {
-                if (getPlatformInfo().isAutoCommitModeForLastIdentityValueReading())
-                {
-                    // we'll commit the statement(s) if no auto-commit is enabled because
-                    // otherwise it is possible that the auto increment hasn't happened yet
-                    // (the db didn't actually perform the insert yet so no triggering of
-                    // sequences did occur)
-                    if (!connection.getAutoCommit())
-                    {
-                        connection.commit();
-                    }
-                }
-
-                queryStmt       = connection.createStatement();
-                lastInsertedIds = queryStmt.executeQuery(queryIdentitySql);
-
-                lastInsertedIds.next();
-
-                for (int idx = 0; idx < autoIncrColumns.length; idx++)
-                {
-                    // we're using the index rather than the name because we cannot know how
-                    // the SQL statement looks like; rather we assume that we get the values
-                    // back in the same order as the auto increment columns
-                    Object value = getObjectFromResultSet(lastInsertedIds, autoIncrColumns[idx], idx + 1);
-
-                    PropertyUtils.setProperty(dynaBean, autoIncrColumns[idx].getName(), value);
-                }
-            }
-            catch (NoSuchMethodException ex)
-            {
-                // Can't happen because we're using dyna beans
-            }
-            catch (IllegalAccessException ex)
-            {
-                // Can't happen because we're using dyna beans
-            }
-            catch (InvocationTargetException ex)
-            {
-                // Can't happen because we're using dyna beans
-            }
-            catch (SQLException ex)
-            {
-                throw new DatabaseOperationException("Error while retrieving the identity column value(s) from the database", ex);
-            }
-            finally
-            {
-                if (lastInsertedIds != null)
-                {
-                    try
-                    {
-                        lastInsertedIds.close();
-                    }
-                    catch (SQLException ex)
-                    {
-                        // we ignore this one
-                    }
-                }
-                closeStatement(statement);
-            }
-        }
-        if (!getPlatformInfo().isAutoCommitModeForLastIdentityValueReading())
-        {
-            try
-            {
-                // we need to do a manual commit now
-                connection.commit();
-                connection.setAutoCommit(autoCommitMode);
-            }
-            catch (SQLException ex)
-            {
-                throw new DatabaseOperationException(ex);
-            }
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void insert(Database model, DynaBean dynaBean) throws DatabaseOperationException
-    {
-        Connection connection = borrowConnection();
-
-        try
-        {
-            insert(connection, model, dynaBean);
-        }
-        finally
-        {
-            returnConnection(connection);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void insert(Connection connection, Database model, Collection dynaBeans) throws DatabaseOperationException
-    {
-        SqlDynaClass      dynaClass              = null;
-        SqlDynaProperty[] properties             = null;
-        PreparedStatement statement              = null;
-        int               addedStmts             = 0;
-        boolean           identityWarningPrinted = false;
-
-        for (Iterator it = dynaBeans.iterator(); it.hasNext();)
-        {
-            DynaBean     dynaBean     = (DynaBean)it.next();
-            SqlDynaClass curDynaClass = model.getDynaClassFor(dynaBean);
-
-            if (curDynaClass != dynaClass)
-            {
-                if (dynaClass != null)
-                {
-                    executeBatch(statement, addedStmts, dynaClass.getTable());
-                    addedStmts = 0;
-                }
-
-                dynaClass  = curDynaClass;
-                properties = getPropertiesForInsertion(model, curDynaClass, dynaBean);
-    
-                if (properties.length == 0)
-                {
-                    _log.warn("Cannot insert instances of type " + dynaClass + " because it has no usable properties");
-                    continue;
-                }
-                if (!identityWarningPrinted &&
-                    (getRelevantIdentityColumns(model, curDynaClass, dynaBean).length > 0))
-                {
-                    _log.warn("Updating the bean properties corresponding to auto-increment columns is not supported in batch mode");
-                    identityWarningPrinted = true;
-                }
-
-                String insertSql = createInsertSql(model, dynaClass, properties, null);
-
-                if (_log.isDebugEnabled())
-                {
-                    _log.debug("Starting new batch with SQL: " + insertSql);
-                }
-                try
-                {
-                    statement = connection.prepareStatement(insertSql);
-                }
-                catch (SQLException ex)
-                {
-                    throw new DatabaseOperationException("Error while preparing insert statement", ex);
-                }
-            }
-            try
-            {
-                for (int idx = 0; idx < properties.length; idx++ )
-                {
-                    setObject(statement, idx + 1, dynaBean, properties[idx]);
-                }
-                statement.addBatch();
-                addedStmts++;
-            }
-            catch (SQLException ex)
-            {
-                throw new DatabaseOperationException("Error while adding batch insert", ex);
-            }
-        }
-        if (dynaClass != null)
-        {
-            executeBatch(statement, addedStmts, dynaClass.getTable());
-        }
-    }
-
-    /**
-     * Performs the batch for the given statement, and checks that the specified amount of rows have been changed.
-     * 
-     * @param statement The prepared statement
-     * @param numRows   The number of rows that should change
-     * @param table     The changed table
-     */
-    private void executeBatch(PreparedStatement statement, int numRows, Table table) throws DatabaseOperationException
-    {
-        if (statement != null)
-        {
-            try
-            {
-                Connection connection = statement.getConnection();
-
-                beforeInsert(connection, table);
-
-                int[] results = statement.executeBatch();
-
-                closeStatement(statement);
-                afterInsert(connection, table);
-
-                boolean hasSum = true;
-                int     sum    = 0;
-
-                for (int idx = 0; (results != null) && (idx < results.length); idx++)
-                {
-                    if (results[idx] < 0)
-                    {
-                        hasSum = false;
-                        if (results[idx] == Statement.EXECUTE_FAILED)
-                        {
-                            _log.warn("The batch insertion of row " + idx + " into table " + table.getName() + " failed but the driver is able to continue processing");
-                        }
-                        else if (results[idx] != Statement.SUCCESS_NO_INFO)
-                        {
-                            _log.warn("The batch insertion of row " + idx + " into table " + table.getName() + " returned an undefined status value " + results[idx]);
-                        }
-                    }
-                    else
-                    {
-                        sum += results[idx];
-                    }
-                }
-                if (hasSum && (sum != numRows))
-                {
-                    _log.warn("Attempted to insert " + numRows + " rows into table " + table.getName() + " but changed " + sum + " rows");
-                }
-            }
-            catch (SQLException ex)
-            {
-                if (ex instanceof BatchUpdateException)
-                {
-                    SQLException sqlEx = ((BatchUpdateException)ex).getNextException();
-
-                    throw new DatabaseOperationException("Error while inserting into the database", sqlEx);
-                }
-                else
-                {
-                    throw new DatabaseOperationException("Error while inserting into the database", ex);
-                }
-            }
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void insert(Database model, Collection dynaBeans) throws DatabaseOperationException
-    {
-        Connection connection = borrowConnection();
-
-        try
-        {
-            insert(connection, model, dynaBeans);
-        }
-        finally
-        {
-            returnConnection(connection);
-        }
-    }
-
-    /**
      * Allows platforms to issue statements directly before rows are inserted into
      * the specified table.
      *  
@@ -2250,255 +1521,109 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
     {
     }
 
-    /**
-     * Creates the SQL for updating an object of the given type. If a concrete bean is given,
-     * then a concrete update statement is created, otherwise an update statement usable in a
-     * prepared statement is build.
-     * 
-     * @param model       The database model
-     * @param dynaClass   The type
-     * @param primaryKeys The primary keys
-     * @param properties  The properties to write
-     * @param bean        Optionally the concrete bean to update
-     * @return The SQL required to update the instance
-     */
-    protected String createUpdateSql(Database model, SqlDynaClass dynaClass, SqlDynaProperty[] primaryKeys, SqlDynaProperty[] properties, DynaBean bean)
-    {
-        Table   table        = model.findTable(dynaClass.getTableName());
-        HashMap columnValues = toColumnValues(properties, bean);
+	/**
+	 * Creates the SQL for updating an object of the given type. If a concrete bean is given,
+	 * then a concrete update statement is created, otherwise an update statement usable in a
+	 * prepared statement is build.
+	 *
+	 * @param table   The type
+	 * @param columnValues The primary keys
+	 * @return The SQL required to update the instance
+	 */
+	protected String createUpdateSql(Table table, Map<String, Object> columnValues)
+	{
+		return _builder.getUpdateSql(table, columnValues, false);
+	}
 
-        columnValues.putAll(toColumnValues(primaryKeys, bean));
+	/**
+	 * {@inheritDoc}
+	 */
+	public void update(Connection connection, Database model, Table table, Map<String, Object> dynaBean) throws DatabaseOperationException
+	{
+		List<Column> primaryKeys = table.getPrimaryKeyColumns().toList();
 
-        return _builder.getUpdateSql(table, columnValues, bean == null);
-    }
+		if (primaryKeys.isEmpty())
+		{
+			throw new RuntimeException("Cannot update instances of type " + table.getName() + " because it has no primary keys");
+		}
 
-    /**
-     * Creates the SQL for updating an object of the given type. If a concrete bean is given,
-     * then a concrete update statement is created, otherwise an update statement usable in a
-     * prepared statement is build.
-     * 
-     * @param model       The database model
-     * @param dynaClass   The type
-     * @param primaryKeys The primary keys
-     * @param properties  The properties to write
-     * @param oldBean     Contains column values to identify the rows to update (i.e. for the WHERE clause)
-     * @param newBean     Contains the new column values to write
-     * @return The SQL required to update the instance
-     */
-    protected String createUpdateSql(Database model, SqlDynaClass dynaClass, SqlDynaProperty[] primaryKeys, SqlDynaProperty[] properties, DynaBean oldBean, DynaBean newBean)
-    {
-        Table   table           = model.findTable(dynaClass.getTableName());
-        HashMap oldColumnValues = toColumnValues(primaryKeys, oldBean);
-        HashMap newColumnValues = toColumnValues(properties, newBean);
+		Set<String> nonPrimaryColNames = table.getColumns()
+			.stream()
+			.filter(col -> !col.isPrimaryKey())
+			.map(Column::getName)
+			.collect(Collectors.toSet());
 
-        if (primaryKeys.length == 0)
-        {
-            _log.info("Cannot update instances of type " + dynaClass + " because it has no primary keys");
-            return null;
-        }
-        else
-        {
-            return _builder.getUpdateSql(table, oldColumnValues, newColumnValues, newBean == null);
-        }
-    }
+		List<Column> nonPrimaryCols = table.getColumns()
+			.stream()
+			.filter(col -> !col.isPrimaryKey())
+			.toList();
 
-    /**
-     * {@inheritDoc}
-     */
-    public String getUpdateSql(Database model, DynaBean dynaBean)
-    {
-        SqlDynaClass      dynaClass      = model.getDynaClassFor(dynaBean);
-        SqlDynaProperty[] primaryKeys    = dynaClass.getPrimaryKeyProperties();
-        SqlDynaProperty[] nonPrimaryKeys = dynaClass.getNonPrimaryKeyProperties();
+		var propertiesToUpdate = dynaBean.entrySet()
+			.stream()
+			.filter(e -> nonPrimaryColNames.contains(e.getKey()))
+			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-        if (primaryKeys.length == 0)
-        {
-            _log.info("Cannot update instances of type " + dynaClass + " because it has no primary keys");
-            return null;
-        }
-        else
-        {
-            return createUpdateSql(model, dynaClass, primaryKeys, nonPrimaryKeys, dynaBean);
-        }
-    }
+		String sql = createUpdateSql(table, propertiesToUpdate);
+		PreparedStatement statement  = null;
 
-    /**
-     * {@inheritDoc}
-     */
-    public String getUpdateSql(Database model, DynaBean oldDynaBean, DynaBean newDynaBean)
-    {
-        SqlDynaClass      dynaClass      = model.getDynaClassFor(oldDynaBean);
-        SqlDynaProperty[] primaryKeys    = dynaClass.getPrimaryKeyProperties();
-        SqlDynaProperty[] nonPrimaryKeys = dynaClass.getNonPrimaryKeyProperties();
+		if (_log.isDebugEnabled())
+		{
+			_log.debug("About to execute SQL: " + sql);
+		}
+		try
+		{
+			beforeUpdate(connection, table);
 
-        if (primaryKeys.length == 0)
-        {
-            _log.info("Cannot update instances of type " + dynaClass + " because it has no primary keys");
-            return null;
-        }
-        else
-        {
-            return createUpdateSql(model, dynaClass, primaryKeys, nonPrimaryKeys, oldDynaBean, newDynaBean);
-        }
-    }
+			statement = connection.prepareStatement(sql);
 
-    /**
-     * {@inheritDoc}
-     */
-    public void update(Connection connection, Database model, DynaBean dynaBean) throws DatabaseOperationException
-    {
-        SqlDynaClass      dynaClass   = model.getDynaClassFor(dynaBean);
-        SqlDynaProperty[] primaryKeys = dynaClass.getPrimaryKeyProperties();
+			int sqlIndex = 1;
 
-        if (primaryKeys.length == 0)
-        {
-            _log.info("Cannot update instances of type " + dynaClass + " because it has no primary keys");
-            return;
-        }
+			for (int idx = 0; idx < nonPrimaryCols.size(); idx++)
+			{
+				setObject(statement, sqlIndex++, dynaBean, nonPrimaryCols);
+			}
+			for (int idx = 0; idx < primaryKeys.size(); idx++)
+			{
+				setObject(statement, sqlIndex++, dynaBean, primaryKeys);
+			}
 
-        SqlDynaProperty[] properties = dynaClass.getNonPrimaryKeyProperties();
-        String            sql        = createUpdateSql(model, dynaClass, primaryKeys, properties, null);
-        PreparedStatement statement  = null;
+			int count = statement.executeUpdate();
 
-        if (_log.isDebugEnabled())
-        {
-            _log.debug("About to execute SQL: " + sql);
-        }
-        try
-        {
-            beforeUpdate(connection, dynaClass.getTable());
+			afterUpdate(connection, table);
 
-            statement = connection.prepareStatement(sql);
+			if (count != 1)
+			{
+				_log.warn("Attempted to insert a single row " + dynaBean +
+					" into table " + table.getName() +
+					" but changed " + count + " row(s)");
+			}
+		}
+		catch (SQLException ex)
+		{
+			throw new DatabaseOperationException("Error while updating in the database", ex);
+		}
+		finally
+		{
+			closeStatement(statement);
+		}
+	}
 
-            int sqlIndex = 1;
+	/**
+	 * {@inheritDoc}
+	 */
+	public void update(Database model, Table table, Map<String, Object> dynaBean) throws DatabaseOperationException
+	{
+		Connection connection = borrowConnection();
 
-            for (int idx = 0; idx < properties.length; idx++)
-            {
-                setObject(statement, sqlIndex++, dynaBean, properties[idx]);
-            }
-            for (int idx = 0; idx < primaryKeys.length; idx++)
-            {
-                setObject(statement, sqlIndex++, dynaBean, primaryKeys[idx]);
-            }
-
-            int count = statement.executeUpdate();
-
-            afterUpdate(connection, dynaClass.getTable());
-
-            if (count != 1)
-            {
-                _log.warn("Attempted to insert a single row " + dynaBean +
-                         " into table " + dynaClass.getTableName() +
-                         " but changed " + count + " row(s)");
-            }
-        }
-        catch (SQLException ex)
-        {
-            throw new DatabaseOperationException("Error while updating in the database", ex);
-        }
-        finally
-        {
-            closeStatement(statement);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void update(Database model, DynaBean dynaBean) throws DatabaseOperationException
-    {
-        Connection connection = borrowConnection();
-
-        try
-        {
-            update(connection, model, dynaBean);
-        }
-        finally
-        {
-            returnConnection(connection);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void update(Connection connection, Database model, DynaBean oldDynaBean, DynaBean newDynaBean) throws DatabaseOperationException
-    {
-        SqlDynaClass      dynaClass   = model.getDynaClassFor(oldDynaBean);
-        SqlDynaProperty[] primaryKeys = dynaClass.getPrimaryKeyProperties();
-
-        if (!dynaClass.getTable().equals(model.getDynaClassFor(newDynaBean).getTable()))
-        {
-            throw new DatabaseOperationException("The old and new dyna beans need to be for the same table");
-        }
-        if (primaryKeys.length == 0)
-        {
-            _log.info("Cannot update instances of type " + dynaClass + " because it has no primary keys");
-            return;
-        }
-
-        SqlDynaProperty[] properties = dynaClass.getSqlDynaProperties();
-        String            sql        = createUpdateSql(model, dynaClass, primaryKeys, properties, null, null);
-        PreparedStatement statement  = null;
-
-        if (_log.isDebugEnabled())
-        {
-            _log.debug("About to execute SQL: " + sql);
-        }
-        try
-        {
-            beforeUpdate(connection, dynaClass.getTable());
-
-            statement = connection.prepareStatement(sql);
-
-            int sqlIndex = 1;
-
-            for (int idx = 0; idx < properties.length; idx++)
-            {
-                setObject(statement, sqlIndex++, newDynaBean, properties[idx]);
-            }
-            for (int idx = 0; idx < primaryKeys.length; idx++)
-            {
-                setObject(statement, sqlIndex++, oldDynaBean, primaryKeys[idx]);
-            }
-
-            int count = statement.executeUpdate();
-
-            afterUpdate(connection, dynaClass.getTable());
-
-            if (count != 1)
-            {
-                _log.warn("Attempted to insert a single row " + newDynaBean +
-                         " into table " + dynaClass.getTableName() +
-                         " but changed " + count + " row(s)");
-            }
-        }
-        catch (SQLException ex)
-        {
-            throw new DatabaseOperationException("Error while updating in the database", ex);
-        }
-        finally
-        {
-            closeStatement(statement);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void update(Database model, DynaBean oldDynaBean, DynaBean newDynaBean) throws DatabaseOperationException
-    {
-        Connection connection = borrowConnection();
-
-        try
-        {
-            update(connection, model, oldDynaBean, newDynaBean);
-        }
-        finally
-        {
-            returnConnection(connection);
-        }
-    }
+		try
+		{
+			update(connection, model, table, dynaBean);
+		}
+		finally
+		{
+			returnConnection(connection);
+		}
+	}
 
     /**
      * Allows platforms to issue statements directly before rows are updated in
@@ -2522,217 +1647,83 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
     {
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public boolean exists(Database model, DynaBean dynaBean)
-    {
-        Connection connection = borrowConnection();
+	/**
+	 * {@inheritDoc}
+	 */
+	public void delete(Database model, String tableName, Map<String, Object> dynaBean) throws DatabaseOperationException
+	{
+		Connection connection = borrowConnection();
 
-        try
-        {
-            return exists(connection, model, dynaBean);
-        }
-        finally
-        {
-            returnConnection(connection);
-        }
-    }
+		try
+		{
+			delete(connection, model, tableName, dynaBean);
+		}
+		finally
+		{
+			returnConnection(connection);
+		}
+	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	public void delete(Connection connection, Database model, String tableName, Map<String, Object> dynaBean) throws DatabaseOperationException
+	{
+		PreparedStatement statement  = null;
+		Table table = model.findTable(tableName).orElseThrow();
 
-    /**
-     * {@inheritDoc}
-     */
-    public boolean exists(Connection connection, Database model, DynaBean dynaBean)
-    {
-        SqlDynaClass      dynaClass   = model.getDynaClassFor(dynaBean);
-        SqlDynaProperty[] primaryKeys = dynaClass.getPrimaryKeyProperties();
-        
-        if (primaryKeys.length == 0)
-        {
-            return false;
-        }
+		try
+		{
+			var primaryKeys = table.getPrimaryKeyColumns()
+				.toList();
 
-        PreparedStatement stmt = null;
+			if (primaryKeys.isEmpty())
+			{
+				_log.warn("Cannot delete instances of type " + tableName + " because it has no primary keys");
+				return;
+			}
 
-        try
-        {
-            StringBuffer sql = new StringBuffer();
+			var primaryKeyNames = primaryKeys.stream()
+				.map(Column::getName)
+				.collect(Collectors.toSet());
 
-            sql.append("SELECT * FROM ");
-            sql.append(_builder.getDelimitedIdentifier(dynaClass.getTable().getName()));
-            sql.append(" WHERE ");
+			var pkValues = dynaBean.entrySet()
+				.stream()
+				.filter(e -> primaryKeyNames.contains(e.getKey()))
+				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-            for (int idx = 0; idx < primaryKeys.length; idx++)
-            {
-                String key = primaryKeys[idx].getColumn().getName();
+			String sql = _builder.getDeleteSql(table, pkValues, false);
 
-                if (idx > 0)
-                {
-                    sql.append(" AND ");
-                }
-                sql.append(_builder.getDelimitedIdentifier(key));
-                sql.append("=?");
-            }
+			if (_log.isDebugEnabled())
+			{
+				_log.debug("About to execute SQL " + sql);
+			}
 
-            stmt = connection.prepareStatement(sql.toString());
+			statement = connection.prepareStatement(sql);
 
-            for (int idx = 0; idx < primaryKeys.length; idx++)
-            {
-                setObject(stmt, idx + 1, dynaBean, primaryKeys[idx]);
-            }
+			for (int idx = 0; idx < primaryKeys.size(); idx++)
+			{
+				setObject(statement, idx, dynaBean, primaryKeys);
+			}
 
-            ResultSet resultSet = stmt.executeQuery();
+			int count = statement.executeUpdate();
 
-            return resultSet.next();
-        }
-        catch (SQLException ex)
-        {
-            throw new DatabaseOperationException("Error while reading from the database", ex);
-        }
-        finally
-        {
-            closeStatement(stmt);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void store(Database model, DynaBean dynaBean) throws DatabaseOperationException
-    {
-        Connection connection = borrowConnection();
-
-        try
-        {
-            store(connection, model, dynaBean);
-        }
-        finally
-        {
-            returnConnection(connection);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void store(Connection connection, Database model, DynaBean dynaBean) throws DatabaseOperationException
-    {
-        if (exists(connection, model, dynaBean))
-        {
-            update(connection, model, dynaBean);
-        }
-        else
-        {
-            insert(connection, model, dynaBean);
-        }
-    }
-
-    /**
-     * Creates the SQL for deleting an object of the given type. If a concrete bean is given,
-     * then a concrete delete statement is created, otherwise a delete statement usable in a
-     * prepared statement is build.
-     * 
-     * @param model       The database model
-     * @param dynaClass   The type
-     * @param primaryKeys The primary keys
-     * @param bean        Optionally the concrete bean to update
-     * @return The SQL required to delete the instance
-     */
-    protected String createDeleteSql(Database model, SqlDynaClass dynaClass, SqlDynaProperty[] primaryKeys, DynaBean bean)
-    {
-        Table   table    = model.findTable(dynaClass.getTableName());
-        HashMap pkValues = toColumnValues(primaryKeys, bean);
-
-        return _builder.getDeleteSql(table, pkValues, bean == null);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public String getDeleteSql(Database model, DynaBean dynaBean)
-    {
-        SqlDynaClass      dynaClass   = model.getDynaClassFor(dynaBean);
-        SqlDynaProperty[] primaryKeys = dynaClass.getPrimaryKeyProperties();
-
-        if (primaryKeys.length == 0)
-        {
-            _log.warn("Cannot delete instances of type " + dynaClass + " because it has no primary keys");
-            return null;
-        }
-        else
-        {
-            return createDeleteSql(model, dynaClass, primaryKeys, dynaBean);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void delete(Database model, DynaBean dynaBean) throws DatabaseOperationException
-    {
-        Connection connection = borrowConnection();
-
-        try
-        {
-            delete(connection, model, dynaBean);
-        }
-        finally
-        {
-            returnConnection(connection);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void delete(Connection connection, Database model, DynaBean dynaBean) throws DatabaseOperationException
-    {
-        PreparedStatement statement  = null;
-
-        try
-        {
-            SqlDynaClass      dynaClass   = model.getDynaClassFor(dynaBean);
-            SqlDynaProperty[] primaryKeys = dynaClass.getPrimaryKeyProperties();
-
-            if (primaryKeys.length == 0)
-            {
-                _log.warn("Cannot delete instances of type " + dynaClass + " because it has no primary keys");
-                return;
-            }
-
-            String sql = createDeleteSql(model, dynaClass, primaryKeys, null);
-
-            if (_log.isDebugEnabled())
-            {
-                _log.debug("About to execute SQL " + sql);
-            }
-
-            statement = connection.prepareStatement(sql);
-
-            for (int idx = 0; idx < primaryKeys.length; idx++)
-            {
-                setObject(statement, idx + 1, dynaBean, primaryKeys[idx]);
-            }
-
-            int count = statement.executeUpdate();
-
-            if (count != 1)
-            {
-                _log.warn("Attempted to delete a single row " + dynaBean +
-                          " in table " + dynaClass.getTableName() +
-                          " but changed " + count + " row(s).");
-            }
-        }
-        catch (SQLException ex)
-        {
-            throw new DatabaseOperationException("Error while deleting from the database", ex);
-        }
-        finally
-        {
-            closeStatement(statement);
-        }
-    }
+			if (count != 1)
+			{
+				_log.warn("Attempted to delete a single row " + dynaBean +
+					" in table " + tableName +
+					" but changed " + count + " row(s).");
+			}
+		}
+		catch (SQLException ex)
+		{
+			throw new DatabaseOperationException("Error while deleting from the database", ex);
+		}
+		finally
+		{
+			closeStatement(statement);
+		}
+	}
 
     /**
      * {@inheritDoc}
@@ -2772,7 +1763,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
     /**
      * {@inheritDoc}
      */
-    public Database readModelFromDatabase(String name, String catalog, String schema, String[] tableTypes) throws DatabaseOperationException
+    public Database readModelFromDatabase(String name, String catalog, String schema, List<String> tableTypes) throws DatabaseOperationException
     {
         Connection connection = borrowConnection();
 
@@ -2789,7 +1780,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
     /**
      * {@inheritDoc}
      */
-    public Database readModelFromDatabase(Connection connection, String name, String catalog, String schema, String[] tableTypes) throws DatabaseOperationException
+    public Database readModelFromDatabase(Connection connection, String name, String catalog, String schema, List<String> tableTypes) throws DatabaseOperationException
     {
         try
         {
@@ -2840,41 +1831,6 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
                 }
             }
         }
-    }
-    
-    /**
-     * Derives the column values for the given dyna properties from the dyna bean.
-     * 
-     * @param properties The properties
-     * @param bean       The bean
-     * @return The values indexed by the column names
-     */
-    protected HashMap toColumnValues(SqlDynaProperty[] properties, DynaBean bean)
-    {
-        HashMap result = new HashMap();
-
-        for (int idx = 0; idx < properties.length; idx++)
-        {
-            result.put(properties[idx].getName(),
-                       bean == null ? null : bean.get(properties[idx].getName()));
-        }
-        return result;
-    }
-
-    /**
-     * Sets a parameter of the prepared statement based on the type of the column of the property.
-     * 
-     * @param statement The statement
-     * @param sqlIndex  The index of the parameter to set in the statement
-     * @param dynaBean  The bean of which to take the value
-     * @param property  The property of the bean, which also defines the corresponding column
-     */
-    protected void setObject(PreparedStatement statement, int sqlIndex, DynaBean dynaBean, SqlDynaProperty property) throws SQLException
-    {
-        int     typeCode = property.getColumn().getTypeCode();
-        Object  value    = dynaBean.get(property.getName());
-
-        setStatementParameterValue(statement, sqlIndex, typeCode, value);
     }
 
 	/**
@@ -2941,83 +1897,6 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
         }
 	}
 
-    /**
-     * Helper method esp. for the {@link ModelBasedResultSetIterator} class that retrieves
-     * the value for a column from the given result set. If a table was specified,
-     * and it contains the column, then the jdbc type defined for the column is used for extracting
-     * the value, otherwise the object directly retrieved from the result set is returned.<br/>
-     * The method is defined here rather than in the {@link ModelBasedResultSetIterator} class
-     * so that concrete platforms can modify its behavior.
-     * 
-     * @param resultSet  The result set
-     * @param columnName The name of the column
-     * @param table      The table
-     * @return The value
-     */
-    protected Object getObjectFromResultSet(ResultSet resultSet, String columnName, Table table) throws SQLException
-    {
-        Column column = (table == null ? null : table.findColumn(columnName, isDelimitedIdentifierModeOn()));
-        Object value  = null;
-
-        if (column != null)
-        {
-            int originalJdbcType = column.getTypeCode();
-            int targetJdbcType   = getPlatformInfo().getTargetJdbcType(originalJdbcType);
-            int jdbcType         = originalJdbcType;
-
-            // in general we're trying to retrieve the value using the original type
-            // but sometimes we also need the target type:
-            if ((originalJdbcType == Types.BLOB) && (targetJdbcType != Types.BLOB))
-            {
-                // we should not use the Blob interface if the database doesn't map to this type 
-                jdbcType = targetJdbcType;
-            }
-            if ((originalJdbcType == Types.CLOB) && (targetJdbcType != Types.CLOB))
-            {
-                // we should not use the Clob interface if the database doesn't map to this type 
-                jdbcType = targetJdbcType;
-            }
-            value = extractColumnValue(resultSet, columnName, 0, jdbcType);
-        }
-        else
-        {
-            value = resultSet.getObject(columnName);
-        }
-        return resultSet.wasNull() ? null : value;
-    }
-
-    /**
-     * Helper method for retrieving the value for a column from the given result set
-     * using the type code of the column.
-     * 
-     * @param resultSet The result set
-     * @param column    The column
-     * @param idx       The value's index in the result set (starting from 1) 
-     * @return The value
-     */
-    protected Object getObjectFromResultSet(ResultSet resultSet, Column column, int idx) throws SQLException
-    {
-        int    originalJdbcType = column.getTypeCode();
-        int    targetJdbcType   = getPlatformInfo().getTargetJdbcType(originalJdbcType);
-        int    jdbcType         = originalJdbcType;
-        Object value            = null;
-
-        // in general we're trying to retrieve the value using the original type
-        // but sometimes we also need the target type:
-        if ((originalJdbcType == Types.BLOB) && (targetJdbcType != Types.BLOB))
-        {
-            // we should not use the Blob interface if the database doesn't map to this type 
-            jdbcType = targetJdbcType;
-        }
-        if ((originalJdbcType == Types.CLOB) && (targetJdbcType != Types.CLOB))
-        {
-            // we should not use the Clob interface if the database doesn't map to this type 
-            jdbcType = targetJdbcType;
-        }
-        value = extractColumnValue(resultSet, null, idx, jdbcType);
-        return resultSet.wasNull() ? null : value;
-    }
-
 	/**
 	 * This is the core method to retrieve a value for a column from a result set. Its  primary
 	 * purpose is to call the appropriate method on the result set, and to provide an extension
@@ -3050,22 +1929,22 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
 		        break;
 		    case Types.BIT:
             case Types.BOOLEAN:
-		        value = new Boolean(useIdx ? resultSet.getBoolean(columnIdx) : resultSet.getBoolean(columnName));
+		        value = useIdx ? resultSet.getBoolean(columnIdx) : resultSet.getBoolean(columnName);
 		        break;
 		    case Types.TINYINT:
 		    case Types.SMALLINT:
 		    case Types.INTEGER:
-		        value = new Integer(useIdx ? resultSet.getInt(columnIdx) : resultSet.getInt(columnName));
+		        value = useIdx ? resultSet.getInt(columnIdx) : resultSet.getInt(columnName);
 		        break;
 		    case Types.BIGINT:
-		        value = new Long(useIdx ? resultSet.getLong(columnIdx) : resultSet.getLong(columnName));
+		        value = useIdx ? resultSet.getLong(columnIdx) : resultSet.getLong(columnName);
 		        break;
 		    case Types.REAL:
-		        value = new Float(useIdx ? resultSet.getFloat(columnIdx) : resultSet.getFloat(columnName));
+		        value = useIdx ? resultSet.getFloat(columnIdx) : resultSet.getFloat(columnName);
 		        break;
 		    case Types.FLOAT:
 		    case Types.DOUBLE:
-		        value = new Double(useIdx ? resultSet.getDouble(columnIdx) : resultSet.getDouble(columnName));
+		        value = useIdx ? resultSet.getDouble(columnIdx) : resultSet.getDouble(columnName);
 		        break;
 		    case Types.BINARY:
 		    case Types.VARBINARY:
@@ -3150,18 +2029,382 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
         return resultSet.wasNull() ? null : value;
 	}
 
-    
-    /**
-     * Creates an iterator over the given result set.
-     *
-     * @param model      The database model
-     * @param resultSet  The result set to iterate over
-     * @param queryHints The tables that were queried in the query that produced the
-     *                   given result set (optional)
-     * @return The iterator
-     */
-    protected ModelBasedResultSetIterator createResultSetIterator(Database model, ResultSet resultSet, Table[] queryHints)
-    {
-        return new ModelBasedResultSetIterator(this, model, resultSet, queryHints, true);
-    }
+	/**
+	 * Returns all identity properties whose value were defined by the database and which
+	 * now need to be read back from the DB.
+	 *
+	 * @return The columns
+	 */
+	private List<Column> getRelevantIdentityColumns(Table table, Map<String, Object> data)
+	{
+		return data.keySet()
+			.stream()
+			.map(col -> table.findColumn(col).orElseThrow())
+			.filter(col -> col.isAutoIncrement() && (!isIdentityOverrideOn() || !getPlatformInfo().isIdentityOverrideAllowed()))
+			.toList();
+	}
+
+	/**
+	 * Helper method esp. for the {@link ModelBasedResultSetIterator} class that retrieves
+	 * the value for a column from the given result set. If a table was specified,
+	 * and it contains the column, then the jdbc type defined for the column is used for extracting
+	 * the value, otherwise the object directly retrieved from the result set is returned.<br/>
+	 * The method is defined here rather than in the {@link ModelBasedResultSetIterator} class
+	 * so that concrete platforms can modify its behavior.
+	 *
+	 * @param resultSet  The result set
+	 * @param columnName The name of the column
+	 * @param table      The table
+	 * @return The value
+	 */
+	protected Object getObjectFromResultSet(ResultSet resultSet, String columnName, Table table) throws SQLException
+	{
+		Column column = (table == null ? null : table.findColumn(columnName, isDelimitedIdentifierModeOn()).orElse(null));
+		Object value  = null;
+
+		if (column != null)
+		{
+			int originalJdbcType = column.getTypeCode();
+			int targetJdbcType   = getPlatformInfo().getTargetJdbcType(originalJdbcType);
+			int jdbcType         = originalJdbcType;
+
+			// in general we're trying to retrieve the value using the original type
+			// but sometimes we also need the target type:
+			if ((originalJdbcType == Types.BLOB) && (targetJdbcType != Types.BLOB))
+			{
+				// we should not use the Blob interface if the database doesn't map to this type
+				jdbcType = targetJdbcType;
+			}
+			if ((originalJdbcType == Types.CLOB) && (targetJdbcType != Types.CLOB))
+			{
+				// we should not use the Clob interface if the database doesn't map to this type
+				jdbcType = targetJdbcType;
+			}
+			value = extractColumnValue(resultSet, columnName, 0, jdbcType);
+		}
+		else
+		{
+			value = resultSet.getObject(columnName);
+		}
+		return resultSet.wasNull() ? null : value;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Map<String, Object> insert(Connection connection, Database model, String tableName, Map<String, Object> columnValues) throws DatabaseOperationException
+	{
+		var table = model.findTable(tableName).orElseThrow();
+
+		var properties = columnValues.keySet()
+			.stream()
+			.map(col -> table.findColumn(col).orElseThrow())
+			.toList();
+
+		var autoIncrColumns = getRelevantIdentityColumns(table, columnValues);
+
+		String insertSql        = _builder.getInsertSql(table, columnValues, false);
+		String queryIdentitySql = null;
+
+		var result = new HashMap<>(columnValues);
+
+		if (_log.isDebugEnabled())
+		{
+			_log.debug("About to execute SQL: " + insertSql);
+		}
+
+		if (!autoIncrColumns.isEmpty())
+		{
+			if (!getPlatformInfo().isLastIdentityValueReadable())
+			{
+				_log.warn("The database does not support querying for auto-generated column values");
+			}
+			else
+			{
+				queryIdentitySql = _builder.getSelectLastIdentityValues(table);
+			}
+		}
+
+		boolean           autoCommitMode = false;
+		PreparedStatement statement      = null;
+
+		try
+		{
+			if (!getPlatformInfo().isAutoCommitModeForLastIdentityValueReading())
+			{
+				autoCommitMode = connection.getAutoCommit();
+				connection.setAutoCommit(false);
+			}
+
+			beforeInsert(connection, table);
+
+			statement = connection.prepareStatement(insertSql);
+
+			for (int idx = 0; idx < properties.size(); idx++ )
+			{
+				setObject(statement, idx, columnValues, properties);
+			}
+
+			int count = statement.executeUpdate();
+
+			afterInsert(connection, table);
+
+			if (count != 1)
+			{
+				_log.warn("Attempted to insert a single row " + columnValues +
+					" in table " + tableName +
+					" but changed " + count + " row(s)");
+			}
+		}
+		catch (SQLException ex)
+		{
+			throw new DatabaseOperationException("Error while inserting into the database: " + ex.getMessage(), ex);
+		}
+		finally
+		{
+			closeStatement(statement);
+		}
+		if (queryIdentitySql != null)
+		{
+			Statement queryStmt       = null;
+			ResultSet lastInsertedIds = null;
+
+			try
+			{
+				if (getPlatformInfo().isAutoCommitModeForLastIdentityValueReading())
+				{
+					// we'll commit the statement(s) if no auto-commit is enabled because
+					// otherwise it is possible that the auto increment hasn't happened yet
+					// (the db didn't actually perform the insert yet so no triggering of
+					// sequences did occur)
+					if (!connection.getAutoCommit())
+					{
+						connection.commit();
+					}
+				}
+
+				queryStmt       = connection.createStatement();
+				lastInsertedIds = queryStmt.executeQuery(queryIdentitySql);
+
+				lastInsertedIds.next();
+
+				for (Column autoIncrColumn : autoIncrColumns) {
+					// we're using the index rather than the name because we cannot know how
+					// the SQL statement looks like; rather we assume that we get the values
+					// back in the same order as the auto increment columns
+					Object value = getObjectFromResultSet(lastInsertedIds, autoIncrColumn.getName(), table);
+					result.put(autoIncrColumn.getName(), value);
+				}
+			}
+			catch (SQLException ex)
+			{
+				throw new DatabaseOperationException("Error while retrieving the identity column value(s) from the database", ex);
+			}
+			finally
+			{
+				if (lastInsertedIds != null)
+				{
+					try
+					{
+						lastInsertedIds.close();
+					}
+					catch (SQLException ex)
+					{
+						// we ignore this one
+					}
+				}
+				closeStatement(statement);
+			}
+		}
+		if (!getPlatformInfo().isAutoCommitModeForLastIdentityValueReading())
+		{
+			try
+			{
+				// we need to do a manual commit now
+				connection.commit();
+				connection.setAutoCommit(autoCommitMode);
+			}
+			catch (SQLException ex)
+			{
+				throw new DatabaseOperationException(ex);
+			}
+		}
+		return result;
+	}
+
+	private void setObject(
+		final PreparedStatement statement,
+		final int idx,
+		final Map<String, Object> columnValues,
+		final List<Column> properties
+	) throws SQLException
+	{
+		int     typeCode = properties.get(idx).getTypeCode();
+		Object  value    = columnValues.get(properties.get(idx).getName());
+
+		setStatementParameterValue(statement, idx + 1, typeCode, value);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Map<String, Object> insert(Database model, String table, Map<String, Object> data) throws DatabaseOperationException
+	{
+		Connection connection = borrowConnection();
+
+		try
+		{
+			return insert(connection, model, table, data);
+		}
+		finally
+		{
+			returnConnection(connection);
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public List<Map<String, Object>> fetch(Database model, String sql, @Nullable Collection<Object> parameters, List<Table> queryHints, int start, int end) throws DatabaseOperationException
+	{
+		Connection        connection = borrowConnection();
+		PreparedStatement statement  = null;
+		ResultSet         resultSet  = null;
+		var result = new ArrayList<Map<String, Object>>();
+
+		try
+		{
+			statement = connection.prepareStatement(sql);
+			if (parameters != null) {
+				int paramIdx = 1;
+
+				for (var iter = parameters.iterator(); iter.hasNext(); paramIdx++)
+				{
+					Object arg = iter.next();
+
+					if (arg instanceof BigDecimal)
+					{
+						// to avoid scale problems because setObject assumes a scale of 0
+						statement.setBigDecimal(paramIdx, (BigDecimal)arg);
+					}
+					else
+					{
+						statement.setObject(paramIdx, arg);
+					}
+				}
+			}
+			resultSet = statement.executeQuery();
+
+			int rowIdx = 0;
+
+			for (var it = createResultSetIterator(model, resultSet, queryHints); ((end < 0) || (rowIdx <= end)) && it.hasNext(); rowIdx++)
+			{
+				if (rowIdx >= start)
+				{
+					result.add(it.next());
+				}
+				else
+				{
+					it.advance();
+				}
+			}
+		}
+		catch (SQLException ex)
+		{
+			// any other exception comes from the iterator which closes the resources automatically
+			closeStatement(statement);
+			returnConnection(connection);
+			throw new DatabaseOperationException("Error while fetching data from the database", ex);
+		}
+		return result;
+	}
+
+//	/**
+//	 * {@inheritDoc}
+//	 */
+//	public void insert(Connection connection, Database model, List<Map<String, Object>> dynaBeans) throws DatabaseOperationException
+//	{
+//		SqlDynaClass      dynaClass              = null;
+//		SqlDynaProperty[] properties             = null;
+//		PreparedStatement statement              = null;
+//		int               addedStmts             = 0;
+//		boolean           identityWarningPrinted = false;
+//
+//		for (Iterator it = dynaBeans.iterator(); it.hasNext();)
+//		{
+//			DynaBean     dynaBean     = (DynaBean)it.next();
+//			SqlDynaClass curDynaClass = model.getDynaClassFor(dynaBean);
+//
+//			if (curDynaClass != dynaClass)
+//			{
+//				if (dynaClass != null)
+//				{
+//					executeBatch(statement, addedStmts, dynaClass.getTable());
+//					addedStmts = 0;
+//				}
+//
+//				dynaClass  = curDynaClass;
+//				properties = getPropertiesForInsertion(model, curDynaClass, dynaBean);
+//
+//				if (properties.length == 0)
+//				{
+//					_log.warn("Cannot insert instances of type " + dynaClass + " because it has no usable properties");
+//					continue;
+//				}
+//				if (!identityWarningPrinted &&
+//					(getRelevantIdentityColumns(model, curDynaClass, dynaBean).length > 0))
+//				{
+//					_log.warn("Updating the bean properties corresponding to auto-increment columns is not supported in batch mode");
+//					identityWarningPrinted = true;
+//				}
+//
+//				String insertSql = createInsertSql(model, dynaClass, properties, null);
+//
+//				if (_log.isDebugEnabled())
+//				{
+//					_log.debug("Starting new batch with SQL: " + insertSql);
+//				}
+//				try
+//				{
+//					statement = connection.prepareStatement(insertSql);
+//				}
+//				catch (SQLException ex)
+//				{
+//					throw new DatabaseOperationException("Error while preparing insert statement", ex);
+//				}
+//			}
+//			try
+//			{
+//				for (int idx = 0; idx < properties.length; idx++ )
+//				{
+//					setObject(statement, idx + 1, dynaBean, properties[idx]);
+//				}
+//				statement.addBatch();
+//				addedStmts++;
+//			}
+//			catch (SQLException ex)
+//			{
+//				throw new DatabaseOperationException("Error while adding batch insert", ex);
+//			}
+//		}
+//		if (dynaClass != null)
+//		{
+//			executeBatch(statement, addedStmts, dynaClass.getTable());
+//		}
+//	}
+
+
+	/**
+	 * Creates an iterator over the given result set.
+	 *
+	 * @param model      The database model
+	 * @param resultSet  The result set to iterate over
+	 * @param queryHints The tables that were queried in the query that produced the
+	 *                   given result set (optional)
+	 * @return The iterator
+	 */
+	protected ModelBasedResultSetIterator createResultSetIterator(Database model, ResultSet resultSet, List<Table> queryHints)
+	{
+		return new ModelBasedResultSetIterator(this, model, resultSet, queryHints, true);
+	}
 }

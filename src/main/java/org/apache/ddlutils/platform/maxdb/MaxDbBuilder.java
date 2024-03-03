@@ -19,13 +19,14 @@ package org.apache.ddlutils.platform.maxdb;
  * under the License.
  */
 
-import java.io.IOException;
-
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.sapdb.SapDbBuilder;
+
+import java.io.IOException;
+import java.util.List;
 
 /**
  * The SQL Builder for MaxDB.
@@ -47,9 +48,9 @@ public class MaxDbBuilder extends SapDbBuilder
     /**
      * {@inheritDoc}
      */
-    public void createPrimaryKey(Table table, Column[] primaryKeyColumns) throws IOException
+    public void createPrimaryKey(Table table, List<Column> primaryKeyColumns) throws IOException
     {
-        if ((primaryKeyColumns.length > 0) && shouldGeneratePrimaryKeys(primaryKeyColumns))
+        if ((!primaryKeyColumns.isEmpty()) && shouldGeneratePrimaryKeys(primaryKeyColumns))
         {
             print("ALTER TABLE ");
             printlnIdentifier(getTableName(table));

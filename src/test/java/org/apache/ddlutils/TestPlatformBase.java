@@ -19,12 +19,17 @@ package org.apache.ddlutils;
  * under the License.
  */
 
-import java.io.IOException;
-import java.io.StringWriter;
-
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.platform.SqlBuilder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * Base class for builder tests.
@@ -38,13 +43,13 @@ public abstract class TestPlatformBase extends TestBase
     /** The writer that the builder of the platform writes to. */
     private StringWriter _writer;
 
-    /**
-     * {@inheritDoc}
-     */
+
+	@BeforeEach
     protected void setUp() throws Exception
     {
         _writer   = new StringWriter();
-        _platform = PlatformFactory.createNewPlatformInstance(getDatabaseName());
+        _platform = PlatformFactory.createNewPlatformInstance(getDatabaseName())
+			.orElseThrow();
         _platform.getSqlBuilder().setWriter(_writer);
         if (_platform.getPlatformInfo().isDelimitedIdentifiersSupported())
         {
@@ -52,9 +57,7 @@ public abstract class TestPlatformBase extends TestBase
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+	@AfterEach
     protected void tearDown() throws Exception
     {
         _platform = null;
@@ -258,4 +261,19 @@ public abstract class TestPlatformBase extends TestBase
 
         return getDatabaseCreationSql(schema);
     }
+
+	protected  <T> void assertEquals(final T columnCount, final T columnCount1)
+	{
+		Assertions.assertEquals(columnCount, columnCount1);
+	}
+
+	protected <T> void assertEquals(final String s, final T columnCount, final T columnCount1)
+	{
+		Assertions.assertEquals(columnCount, columnCount1, s);
+	}
+
+	protected void assertEqualsAttr(@Nullable final Object exp, final Map<String, Object> stringObjectMap, final String property)
+	{
+		Assertions.assertEquals(exp, stringObjectMap.get(property), () -> "Attribute " + property + " differs");
+	}
 }

@@ -35,7 +35,7 @@ public class StringUtilsExt extends org.apache.commons.lang3.StringUtils
      * @param caseSensitive Whether case matters in the comparison
      * @return <code>true</code> if the two strings are equal
      */
-    public static final boolean equals(String strA, String strB, boolean caseSensitive)
+    public static boolean equals(String strA, String strB, boolean caseSensitive)
     {
         return caseSensitive ? equals(strA, strB) : equalsIgnoreCase(strA, strB);
     }

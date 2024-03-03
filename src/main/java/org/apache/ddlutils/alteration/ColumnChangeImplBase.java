@@ -23,6 +23,8 @@ import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
 
+import javax.annotation.Nullable;
+
 /**
  * Base class for changes to columns.
  * 
@@ -57,10 +59,11 @@ public abstract class ColumnChangeImplBase extends    TableChangeImplBase
     /**
      * {@inheritDoc}
      */
+	@Nullable
     public Column findChangedColumn(Database model, boolean caseSensitive)
     {
     	Table table = findChangedTable(model, caseSensitive);
 
-    	return table == null ? null : table.findColumn(_columnName, caseSensitive);
+    	return table == null ? null : table.findColumn(_columnName, caseSensitive).orElse(null);
     }
 }

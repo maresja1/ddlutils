@@ -19,19 +19,19 @@ package org.apache.ddlutils.model;
  * under the License.
  */
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Represents a table in the database model.
@@ -41,7 +41,8 @@ import java.util.Iterator;
 public class Table implements Serializable
 {
     /** Unique ID for serialization purposes. */
-    private static final long serialVersionUID = -5541154961302342608L;
+    @Serial
+	private static final long serialVersionUID = -5541154961302342608L;
 
     /** The catalog of this table as read from the database. */
     private String _catalog = null;
@@ -54,11 +55,11 @@ public class Table implements Serializable
     /** The table's type as read from the database. */
     private String _type = null;
     /** The columns in this table. */
-    private ArrayList _columns = new ArrayList();
+    private final List<Column> _columns = new ArrayList<>();
     /** The foreign keys associated to this table. */
-    private ArrayList _foreignKeys = new ArrayList();
+    private final List<ForeignKey> _foreignKeys = new ArrayList<>();
     /** The indices applied to this table. */
-    private ArrayList _indices = new ArrayList();
+    private final List<Index> _indices = new ArrayList<>();
 
     /**
      * Returns the catalog of this table as read from the database.
@@ -178,7 +179,7 @@ public class Table implements Serializable
      */
     public Column getColumn(int idx)
     {
-        return (Column)_columns.get(idx);
+        return _columns.get(idx);
     }
 
     /**
@@ -186,9 +187,9 @@ public class Table implements Serializable
      * 
      * @return The columns
      */
-    public Column[] getColumns()
+    public List<Column> getColumns()
     {
-        return (Column[])_columns.toArray(new Column[_columns.size()]);
+        return _columns;
     }
 
     /**
@@ -245,13 +246,12 @@ public class Table implements Serializable
      * 
      * @param columns The columns
      */
-    public void addColumns(Collection columns)
+    public void addColumns(Collection<Column> columns)
     {
-        for (Iterator it = columns.iterator(); it.hasNext();)
-        {
-            addColumn((Column)it.next());
-        }
-    }
+		for (Column column : columns) {
+			addColumn(column);
+		}
+	}
 
     /**
      * Removes the given column.
@@ -304,7 +304,7 @@ public class Table implements Serializable
      */
     public ForeignKey getForeignKey(int idx)
     {
-        return (ForeignKey)_foreignKeys.get(idx);
+        return _foreignKeys.get(idx);
     }
 
     /**
@@ -314,7 +314,7 @@ public class Table implements Serializable
      */
     public ForeignKey[] getForeignKeys()
     {
-        return (ForeignKey[])_foreignKeys.toArray(new ForeignKey[_foreignKeys.size()]);
+        return _foreignKeys.toArray(new ForeignKey[0]);
     }
 
     /**
@@ -349,12 +349,11 @@ public class Table implements Serializable
      * 
      * @param foreignKeys The foreign keys
      */
-    public void addForeignKeys(Collection foreignKeys)
+    public void addForeignKeys(Collection<ForeignKey> foreignKeys)
     {
-        for (Iterator it = foreignKeys.iterator(); it.hasNext();)
-        {
-            addForeignKey((ForeignKey)it.next());
-        }
+		for (ForeignKey foreignKey : foreignKeys) {
+			addForeignKey(foreignKey);
+		}
     }
 
     /**
@@ -441,12 +440,11 @@ public class Table implements Serializable
      * 
      * @param indices The indices
      */
-    public void addIndices(Collection indices)
+    public void addIndices(Collection<Index> indices)
     {
-        for (Iterator it = indices.iterator(); it.hasNext();)
-        {
-            addIndex((Index)it.next());
-        }
+		for (Index index : indices) {
+			addIndex(index);
+		}
     }
 
     /**
@@ -454,9 +452,9 @@ public class Table implements Serializable
      * 
      * @return The indices
      */
-    public Index[] getIndices()
+    public List<Index> getIndices()
     {
-        return (Index[])_indices.toArray(new Index[_indices.size()]);
+        return _indices;
     }
 
     /**
@@ -464,15 +462,9 @@ public class Table implements Serializable
      * 
      * @return The unique indices
      */
-    public Index[] getNonUniqueIndices()
+    public Stream<Index> getNonUniqueIndices()
     {
-        Collection nonUniqueIndices = CollectionUtils.select(_indices, new Predicate() {
-            public boolean evaluate(Object input) {
-                return !((Index)input).isUnique();
-            }
-        });
-
-        return (Index[])nonUniqueIndices.toArray(new Index[nonUniqueIndices.size()]);
+		return _indices.stream().filter(index -> !index.isUnique());
     }
 
     /**
@@ -480,15 +472,9 @@ public class Table implements Serializable
      * 
      * @return The unique indices
      */
-    public Index[] getUniqueIndices()
+    public Stream<Index> getUniqueIndices()
     {
-        Collection uniqueIndices = CollectionUtils.select(_indices, new Predicate() {
-            public boolean evaluate(Object input) {
-                return ((Index)input).isUnique();
-            }
-        });
-
-        return (Index[])uniqueIndices.toArray(new Index[uniqueIndices.size()]);
+		return _indices.stream().filter(Index::isUnique);
     }
 
     /**
@@ -524,16 +510,7 @@ public class Table implements Serializable
      */
     public boolean hasPrimaryKey()
     {
-        for (Iterator it = _columns.iterator(); it.hasNext(); )
-        {
-            Column column = (Column)it.next();
-
-            if (column.isPrimaryKey())
-            {
-                return true;
-            }
-        }
-        return false;
+        return _columns.stream().anyMatch(Column::isPrimaryKey);
     }
 
     /**
@@ -544,7 +521,7 @@ public class Table implements Serializable
      * @param name The name of the column
      * @return The column or <code>null</code> if there is no such column
      */
-    public Column findColumn(String name)
+    public Optional<Column> findColumn(String name)
     {
         return findColumn(name, false);
     }
@@ -558,28 +535,20 @@ public class Table implements Serializable
      * @param caseSensitive Whether case matters for the names
      * @return The column or <code>null</code> if there is no such column
      */
-    public Column findColumn(String name, boolean caseSensitive)
+    public Optional<Column> findColumn(String name, boolean caseSensitive)
     {
-        for (Iterator it = _columns.iterator(); it.hasNext(); )
-        {
-            Column column = (Column)it.next();
-
-            if (caseSensitive)
-            {
-                if (column.getName().equals(name))
-                {
-                    return column;
-                }
-            }
-            else
-            {
-                if (column.getName().equalsIgnoreCase(name))
-                {
-                    return column;
-                }
-            }
-        }
-        return null;
+		if (name == null)
+		{
+			throw new NullPointerException("The column name to search for cannot be null");
+		}
+        return _columns.stream().filter(column -> {
+			if (caseSensitive) {
+				return column.getName().equals(name);
+			} else {
+				return column.getName().equalsIgnoreCase(name);
+			}
+		})
+			.findFirst();
     }
 
     /**
@@ -610,7 +579,7 @@ public class Table implements Serializable
      * @param name The name of the index
      * @return The index or <code>null</code> if there is no such index
      */
-    public Index findIndex(String name)
+    public Optional<Index> findIndex(String name)
     {
         return findIndex(name, false);
     }
@@ -625,23 +594,20 @@ public class Table implements Serializable
      * @param caseSensitive Whether case matters for the names
      * @return The index or <code>null</code> if there is no such index
      */
-    public Index findIndex(String name, boolean caseSensitive)
+    public Optional<Index> findIndex(String name, boolean caseSensitive)
     {
         if (name == null)
         {
             throw new NullPointerException("The index name to search for cannot be null");
         }
-        for (int idx = 0; idx < getIndexCount(); idx++)
-        {
-            Index index = getIndex(idx);
-
-            if ((caseSensitive  && name.equals(index.getName())) ||
-                (!caseSensitive && name.equalsIgnoreCase(index.getName())))
-            {
-                return index;
-            }
-        }
-        return null;
+		return _indices.stream().filter(index -> {
+				if (caseSensitive) {
+					return index.getName().equals(name);
+				} else {
+					return index.getName().equalsIgnoreCase(name);
+				}
+			})
+			.findFirst();
     }
 
     /**
@@ -652,7 +618,7 @@ public class Table implements Serializable
      * @param name The name of the foreign key
      * @return The foreign key or <code>null</code> if there is no such foreigb key
      */
-    public ForeignKey findForeignKey(String name)
+    public Optional<ForeignKey> findForeignKey(String name)
     {
         return findForeignKey(name, false);
     }
@@ -667,23 +633,21 @@ public class Table implements Serializable
      * @param caseSensitive Whether case matters for the names
      * @return The foreign key or <code>null</code> if there is no such foreign key
      */
-    public ForeignKey findForeignKey(String name, boolean caseSensitive)
+    public Optional<ForeignKey> findForeignKey(String name, boolean caseSensitive)
     {
         if (name == null)
         {
             throw new NullPointerException("The foreign key name to search for cannot be null");
         }
-        for (int idx = 0; idx < getForeignKeyCount(); idx++)
-        {
-            ForeignKey foreignKey = getForeignKey(idx);
 
-            if ((caseSensitive  && name.equals(foreignKey.getName())) ||
-                (!caseSensitive && name.equalsIgnoreCase(foreignKey.getName())))
-            {
-                return foreignKey;
-            }
-        }
-        return null;
+		return _foreignKeys.stream().filter(foreignKey -> {
+				if (caseSensitive) {
+					return foreignKey.getName().equals(name);
+				} else {
+					return foreignKey.getName().equalsIgnoreCase(name);
+				}
+			})
+			.findFirst();
     }
 
     /**
@@ -692,18 +656,9 @@ public class Table implements Serializable
      * @param key The foreign key to search for
      * @return The found foreign key
      */
-    public ForeignKey findForeignKey(ForeignKey key)
+    public Optional<ForeignKey> findForeignKey(ForeignKey key)
     {
-        for (int idx = 0; idx < getForeignKeyCount(); idx++)
-        {
-            ForeignKey fk = getForeignKey(idx);
-
-            if (fk.equals(key))
-            {
-                return fk;
-            }
-        }
-        return null;
+        return findForeignKey(key, true);
     }
 
     /**
@@ -713,19 +668,16 @@ public class Table implements Serializable
      * @param caseSensitive Whether case matters for the names
      * @return The found foreign key
      */
-    public ForeignKey findForeignKey(ForeignKey key, boolean caseSensitive)
+    public Optional<ForeignKey> findForeignKey(ForeignKey key, boolean caseSensitive)
     {
-        for (int idx = 0; idx < getForeignKeyCount(); idx++)
-        {
-            ForeignKey fk = getForeignKey(idx);
-
-            if ((caseSensitive  && fk.equals(key)) ||
-                (!caseSensitive && fk.equalsIgnoreCase(key)))
-            {
-                return fk;
-            }
-        }
-        return null;
+		return _foreignKeys.stream().filter(foreignKey -> {
+				if (caseSensitive) {
+					return foreignKey.equals(key);
+				} else {
+					return foreignKey.equalsIgnoreCase(key);
+				}
+			})
+			.findFirst();
     }
 
     /**
@@ -733,18 +685,10 @@ public class Table implements Serializable
      * 
      * @return The self-referencing foreign key if any
      */
-    public ForeignKey getSelfReferencingForeignKey()
+    public Optional<ForeignKey> getSelfReferencingForeignKey()
     {
-        for (int idx = 0; idx < getForeignKeyCount(); idx++)
-        {
-            ForeignKey fk = getForeignKey(idx);
-
-            if (this.equals(fk.getForeignTable()))
-            {
-                return fk;
-            }
-        }
-        return null;
+		return _foreignKeys.stream().filter(fk -> this.equals(fk.getForeignTable()))
+			.findFirst();
     }
 
     /**
@@ -752,15 +696,9 @@ public class Table implements Serializable
      * 
      * @return The primary key columns
      */
-    public Column[] getPrimaryKeyColumns()
+    public Stream<Column> getPrimaryKeyColumns()
     {
-        Collection pkColumns = CollectionUtils.select(_columns, new Predicate() {
-            public boolean evaluate(Object input) {
-                return ((Column)input).isPrimaryKey();
-            }
-        });
-
-        return (Column[])pkColumns.toArray(new Column[pkColumns.size()]);
+		return _columns.stream().filter(Column::isPrimaryKey);
     }
 
     /**
@@ -768,17 +706,9 @@ public class Table implements Serializable
      * 
      * @return The primary key column names
      */
-    public String[] getPrimaryKeyColumnNames()
+    public Stream<String> getPrimaryKeyColumnNames()
     {
-        Column[] pkColumns = getPrimaryKeyColumns();
-        String[] names     = new String[pkColumns.length];
-
-        for (int colIdx = 0; colIdx < pkColumns.length; colIdx++)
-        {
-            names[colIdx] = pkColumns[colIdx].getName();
-        }
-
-        return names;
+        return getPrimaryKeyColumns().map(Column::getName);
     }
 
     /**
@@ -787,32 +717,9 @@ public class Table implements Serializable
      * 
      * @return The auto increment columns
      */
-    public Column[] getAutoIncrementColumns()
+    public Stream<Column> getAutoIncrementColumns()
     {
-        Collection autoIncrColumns = CollectionUtils.select(_columns, new Predicate() {
-            public boolean evaluate(Object input) {
-                return ((Column)input).isAutoIncrement();
-            }
-        });
-
-        return (Column[])autoIncrColumns.toArray(new Column[autoIncrColumns.size()]);
-    }
-
-    /**
-     * Returns the required (not-nullable) columns in this table. If none are found,
-     * then an empty array will be returned.
-     * 
-     * @return The required columns
-     */
-    public Column[] getRequiredColumns()
-    {
-        Collection requiredColumns = CollectionUtils.select(_columns, new Predicate() {
-            public boolean evaluate(Object input) {
-                return ((Column)input).isRequired();
-            }
-        });
-
-        return (Column[])requiredColumns.toArray(new Column[requiredColumns.size()]);
+		return _columns.stream().filter(Column::isAutoIncrement);
     }
 
     /**
@@ -825,21 +732,17 @@ public class Table implements Serializable
         if (!_foreignKeys.isEmpty())
         {
             final Collator collator = Collator.getInstance();
-    
-            Collections.sort(_foreignKeys, new Comparator() {
-                public int compare(Object obj1, Object obj2)
-                {
-                    String fk1Name = ((ForeignKey)obj1).getName();
-                    String fk2Name = ((ForeignKey)obj2).getName();
+			_foreignKeys.sort((fk1, fk2) -> {
+				String fk1Name = fk1.getName();
+				String fk2Name = fk2.getName();
 
-                    if (!caseSensitive)
-                    {
-                        fk1Name = (fk1Name != null ? fk1Name.toLowerCase() : null);
-                        fk2Name = (fk2Name != null ? fk2Name.toLowerCase() : null);
-                    }
-                    return collator.compare(fk1Name, fk2Name);
-                }
-            });
+				if (!caseSensitive)
+				{
+					fk1Name = (fk1Name != null ? fk1Name.toLowerCase() : null);
+					fk2Name = (fk2Name != null ? fk2Name.toLowerCase() : null);
+				}
+				return collator.compare(fk1Name, fk2Name);
+			});
         }
     }
     
@@ -848,16 +751,15 @@ public class Table implements Serializable
      */
     public boolean equals(Object obj)
     {
-        if (obj instanceof Table)
+        if (obj instanceof final Table other)
         {
-            Table other = (Table)obj;
 
-            // Note that this compares case sensitive
+			// Note that this compares case sensitive
             // TODO: For now we ignore catalog and schema (type should be irrelevant anyways)
             return new EqualsBuilder().append(_name,                     other._name)
                                       .append(_columns,                  other._columns)
-                                      .append(new HashSet(_foreignKeys), new HashSet(other._foreignKeys))
-                                      .append(new HashSet(_indices),     new HashSet(other._indices))
+                                      .append(new HashSet<>(_foreignKeys), new HashSet<>(other._foreignKeys))
+                                      .append(new HashSet<>(_indices),     new HashSet<>(other._indices))
                                       .isEquals();
         }
         else
@@ -874,8 +776,8 @@ public class Table implements Serializable
         // TODO: For now we ignore catalog and schema (type should be irrelevant anyways)
         return new HashCodeBuilder(17, 37).append(_name)
                                           .append(_columns)
-                                          .append(new HashSet(_foreignKeys))
-                                          .append(new HashSet(_indices))
+                                          .append(new HashSet<>(_foreignKeys))
+                                          .append(new HashSet<>(_indices))
                                           .toHashCode();
     }
 
@@ -884,15 +786,7 @@ public class Table implements Serializable
      */
     public String toString()
     {
-        StringBuffer result = new StringBuffer();
-
-        result.append("Table [name=");
-        result.append(getName());
-        result.append("; ");
-        result.append(getColumnCount());
-        result.append(" columns]");
-
-        return result.toString();
+		return "Table [name=" + getName() + "; " + getColumnCount() + " columns]";
     }
 
     /**
@@ -902,7 +796,7 @@ public class Table implements Serializable
      */
     public String toVerboseString()
     {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
 
         result.append("Table [name=");
         result.append(getName());

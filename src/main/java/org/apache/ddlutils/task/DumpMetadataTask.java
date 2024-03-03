@@ -19,7 +19,7 @@ package org.apache.ddlutils.task;
  * under the License.
  */
 
-import org.apache.commons.collections.set.ListOrderedSet;
+import org.apache.commons.collections4.set.ListOrderedSet;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.ddlutils.io.PrettyPrintingXmlWriter;
 import org.apache.tools.ant.BuildException;
@@ -40,6 +40,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -52,7 +53,7 @@ import java.util.StringTokenizer;
 public class DumpMetadataTask extends Task
 {
     /** Methods that are filtered when enumerating the properties. */
-    private static final String[] IGNORED_PROPERTY_METHODS = { "getConnection", "getCatalogs", "getSchemas" };
+    private static final List<String> IGNORED_PROPERTY_METHODS = List.of("getConnection", "getCatalogs", "getSchemas");
 
     /** The data source to use for accessing the database. */
     private BasicDataSource _dataSource;
@@ -71,7 +72,7 @@ public class DumpMetadataTask extends Task
     /** The pattern for reading all columns. */
     private String _columnPattern = "%";
     /** The tables types to read; <code>null</code> or an empty list means that we shall read every type. */
-    private String[] _tableTypes = null;
+    private List<String> _tableTypes = null;
     /** Whether to read tables. */
     private boolean _dumpTables = true;
     /** Whether to read procedures. */
@@ -172,7 +173,7 @@ public class DumpMetadataTask extends Task
      */
     public void setTableTypes(String tableTypes)
     {
-        ArrayList types = new ArrayList();
+        List<String> types = new ArrayList<>();
 
         if (tableTypes != null)
         {
@@ -188,7 +189,7 @@ public class DumpMetadataTask extends Task
                 }
             }
         }
-        _tableTypes = (String[])types.toArray(new String[types.size()]);
+        _tableTypes = types;
     }
 
     /**
@@ -650,11 +651,11 @@ public class DumpMetadataTask extends Task
             }
         });
 
-        final String[] tableTypesToRead;
+        final List<String> tableTypesToRead;
 
-        if ((_tableTypes == null) || (_tableTypes.length == 0))
+        if ((_tableTypes == null) || (_tableTypes.size() == 0))
         {
-            tableTypesToRead = (String[])tableTypeList.toArray(new String[tableTypeList.size()]);
+            tableTypesToRead = tableTypeList;
         }
         else
         {
@@ -665,7 +666,7 @@ public class DumpMetadataTask extends Task
         {
             public ResultSet getResultSet() throws SQLException
             {
-                return metaData.getTables(_catalogPattern, _schemaPattern, _tablePattern, tableTypesToRead);
+                return metaData.getTables(_catalogPattern, _schemaPattern, _tablePattern, tableTypesToRead.toArray(String[]::new));
             }
 
             public void handleRow(PrettyPrintingXmlWriter xmlWriter, ResultSet result) throws SQLException
@@ -1388,7 +1389,7 @@ public class DumpMetadataTask extends Task
         		{
 	        		try
 	        		{
-	                    xmlWriter.writeAttribute(null, attrName, new Integer(value).toString());
+	                    xmlWriter.writeAttribute(null, attrName, value);
 	        		}
 	        		catch (NumberFormatException parseEx)
 	        		{
@@ -1426,7 +1427,7 @@ public class DumpMetadataTask extends Task
         		{
                     try
                     {
-                        xmlWriter.writeAttribute(null, attrName, new Short(value).toString());
+                        xmlWriter.writeAttribute(null, attrName, String.valueOf(Short.parseShort(value)));
                     }
                     catch (NumberFormatException parseEx)
                     {
@@ -1464,7 +1465,7 @@ public class DumpMetadataTask extends Task
                 {
                     try
                     {
-                        xmlWriter.writeAttribute(null, attrName, new Boolean(value).toString());
+                        xmlWriter.writeAttribute(null, attrName, value);
                     }
                     catch (NumberFormatException parseEx)
                     {
@@ -1481,9 +1482,9 @@ public class DumpMetadataTask extends Task
      * @param resultSet The result set
      * @return The columns
      */
-    private Set getColumnsInResultSet(ResultSet resultSet) throws SQLException
+    private Set<String> getColumnsInResultSet(ResultSet resultSet) throws SQLException
     {
-        ListOrderedSet    result   = new ListOrderedSet();
+        Set<String> result = new ListOrderedSet<>();
         ResultSetMetaData metaData = resultSet.getMetaData();
 
         for (int idx = 1; idx <= metaData.getColumnCount(); idx++)

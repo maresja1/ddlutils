@@ -19,11 +19,6 @@ package org.apache.ddlutils.io;
  * under the License.
  */
 
-import java.math.BigDecimal;
-import java.util.List;
-
-import junit.framework.Test;
-
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.ddlutils.TestAgainstLiveDatabaseBase;
 import org.apache.ddlutils.platform.hsqldb.HsqlDbPlatform;
@@ -31,6 +26,15 @@ import org.apache.ddlutils.platform.maxdb.MaxDbPlatform;
 import org.apache.ddlutils.platform.mysql.MySql50Platform;
 import org.apache.ddlutils.platform.mysql.MySqlPlatform;
 import org.apache.ddlutils.platform.sybase.SybasePlatform;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Objects;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests database alterations that insert columns.
@@ -39,19 +43,23 @@ import org.apache.ddlutils.platform.sybase.SybasePlatform;
  */
 public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 {
-    /**
-     * Parameterized test case pattern.
-     * 
-     * @return The tests
-     */
-    public static Test suite() throws Exception
-    {
-        return getTests(TestInsertColumn.class);
-    }
+
+	@BeforeEach
+	protected void setUp() throws Exception
+	{
+		super.setUp();
+	}
+
+	@AfterEach
+	protected void tearDown() throws Exception
+	{
+		super.tearDown();
+	}
 
     /**
      * Tests the insertion of a column.
      */
+    @Test
     public void testInsertColumn()
     {
         final String model1Xml = 
@@ -72,7 +80,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1) });
+        insertRow("roundtrip", new Object[] { 1 });
 
     	alterDatabase(model2Xml);
 
@@ -81,12 +89,13 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         List beans = getRows("roundtrip");
 
-        assertEquals((Object)null, beans.get(0), "avalue");
+        assertEqualsAttr((Object)null, beans.get(0), "avalue");
     }
 
     /**
      * Tests the insertion of an auto-increment column.
      */
+    @Test
     public void testInsertAutoIncrementColumn()
     {
     	if (!getPlatformInfo().isNonPrimaryKeyIdentityColumnsSupported())
@@ -128,7 +137,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1) });
+        insertRow("roundtrip", new Object[] { 1 });
 
     	alterDatabase(model2Xml);
 
@@ -139,19 +148,20 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         if (isSybase)
         {
-            assertEquals(new BigDecimal(1), beans.get(0), "avalue");
+            assertEqualsAttr(new BigDecimal(1), beans.get(0), "avalue");
         }
         else
         {
             Object avalue = ((DynaBean)beans.get(0)).get("avalue");
 
-            assertTrue((avalue == null) || new Integer(1).equals(avalue));
+            assertTrue((avalue == null) || Objects.equals(1, avalue));
         }
     }
 
     /**
      * Tests the insertion of a column that is set to NOT NULL.
      */
+    @Test
     public void testInsertRequiredColumn()
     {
         final String model1Xml = 
@@ -172,7 +182,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1) });
+        insertRow("roundtrip", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
@@ -181,7 +191,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         List beans = getRows("roundtrip");
 
-        assertEquals(new BigDecimal(2), beans.get(0), "avalue");
+        assertEqualsAttr(new BigDecimal(2), beans.get(0), "avalue");
     }
 
     /**
@@ -190,6 +200,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
      * For instance, Sql Server has a statement for this which means that the
      * existing value in column avalue won't be changed and thus the test fails.
      */
+    @Test
     public void testInsertColumnWithDefault()
     {
         final String model1Xml = 
@@ -210,7 +221,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1) });
+        insertRow("roundtrip", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
@@ -224,12 +235,13 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         // it directly (in which case it might still be NULL)
         Object avalue = ((DynaBean)beans.get(0)).get("avalue");
 
-        assertTrue((avalue == null) || new Double(2).equals(avalue));
+        assertTrue((avalue == null) || Objects.equals(2, avalue));
     }
 
     /**
      * Tests the insertion of a required auto-increment column.
      */
+    @Test
     public void testInsertRequiredAutoIncrementColumn()
     {
         if (!getPlatformInfo().isNonPrimaryKeyIdentityColumnsSupported())
@@ -271,7 +283,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1) });
+        insertRow("roundtrip", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
@@ -282,13 +294,13 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         if (isSybase)
         {
-            assertEquals(new BigDecimal(1), beans.get(0), "avalue");
+            assertEqualsAttr(new BigDecimal(1), beans.get(0), "avalue");
         }
         else
         {
             Object avalue = ((DynaBean)beans.get(0)).get("avalue");
 
-            assertTrue((avalue == null) || new Integer(1).equals(avalue));
+            assertTrue((avalue == null) || Objects.equals(1, avalue));
         }
     }
 
@@ -298,6 +310,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
      * For instance, Sql Server has a statement for this which means that the
      * existing value in column avalue won't be changed and thus the test fails.
      */
+    @Test
     public void testAddRequiredColumnWithDefault()
     {
         final String model1Xml = 
@@ -318,7 +331,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1) });
+        insertRow("roundtrip", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
@@ -351,6 +364,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
     /**
      * Tests the addition and insertion of several columns.
      */
+    @Test
     public void testAddAndInsertMultipleColumns()
     {
         final String model1Xml = 
@@ -375,7 +389,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Double(3.0) });
+        insertRow("roundtrip", new Object[] { 1, 3.0 });
 
         alterDatabase(model2Xml);
 
@@ -384,15 +398,16 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         List beans = getRows("roundtrip");
 
-        assertEquals((Object)null, beans.get(0), "avalue1");
-        assertEquals((Object)null, beans.get(0), "avalue2");
-        assertEquals(new Double(3.0), beans.get(0), "avalue3");
-        assertEquals((Object)null, beans.get(0), "avalue4");
+        assertEqualsAttr((Object)null, beans.get(0), "avalue1");
+        assertEqualsAttr((Object)null, beans.get(0), "avalue2");
+        assertEqualsAttr(3.0, beans.get(0), "avalue3");
+        assertEqualsAttr((Object)null, beans.get(0), "avalue4");
     }
 
     /**
      * Tests the insertion of a primary key and a column.
      */
+    @Test
     public void testInsertPKAndColumn()
     {
         final String model1Xml = 
@@ -413,7 +428,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1) });
+        insertRow("roundtrip", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
@@ -428,6 +443,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
     /**
      * Tests the insertion of a primary key and an autoincrement column.
      */
+    @Test
     public void testInsertPKAndAutoIncrementColumn()
     {
         // we need special catering for Sybase which does not support identity for INTEGER columns
@@ -464,7 +480,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1) });
+        insertRow("roundtrip", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
@@ -475,17 +491,18 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         if (isSybase)
         {
-            assertEquals(new BigDecimal(1), beans.get(0), "avalue");
+            assertEqualsAttr(new BigDecimal(1), beans.get(0), "avalue");
         }
         else
         {
-            assertEquals(new Integer(1), beans.get(0), "avalue");
+            assertEqualsAttr(1, beans.get(0), "avalue");
         }
     }
 
     /**
      * Tests the insertion of a primary key and multiple columns.
      */
+    @Test
     public void testAddAndInsertPKAndMultipleColumns()
     {
         if (!getPlatformInfo().isMixingIdentityAndNormalPrimaryKeyColumnsSupported())
@@ -513,7 +530,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1) });
+        insertRow("roundtrip", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
@@ -527,6 +544,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
     /**
      * Tests the insertion of a column to a primary key.
      */
+    @Test
     public void testInsertColumnIntoPK()
     {
         final String model1Xml = 
@@ -549,7 +567,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2) });
+        insertRow("roundtrip", new Object[] { 1, 2 });
 
         alterDatabase(model2Xml);
 
@@ -562,6 +580,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
     /**
      * Tests the insertion of an autoincrement column into the primary key.
      */
+    @Test
     public void testInsertAutoIncrementColumnIntoPK()
     {
         if (!getPlatformInfo().isMixingIdentityAndNormalPrimaryKeyColumnsSupported())
@@ -606,7 +625,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(-1), new Integer(2) });
+        insertRow("roundtrip", new Object[] { -1, 2 });
 
         alterDatabase(model2Xml);
 
@@ -617,18 +636,19 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         if (isSybase)
         {
-            assertEquals(new BigDecimal(-1), beans.get(0), "pk1");
+            assertEqualsAttr(new BigDecimal(-1), beans.get(0), "pk1");
         }
         else
         {
-            assertEquals(new Integer(-1), beans.get(0), "pk1");
+            assertEqualsAttr(-1, beans.get(0), "pk1");
         }
-        assertEquals(new Integer(2), ((DynaBean)beans.get(0)).get("avalue"));
+        assertEquals(2, ((DynaBean)beans.get(0)).get("avalue"));
     }
 
     /**
      * Tests the insertion of multiple columns into the primary key.
      */
+    @Test
     public void testInsertMultipleColumnsIntoPK()
     {
         if (!getPlatformInfo().isMixingIdentityAndNormalPrimaryKeyColumnsSupported())
@@ -657,7 +677,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1) });
+        insertRow("roundtrip", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
@@ -670,6 +690,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
     /**
      * Tests the insertion of a non-unique index and a column.
      */
+    @Test
     public void testInsertNonUniqueIndexAndColumn()
     {
         if (!getPlatformInfo().isIndicesSupported())
@@ -698,7 +719,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1) });
+        insertRow("roundtrip", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
@@ -707,12 +728,13 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         List beans = getRows("roundtrip");
 
-        assertEquals((Object)null, beans.get(0), "avalue");
+        assertEqualsAttr((Object)null, beans.get(0), "avalue");
     }
 
     /**
      * Tests the insertion of a non-unique index and an auto increment column.
      */
+    @Test
     public void testInsertNonUniqueIndexAndAutoIncrementColumn()
     {
         if (!getPlatformInfo().isNonPrimaryKeyIdentityColumnsSupported() ||
@@ -742,7 +764,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1) });
+        insertRow("roundtrip", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
@@ -751,12 +773,13 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         List beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1), beans.get(0), "avalue");
+        assertEqualsAttr(1, beans.get(0), "avalue");
     }
 
     /**
      * Tests the insertion of a non-unique index and a required column.
      */
+    @Test
     public void testInsertNonUniqueIndexAndRequiredColumn()
     {
         if (!getPlatformInfo().isIndicesSupported())
@@ -785,7 +808,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1) });
+        insertRow("roundtrip", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
@@ -798,6 +821,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
     /**
      * Tests the insertion of a non-unique index and a column with a default value.
      */
+    @Test
     public void testInsertNonUniqueIndexAndColumnWithDefault()
     {
         if (!getPlatformInfo().isIndicesSupported())
@@ -826,7 +850,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1) });
+        insertRow("roundtrip", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
@@ -835,12 +859,13 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         List beans = getRows("roundtrip");
 
-        assertEquals(new Double(2), beans.get(0), "avalue");
+        assertEqualsAttr(2, beans.get(0), "avalue");
     }
 
     /**
      * Tests the insertion of a non-unique index and a required auto increment column.
      */
+    @Test
     public void testInsertNonUniqueIndexAndrequiredAutoIncrementColumn()
     {
         if (!getPlatformInfo().isNonPrimaryKeyIdentityColumnsSupported() ||
@@ -870,7 +895,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1) });
+        insertRow("roundtrip", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
@@ -879,12 +904,13 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         List beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1), beans.get(0), "avalue");
+        assertEqualsAttr(1, beans.get(0), "avalue");
     }
 
     /**
      * Tests the insertion of a non-unique index and a required column with a default value.
      */
+    @Test
     public void testInsertNonUniqueIndexAndRequiredColumnWithDefault()
     {
         if (!getPlatformInfo().isIndicesSupported())
@@ -913,7 +939,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1) });
+        insertRow("roundtrip", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
@@ -940,6 +966,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
     /**
      * Tests the insertion of a non-unique index and several columns.
      */
+    @Test
     public void testAddAndInsertNonUniqueIndexAndMultipleColumns()
     {
         if (!getPlatformInfo().isIndicesSupported())
@@ -970,7 +997,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1) });
+        insertRow("roundtrip", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
@@ -983,6 +1010,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
     /**
      * Tests the insertion of an unique index and a column.
      */
+    @Test
     public void testInsertUniqueIndexAndColumn()
     {
         if (!getPlatformInfo().isIndicesSupported())
@@ -1011,7 +1039,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1) });
+        insertRow("roundtrip", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
@@ -1020,12 +1048,13 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         List beans = getRows("roundtrip");
 
-        assertEquals((Object)null, beans.get(0), "avalue");
+        assertEqualsAttr((Object)null, beans.get(0), "avalue");
     }
 
     /**
      * Tests the insertion of an unique index and an auto increment column.
      */
+    @Test
     public void testInsertUniqueIndexAndAutoIncrementColumn()
     {
         if (!getPlatformInfo().isNonPrimaryKeyIdentityColumnsSupported() ||
@@ -1055,7 +1084,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1) });
+        insertRow("roundtrip", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
@@ -1064,12 +1093,13 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         List beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1), beans.get(0), "avalue");
+        assertEqualsAttr(1, beans.get(0), "avalue");
     }
 
     /**
      * Tests the insertion of an unique index and a required column.
      */
+    @Test
     public void testInsertUniqueIndexAndRequiredColumn()
     {
         if (!getPlatformInfo().isIndicesSupported())
@@ -1098,7 +1128,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1) });
+        insertRow("roundtrip", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
@@ -1111,6 +1141,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
     /**
      * Tests the insertion of an unique index and a column with a default value.
      */
+    @Test
     public void testInsertUniqueIndexAndColumnWithDefault()
     {
         if (!getPlatformInfo().isIndicesSupported())
@@ -1139,7 +1170,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1) });
+        insertRow("roundtrip", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
@@ -1148,12 +1179,13 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         List beans = getRows("roundtrip");
 
-        assertEquals(new Double(2), beans.get(0), "avalue");
+        assertEqualsAttr(2, beans.get(0), "avalue");
     }
 
     /**
      * Tests the insertion of an unique index and a required auto increment column.
      */
+    @Test
     public void testInsertUniqueIndexAndRequiredAutoIncrementColumn()
     {
         if (!getPlatformInfo().isNonPrimaryKeyIdentityColumnsSupported() ||
@@ -1183,7 +1215,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1) });
+        insertRow("roundtrip", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
@@ -1192,12 +1224,13 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         List beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1), beans.get(0), "avalue");
+        assertEqualsAttr(1, beans.get(0), "avalue");
     }
 
     /**
      * Tests the insertion of an unique index and a required column with a default value.
      */
+    @Test
     public void testInsertUniqueIndexAndRequiredColumnWithDefault()
     {
         if (!getPlatformInfo().isIndicesSupported())
@@ -1226,7 +1259,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1) });
+        insertRow("roundtrip", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
@@ -1253,6 +1286,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
     /**
      * Tests the insertion of an unique index and several columns.
      */
+    @Test
     public void testAddAndInsertUniqueIndexAndMultipleColumns()
     {
         if (!getPlatformInfo().isIndicesSupported())
@@ -1283,7 +1317,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1) });
+        insertRow("roundtrip", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
@@ -1296,6 +1330,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
     /**
      * Tests the insertion of a column into a non-unique index.
      */
+    @Test
     public void testInsertColumnIntoNonUniqueIndex()
     {
         if (!getPlatformInfo().isIndicesSupported())
@@ -1330,7 +1365,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2) });
+        insertRow("roundtrip", new Object[] { 1, 2 });
 
         alterDatabase(model2Xml);
 
@@ -1339,13 +1374,14 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         List beans = getRows("roundtrip");
 
-        assertEquals(new Integer(2), beans.get(0), "avalue1");
-        assertEquals((Object)null,   beans.get(0), "avalue2");
+        assertEqualsAttr(2, beans.get(0), "avalue1");
+        assertEqualsAttr((Object)null,   beans.get(0), "avalue2");
     }
 
     /**
      * Tests the insert of an auto increment column into a non-unique index.
      */
+    @Test
     public void testInsertAutoIncrementColumnIntoNonUniqueIndex()
     {
         if (!getPlatformInfo().isNonPrimaryKeyIdentityColumnsSupported() ||
@@ -1381,7 +1417,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2) });
+        insertRow("roundtrip", new Object[] { 1, 2 });
 
         alterDatabase(model2Xml);
 
@@ -1390,13 +1426,14 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         List beans = getRows("roundtrip");
 
-        assertEquals(new Integer(2), beans.get(0), "avalue1");
-        assertEquals(new Integer(1), beans.get(0), "avalue2");
+        assertEqualsAttr(2, beans.get(0), "avalue1");
+        assertEqualsAttr(1, beans.get(0), "avalue2");
     }
 
     /**
      * Tests the insertion of a required column into a non-unique index.
      */
+    @Test
     public void testInsertRequiredColumnIntoNonUniqueIndex()
     {
         if (!getPlatformInfo().isIndicesSupported())
@@ -1431,7 +1468,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2) });
+        insertRow("roundtrip", new Object[] { 1, 2 });
 
         alterDatabase(model2Xml);
 
@@ -1444,6 +1481,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
     /**
      * Tests the insertion of a column with a default value into a non-unique index.
      */
+    @Test
     public void testInsertColumnWithDefaultIntoNonUniqueIndex()
     {
         if (!getPlatformInfo().isIndicesSupported())
@@ -1478,7 +1516,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2) });
+        insertRow("roundtrip", new Object[] { 1, 2 });
 
         alterDatabase(model2Xml);
 
@@ -1487,13 +1525,14 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         List beans = getRows("roundtrip");
 
-        assertEquals(new Integer(2), beans.get(0), "avalue1");
-        assertEquals(new Double(2),  beans.get(0), "avalue2");
+        assertEqualsAttr(2, beans.get(0), "avalue1");
+        assertEqualsAttr(2,  beans.get(0), "avalue2");
     }
 
     /**
      * Tests the insertion of a required auto increment column into a non-unique index.
      */
+    @Test
     public void testInsertRequiredAutoIncrementColumnIntoNonUniqueIndex()
     {
         if (!getPlatformInfo().isNonPrimaryKeyIdentityColumnsSupported() ||
@@ -1529,7 +1568,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2) });
+        insertRow("roundtrip", new Object[] { 1, 2 });
 
         alterDatabase(model2Xml);
 
@@ -1538,13 +1577,14 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         List beans = getRows("roundtrip");
 
-        assertEquals(new Integer(2), beans.get(0), "avalue1");
-        assertEquals(new Integer(1), beans.get(0), "avalue2");
+        assertEqualsAttr(2, beans.get(0), "avalue1");
+        assertEqualsAttr(1, beans.get(0), "avalue2");
     }
 
     /**
      * Tests the insertion of a required column with a default value into a non-unique index.
      */
+    @Test
     public void testInsertRequiredColumnWithDefaultIntoNonUniqueIndex()
     {
         if (!getPlatformInfo().isIndicesSupported())
@@ -1579,7 +1619,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2) });
+        insertRow("roundtrip", new Object[] { 1, 2 });
 
         alterDatabase(model2Xml);
 
@@ -1589,7 +1629,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         List   beans   = getRows("roundtrip");
         Object avalue2 = ((DynaBean)beans.get(0)).get("avalue2");
 
-        assertEquals(new Integer(2),  beans.get(0), "avalue1");
+        assertEqualsAttr(2,  beans.get(0), "avalue1");
         if (MySqlPlatform.DATABASENAME.equals(getPlatform().getName()) ||
             MySql50Platform.DATABASENAME.equals(getPlatform().getName()) ||
             HsqlDbPlatform.DATABASENAME.equals(getPlatform().getName()) ||
@@ -1607,6 +1647,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
     /**
      * Tests the insertion of multiple columns into a non-unique index.
      */
+    @Test
     public void testAddAndInsertMultipleColumnsIntoNonUniqueIndex()
     {
         if (!getPlatformInfo().isIndicesSupported())
@@ -1643,7 +1684,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2) });
+        insertRow("roundtrip", new Object[] { 1, 2 });
 
         alterDatabase(model2Xml);
 
@@ -1656,6 +1697,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
     /**
      * Tests the insertion of a column into an unique index.
      */
+    @Test
     public void testInsertColumnIntoUniqueIndex()
     {
         if (!getPlatformInfo().isIndicesSupported())
@@ -1690,7 +1732,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2) });
+        insertRow("roundtrip", new Object[] { 1, 2 });
 
         alterDatabase(model2Xml);
 
@@ -1699,13 +1741,14 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         List beans = getRows("roundtrip");
 
-        assertEquals(new Integer(2), beans.get(0), "avalue1");
-        assertEquals((Object)null,   beans.get(0), "avalue2");
+        assertEqualsAttr(2, beans.get(0), "avalue1");
+        assertEqualsAttr((Object)null,   beans.get(0), "avalue2");
     }
 
     /**
      * Tests the insertion of an auto increment column into an unique index.
      */
+    @Test
     public void testInsertAutoIncrementColumnIntoUniqueIndex()
     {
         if (!getPlatformInfo().isNonPrimaryKeyIdentityColumnsSupported() ||
@@ -1741,7 +1784,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2) });
+        insertRow("roundtrip", new Object[] { 1, 2 });
 
         alterDatabase(model2Xml);
 
@@ -1750,13 +1793,14 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         List beans = getRows("roundtrip");
 
-        assertEquals(new Integer(2), beans.get(0), "avalue1");
-        assertEquals(new Integer(1), beans.get(0), "avalue2");
+        assertEqualsAttr(2, beans.get(0), "avalue1");
+        assertEqualsAttr(1, beans.get(0), "avalue2");
     }
 
     /**
      * Tests the insertion of a required column into an unique index.
      */
+    @Test
     public void testInsertRequiredColumnIntoUniqueIndex()
     {
         if (!getPlatformInfo().isIndicesSupported())
@@ -1791,7 +1835,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2) });
+        insertRow("roundtrip", new Object[] { 1, 2 });
 
         alterDatabase(model2Xml);
 
@@ -1804,6 +1848,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
     /**
      * Tests the insertion of a column with a default value into an unique index.
      */
+    @Test
     public void testInsertColumnWithDefaultIntoUniqueIndex()
     {
         if (!getPlatformInfo().isIndicesSupported())
@@ -1838,7 +1883,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2) });
+        insertRow("roundtrip", new Object[] { 1, 2 });
 
         alterDatabase(model2Xml);
 
@@ -1847,13 +1892,14 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         List beans = getRows("roundtrip");
 
-        assertEquals(new Integer(2), beans.get(0), "avalue1");
-        assertEquals(new Double(2),  beans.get(0), "avalue2");
+        assertEqualsAttr(2, beans.get(0), "avalue1");
+        assertEqualsAttr(2,  beans.get(0), "avalue2");
     }
 
     /**
      * Tests the insertion of a required auto increment column into an unique index.
      */
+    @Test
     public void testInsertRequiredAutoIncrementColumnIntoUniqueIndex()
     {
         if (!getPlatformInfo().isNonPrimaryKeyIdentityColumnsSupported() ||
@@ -1889,7 +1935,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2) });
+        insertRow("roundtrip", new Object[] { 1, 2 });
 
         alterDatabase(model2Xml);
 
@@ -1898,13 +1944,14 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         List beans = getRows("roundtrip");
 
-        assertEquals(new Integer(2), beans.get(0), "avalue1");
-        assertEquals(new Integer(1), beans.get(0), "avalue2");
+        assertEqualsAttr(2, beans.get(0), "avalue1");
+        assertEqualsAttr(1, beans.get(0), "avalue2");
     }
 
     /**
      * Tests the insertion of a required column with a default value into an unique index.
      */
+    @Test
     public void testInsertRequiredColumnWithDefaultIntoUniqueIndex()
     {
         if (!getPlatformInfo().isIndicesSupported())
@@ -1939,7 +1986,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2) });
+        insertRow("roundtrip", new Object[] { 1, 2 });
 
         alterDatabase(model2Xml);
 
@@ -1949,7 +1996,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         List   beans   = getRows("roundtrip");
         Object avalue2 = ((DynaBean)beans.get(0)).get("avalue2");
 
-        assertEquals(new Integer(2), beans.get(0), "avalue1");
+        assertEqualsAttr(2, beans.get(0), "avalue1");
         if (MySqlPlatform.DATABASENAME.equals(getPlatform().getName()) ||
             MySql50Platform.DATABASENAME.equals(getPlatform().getName()) ||
             HsqlDbPlatform.DATABASENAME.equals(getPlatform().getName()) ||
@@ -1967,6 +2014,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
     /**
      * Tests the insertion of multiple columns into an unique index.
      */
+    @Test
     public void testAddAndInsertMultipleColumnsIntoUniqueIndex()
     {
         if (!getPlatformInfo().isIndicesSupported())
@@ -2003,7 +2051,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2) });
+        insertRow("roundtrip", new Object[] { 1, 2 });
 
         alterDatabase(model2Xml);
 
@@ -2016,6 +2064,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
     /**
      * Tests the insertion of a foreign key and its local column.
      */
+    @Test
     public void testInsertFKAndLocalColumn()
     {
         final String model1Xml = 
@@ -2046,7 +2095,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         createDatabase(model1Xml);
 
         insertRow("roundtrip1", new Object[] { "text" });
-        insertRow("roundtrip2", new Object[] { new Integer(1) });
+        insertRow("roundtrip2", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
@@ -2056,14 +2105,15 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         List beans1 = getRows("roundtrip1");
         List beans2 = getRows("roundtrip2");
 
-        assertEquals((Object)"text", beans1.get(0), "pk");
-        assertEquals(new Integer(1), beans2.get(0), "pk");
-        assertEquals((Object)null,   beans2.get(0), "avalue");
+        assertEqualsAttr((Object)"text", beans1.get(0), "pk");
+        assertEqualsAttr(1, beans2.get(0), "pk");
+        assertEqualsAttr((Object)null,   beans2.get(0), "avalue");
     }
 
     /**
      * Tests the insertion of a foreign key and its local auto increment column.
      */
+    @Test
     public void testInsertFKAndLocalAutoIncrementColumn()
     {
         if (!getPlatformInfo().isNonPrimaryKeyIdentityColumnsSupported())
@@ -2098,8 +2148,8 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip1", new Object[] { new Integer(1) });
-        insertRow("roundtrip2", new Object[] { new Integer(2) });
+        insertRow("roundtrip1", new Object[] { 1 });
+        insertRow("roundtrip2", new Object[] { 2 });
 
         alterDatabase(model2Xml);
 
@@ -2109,14 +2159,15 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         List beans1 = getRows("roundtrip1");
         List beans2 = getRows("roundtrip2");
 
-        assertEquals(new Integer(1), beans1.get(0), "pk");
-        assertEquals(new Integer(2), beans2.get(0), "pk");
-        assertEquals(new Integer(1), beans2.get(0), "avalue");
+        assertEqualsAttr(1, beans1.get(0), "pk");
+        assertEqualsAttr(2, beans2.get(0), "pk");
+        assertEqualsAttr(1, beans2.get(0), "avalue");
     }
 
     /**
      * Tests the insertion of a foreign key and its local required column.
      */
+    @Test
     public void testInsertFKAndLocalRequiredColumn()
     {
         final String model1Xml = 
@@ -2147,7 +2198,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         createDatabase(model1Xml);
 
         insertRow("roundtrip1", new Object[] { new BigDecimal(1) });
-        insertRow("roundtrip2", new Object[] { new Integer(2) });
+        insertRow("roundtrip2", new Object[] { 2 });
 
         alterDatabase(model2Xml);
 
@@ -2157,13 +2208,14 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         List beans1 = getRows("roundtrip1");
         List beans2 = getRows("roundtrip2");
 
-        assertEquals(new BigDecimal(1), beans1.get(0), "pk");
+        assertEqualsAttr(new BigDecimal(1), beans1.get(0), "pk");
         assertTrue(beans2.isEmpty());
     }
 
     /**
      * Tests the insertion of a foreign key and its local column with a default value.
      */
+    @Test
     public void testInsertFKAndLocalColumnWithDefault()
     {
         final String model1Xml = 
@@ -2193,8 +2245,8 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip1", new Object[] { new Double(1) });
-        insertRow("roundtrip2", new Object[] { new Integer(2) });
+        insertRow("roundtrip1", new Object[] { 1 });
+        insertRow("roundtrip2", new Object[] { 2 });
 
         alterDatabase(model2Xml);
 
@@ -2204,14 +2256,15 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         List beans1 = getRows("roundtrip1");
         List beans2 = getRows("roundtrip2");
 
-        assertEquals(new Double(1),  beans1.get(0), "pk");
-        assertEquals(new Integer(2), beans2.get(0), "pk");
-        assertEquals(new Double(1),  beans2.get(0), "avalue");
+        assertEqualsAttr(1,  beans1.get(0), "pk");
+        assertEqualsAttr(2, beans2.get(0), "pk");
+        assertEqualsAttr(1,  beans2.get(0), "avalue");
     }
 
     /**
      * Tests the insertion of a foreign key and its local required auto increment column.
      */
+    @Test
     public void testInsertFKAndLocalRequiredAutoIncrementColumn()
     {
         if (!getPlatformInfo().isNonPrimaryKeyIdentityColumnsSupported())
@@ -2246,8 +2299,8 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip1", new Object[] { new Integer(1) });
-        insertRow("roundtrip2", new Object[] { new Integer(2) });
+        insertRow("roundtrip1", new Object[] { 1 });
+        insertRow("roundtrip2", new Object[] { 2 });
 
         alterDatabase(model2Xml);
 
@@ -2257,14 +2310,15 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         List beans1 = getRows("roundtrip1");
         List beans2 = getRows("roundtrip2");
 
-        assertEquals(new Integer(1), beans1.get(0), "pk");
-        assertEquals(new Integer(2), beans2.get(0), "pk");
-        assertEquals(new Integer(1), beans2.get(0), "avalue");
+        assertEqualsAttr(1, beans1.get(0), "pk");
+        assertEqualsAttr(2, beans2.get(0), "pk");
+        assertEqualsAttr(1, beans2.get(0), "avalue");
     }
 
     /**
      * Tests the insertion of a foreign key and its local required column with a default value.
      */
+    @Test
     public void testInsertFKAndLocalRequiredColumnWithDefault()
     {
         final String model1Xml = 
@@ -2295,7 +2349,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         createDatabase(model1Xml);
 
         insertRow("roundtrip1", new Object[] { "text" });
-        insertRow("roundtrip2", new Object[] { new Integer(1) });
+        insertRow("roundtrip2", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
@@ -2307,7 +2361,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         Object pk1    = ((DynaBean)beans1.get(0)).get("pk");
         Object avalue = ((DynaBean)beans2.get(0)).get("avalue");
 
-        assertEquals(new Integer(1), beans2.get(0), "pk");
+        assertEqualsAttr(1, beans2.get(0), "pk");
         if (MySqlPlatform.DATABASENAME.equals(getPlatform().getName()) ||
             MySql50Platform.DATABASENAME.equals(getPlatform().getName()) ||
             HsqlDbPlatform.DATABASENAME.equals(getPlatform().getName()) ||
@@ -2329,6 +2383,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
     /**
      * Tests the insertion of a foreign key and its local columns.
      */
+    @Test
     public void testAddAndInsertFKAndMultipleLocalColumns()
     {
         final String model1Xml = 
@@ -2362,8 +2417,8 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip1", new Object[] { new Integer(1), new Double(2) });
-        insertRow("roundtrip2", new Object[] { new Integer(3) });
+        insertRow("roundtrip1", new Object[] { 1, 2 });
+        insertRow("roundtrip2", new Object[] { 3 });
 
         alterDatabase(model2Xml);
 
@@ -2373,14 +2428,15 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         List beans1 = getRows("roundtrip1");
         List beans2 = getRows("roundtrip2");
 
-        assertEquals(new Integer(1), beans1.get(0), "pk1");
-        assertEquals(new Double(2),  beans1.get(0), "pk2");
+        assertEqualsAttr(1, beans1.get(0), "pk1");
+        assertEqualsAttr(2,  beans1.get(0), "pk2");
         assertTrue(beans2.isEmpty());
     }
 
     /**
      * Tests the insertion of a foreign key and its foreign column.
      */
+    @Test
     public void testInsertFKAndForeignColumn()
     {
         final String model1Xml = 
@@ -2421,6 +2477,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
     /**
      * Tests the insertion of a foreign key and its foreign auto increment column.
      */
+    @Test
     public void testInsertFKAndForeignAutoIncrementColumn()
     {
         final String model1Xml = 
@@ -2452,8 +2509,8 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip1", new Object[] { new Integer(2) });
-        insertRow("roundtrip2", new Object[] { new Integer(1), new Integer(1) });
+        insertRow("roundtrip1", new Object[] { 2 });
+        insertRow("roundtrip2", new Object[] { 1, 1 });
 
         alterDatabase(model2Xml);
 
@@ -2463,15 +2520,16 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         List beans1 = getRows("roundtrip1");
         List beans2 = getRows("roundtrip2");
 
-        assertEquals(new Integer(1), beans1.get(0), "pk");
-        assertEquals(new Integer(2), beans1.get(0), "avalue");
-        assertEquals(new Integer(1), beans2.get(0), "pk");
-        assertEquals(new Integer(1), beans2.get(0), "avalue");
+        assertEqualsAttr(1, beans1.get(0), "pk");
+        assertEqualsAttr(2, beans1.get(0), "avalue");
+        assertEqualsAttr(1, beans2.get(0), "pk");
+        assertEqualsAttr(1, beans2.get(0), "avalue");
     }
 
     /**
      * Tests the insertion of a foreign key and its foreign auto increment column.
      */
+    @Test
     public void testInsertFKAndForeignColumnWithDefault()
     {
         final String model1Xml = 
@@ -2503,8 +2561,8 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip1", new Object[] { new Integer(2) });
-        insertRow("roundtrip2", new Object[] { new Integer(1), new Double(1) });
+        insertRow("roundtrip1", new Object[] { 2 });
+        insertRow("roundtrip2", new Object[] { 1, 1 });
 
         alterDatabase(model2Xml);
 
@@ -2514,15 +2572,16 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         List beans1 = getRows("roundtrip1");
         List beans2 = getRows("roundtrip2");
 
-        assertEquals(new Double(1),  beans1.get(0), "pk");
-        assertEquals(new Integer(2), beans1.get(0), "avalue");
-        assertEquals(new Integer(1), beans2.get(0), "pk");
-        assertEquals(new Double(1),  beans2.get(0), "avalue");
+        assertEqualsAttr(1,  beans1.get(0), "pk");
+        assertEqualsAttr(2, beans1.get(0), "avalue");
+        assertEqualsAttr(1, beans2.get(0), "pk");
+        assertEqualsAttr(1,  beans2.get(0), "avalue");
     }
 
     /**
      * Tests the insertion of a foreign key and its multiple foreign columns.
      */
+    @Test
     public void testAddAndInsertFKAndMultipleForeignColumns()
     {
         final String model1Xml = 
@@ -2567,6 +2626,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
     /**
      * Tests the insertion of local and foreign column into a foreign key.
      */
+    @Test
     public void testInsertColumnsIntoFK()
     {
         final String model1Xml = 
@@ -2612,6 +2672,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
     /**
      * Tests the insertion of local and foreign auto increment columns into a foreign key.
      */
+    @Test
     public void testInsertAutoIncrementColumnIntoFK()
     {
         if (!getPlatformInfo().isNonPrimaryKeyIdentityColumnsSupported())
@@ -2653,8 +2714,8 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip1", new Object[] { new Integer(1) });
-        insertRow("roundtrip2", new Object[] { new Integer(2), new Integer(1) });
+        insertRow("roundtrip1", new Object[] { 1 });
+        insertRow("roundtrip2", new Object[] { 2, 1 });
 
         alterDatabase(model2Xml);
 
@@ -2664,16 +2725,17 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         List beans1 = getRows("roundtrip1");
         List beans2 = getRows("roundtrip2");
 
-        assertEquals(new Integer(1), beans1.get(0), "pk1");
-        assertEquals(new Integer(1), beans1.get(0), "pk2");
-        assertEquals(new Integer(2), beans2.get(0), "pk");
-        assertEquals(new Integer(1), beans2.get(0), "avalue1");
-        assertEquals(new Integer(1), beans2.get(0), "avalue2");
+        assertEqualsAttr(1, beans1.get(0), "pk1");
+        assertEqualsAttr(1, beans1.get(0), "pk2");
+        assertEqualsAttr(2, beans2.get(0), "pk");
+        assertEqualsAttr(1, beans2.get(0), "avalue1");
+        assertEqualsAttr(1, beans2.get(0), "avalue2");
     }
 
     /**
      * Tests the insertion of local and foreign required columns into a foreign key.
      */
+    @Test
     public void testInsertRequiredColumnsIntoFK()
     {
         final String model1Xml = 
@@ -2719,6 +2781,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
     /**
      * Tests the insertion of local and foreign columns with default values into a foreign key.
      */
+    @Test
     public void testInsertColumnsWithDefaultsIntoFK()
     {
         if (getPlatformInfo().isPrimaryKeyColumnsHaveToBeRequired())
@@ -2760,24 +2823,25 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip1", new Object[] { new Integer(1) });
-        insertRow("roundtrip2", new Object[] { new Integer(2), new Integer(1) });
+        insertRow("roundtrip1", new Object[] { 1 });
+        insertRow("roundtrip2", new Object[] { 2, 1 });
 
         alterDatabase(model2Xml);
 
         List beans1 = getRows("roundtrip1");
         List beans2 = getRows("roundtrip2");
 
-        assertEquals(new Integer(1), beans1.get(0), "pk1");
-        assertEquals(new Double(2),  beans1.get(0), "pk2");
-        assertEquals(new Integer(2), beans2.get(0), "pk");
-        assertEquals(new Integer(1), beans2.get(0), "avalue1");
-        assertEquals(new Double(2),  beans2.get(0), "avalue2");
+        assertEqualsAttr(1, beans1.get(0), "pk1");
+        assertEqualsAttr(2,  beans1.get(0), "pk2");
+        assertEqualsAttr(2, beans2.get(0), "pk");
+        assertEqualsAttr(1, beans2.get(0), "avalue1");
+        assertEqualsAttr(2,  beans2.get(0), "avalue2");
     }
 
     /**
      * Tests the insertion of local and foreign required auto increment columns into a foreign key.
      */
+    @Test
     public void testInsertRequiredAutoIncrementColumnIntoFK()
     {
         if (!getPlatformInfo().isNonPrimaryKeyIdentityColumnsSupported())
@@ -2819,8 +2883,8 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip1", new Object[] { new Integer(1) });
-        insertRow("roundtrip2", new Object[] { new Integer(2), new Integer(1) });
+        insertRow("roundtrip1", new Object[] { 1 });
+        insertRow("roundtrip2", new Object[] { 2, 1 });
 
         alterDatabase(model2Xml);
 
@@ -2830,16 +2894,17 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         List beans1 = getRows("roundtrip1");
         List beans2 = getRows("roundtrip2");
 
-        assertEquals(new Integer(1), beans1.get(0), "pk1");
-        assertEquals(new Integer(1), beans1.get(0), "pk2");
-        assertEquals(new Integer(2), beans2.get(0), "pk");
-        assertEquals(new Integer(1), beans2.get(0), "avalue1");
-        assertEquals(new Integer(1), beans2.get(0), "avalue2");
+        assertEqualsAttr(1, beans1.get(0), "pk1");
+        assertEqualsAttr(1, beans1.get(0), "pk2");
+        assertEqualsAttr(2, beans2.get(0), "pk");
+        assertEqualsAttr(1, beans2.get(0), "avalue1");
+        assertEqualsAttr(1, beans2.get(0), "avalue2");
     }
 
     /**
      * Tests the insertion of local and foreign required columns with default values into a foreign key.
      */
+    @Test
     public void testInsertRequiredColumnsWithDefaultsIntoFK()
     {
         final String model1Xml = 
@@ -2876,8 +2941,8 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip1", new Object[] { new Integer(1) });
-        insertRow("roundtrip2", new Object[] { new Integer(2), new Integer(1) });
+        insertRow("roundtrip1", new Object[] { 1 });
+        insertRow("roundtrip2", new Object[] { 2, 1 });
 
         alterDatabase(model2Xml);
 
@@ -2886,9 +2951,9 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         Object pk2     = ((DynaBean)beans1.get(0)).get("pk2");
         Object avalue2 = ((DynaBean)beans2.get(0)).get("avalue2");
 
-        assertEquals(new Integer(1), beans1.get(0), "pk1");
-        assertEquals(new Integer(2), beans2.get(0), "pk");
-        assertEquals(new Integer(1), beans2.get(0), "avalue1");
+        assertEqualsAttr(1, beans1.get(0), "pk1");
+        assertEqualsAttr(2, beans2.get(0), "pk");
+        assertEqualsAttr(1, beans2.get(0), "avalue1");
         if (MySqlPlatform.DATABASENAME.equals(getPlatform().getName()) ||
             MySql50Platform.DATABASENAME.equals(getPlatform().getName()) ||
             HsqlDbPlatform.DATABASENAME.equals(getPlatform().getName()) ||
@@ -2908,6 +2973,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
     /**
      * Tests the insertion of multiple local and foreign columns into a foreign key.
      */
+    @Test
     public void testAddAndInsertMultipleColumnsIntoFK()
     {
         final String model1Xml = 

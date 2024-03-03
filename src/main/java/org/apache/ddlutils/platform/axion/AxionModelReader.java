@@ -19,15 +19,16 @@ package org.apache.ddlutils.platform.axion;
  * under the License.
  */
 
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-
 import org.apache.ddlutils.Platform;
+import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.DatabaseMetaDataWrapper;
 import org.apache.ddlutils.platform.JdbcModelReader;
+
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * Reads a database model from an Axion database.
@@ -52,19 +53,19 @@ public class AxionModelReader extends JdbcModelReader
     /**
      * {@inheritDoc}
      */
-    protected Collection readPrimaryKeyNames(DatabaseMetaDataWrapper metaData, String tableName) throws SQLException
+    protected Collection<String> readPrimaryKeyNames(DatabaseMetaDataWrapper metaData, String tableName) throws SQLException
     {
         // Axion still does not support DatabaseMetaData#getPrimaryKeys
-        return new ArrayList();
+        return new ArrayList<>();
     }
 
     /**
      * {@inheritDoc}
      */
-    protected Collection readForeignKeys(DatabaseMetaDataWrapper metaData, String tableName) throws SQLException
+    protected Collection<ForeignKey> readForeignKeys(DatabaseMetaDataWrapper metaData, String tableName) throws SQLException
     {
         // Axion still does not support DatabaseMetaData#getImportedKeys or #getExportedKeys
-        return new ArrayList();
+        return new ArrayList<>();
     }
 
     /**

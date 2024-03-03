@@ -124,11 +124,11 @@
       <scope>compile</scope>
       <optional>true</optional>
     </dependency>
-	  <dependency>
-		  <groupId>commons-beanutils</groupId>
-		  <artifactId>commons-beanutils</artifactId>
-		  <version>1.9.4</version>
-	  </dependency>
+	<dependency>
+	  <groupId>org.jodd</groupId>
+	  <artifactId>jodd-util</artifactId>
+	  <version>6.2.2</version>
+	</dependency>
 	<dependency>
 	  <groupId>commons-codec</groupId>
 	  <artifactId>commons-codec</artifactId>
@@ -196,7 +196,16 @@
 		  <artifactId>woodstox-core</artifactId>
 		  <version>6.5.1</version>
 	  </dependency>
-
+	  <dependency>
+		  <groupId>org.dom4j</groupId>
+		  <artifactId>dom4j</artifactId>
+		  <version>2.1.4</version>
+	  </dependency>
+	  <dependency>
+		  <groupId>com.google.code.findbugs</groupId>
+		  <artifactId>jsr305</artifactId>
+		  <version>3.0.2</version>
+	  </dependency>
 <!-- 
     <dependency>
       <groupId>axion</groupId>
@@ -236,6 +245,12 @@
     </dependency>
  -->
     <!-- NB: No public driver for DB2, interbase, sapdb, oracle, sqlserver -->
+	  <dependency>
+		  <groupId>org.hsqldb</groupId>
+		  <artifactId>hsqldb</artifactId>
+		  <version>2.7.2</version>
+		  <scope>test</scope>
+	  </dependency>
   </dependencies>
 
   <profiles>
@@ -260,6 +275,7 @@
     </profile>
 
     <profile>
+	  <id>hsqldb</id>
       <activation>
         <property>
           <name>testDb</name>
@@ -267,57 +283,61 @@
         </property>
       </activation>
       <dependencies>
-        <dependency>
-          <groupId>hsqldb</groupId>
-          <artifactId>hsqldb</artifactId>
-          <version>1.8.0.4</version>
-          <scope>test</scope>
-        </dependency>
+		  <dependency>
+			  <groupId>org.hsqldb</groupId>
+			  <artifactId>hsqldb</artifactId>
+			  <version>2.7.2</version>
+			  <scope>test</scope>
+		  </dependency>
       </dependencies>
 	  <build>
 	    <plugins>
-	      <plugin>
-	        <groupId>org.apache.maven.plugins</groupId>
-	        <artifactId>maven-surefire-plugin</artifactId>
-	        <configuration>
-	          <systemProperties>
-	            <property>
-	              <name>jdbc.properties.file</name>
-	              <value>/jdbc.properties.hsqldb</value>
-	            </property>
-	          </systemProperties>
-	        </configuration>
-	      </plugin>
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.1.2</version>
+				<configuration>
+					<systemProperties>
+						<property>
+							<name>jdbc.properties.file</name>
+							<value>/jdbc.properties.hsqldb</value>
+						</property>
+					</systemProperties>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<version>3.1.2</version>
+			</plugin>
 	    </plugins>
 	  </build>
     </profile>
   </profiles>
 
-  <reporting>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-project-info-reports-plugin</artifactId>
-        <version>2.4</version>
-        <reportSets>
-          <reportSet>
-            <reports></reports>
-          </reportSet>
-        </reportSets>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>2.8</version>
-        <configuration>
-          <stylesheetfile>src/site/javadoc/stylesheet.css</stylesheetfile>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.tomdz.maven</groupId>
-        <artifactId>sphinx-maven-plugin</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
-      </plugin>
-    </plugins>
-  </reporting>
+<!--  <reporting>-->
+<!--    <plugins>-->
+<!--      <plugin>-->
+<!--        <groupId>org.apache.maven.plugins</groupId>-->
+<!--        <artifactId>maven-project-info-reports-plugin</artifactId>-->
+<!--        <version>2.4</version>-->
+<!--        <reportSets>-->
+<!--          <reportSet>-->
+<!--            <reports></reports>-->
+<!--          </reportSet>-->
+<!--        </reportSets>-->
+<!--      </plugin>-->
+<!--      <plugin>-->
+<!--        <groupId>org.apache.maven.plugins</groupId>-->
+<!--        <artifactId>maven-javadoc-plugin</artifactId>-->
+<!--        <version>2.8</version>-->
+<!--        <configuration>-->
+<!--          <stylesheetfile>src/site/javadoc/stylesheet.css</stylesheetfile>-->
+<!--        </configuration>-->
+<!--      </plugin>-->
+<!--      <plugin>-->
+<!--        <groupId>org.tomdz.maven</groupId>-->
+<!--        <artifactId>sphinx-maven-plugin</artifactId>-->
+<!--        <version>1.0.0-SNAPSHOT</version>-->
+<!--      </plugin>-->
+<!--    </plugins>-->
+<!--  </reporting>-->
 </project>

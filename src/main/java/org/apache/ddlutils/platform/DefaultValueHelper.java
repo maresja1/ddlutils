@@ -19,14 +19,12 @@ package org.apache.ddlutils.platform;
  * under the License.
  */
 
+import org.apache.ddlutils.model.TypeMap;
+
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
-
-import org.apache.commons.beanutils.ConversionException;
-import org.apache.commons.beanutils.ConvertUtils;
-import org.apache.ddlutils.model.TypeMap;
 
 /**
  * Helper class for dealing with default values, e.g. converting them to other types.
@@ -96,29 +94,20 @@ public class DefaultValueHelper
      */
     private Object convertBoolean(String defaultValue, int targetTypeCode)
     {
-        Boolean value  = null;
+        var value = Boolean.parseBoolean(defaultValue);
         Object  result = null;
 
-        try
-        {
-            value = (Boolean)ConvertUtils.convert(defaultValue, Boolean.class);
-        }
-        catch (ConversionException ex)
-        {
-            return defaultValue;
-        }
-        
         if ((targetTypeCode == Types.BIT) || (targetTypeCode == Types.BOOLEAN))
         {
             result = value;
         }
         else if (TypeMap.isNumericType(targetTypeCode))
         {
-            result = (value.booleanValue() ? new Integer(1) : new Integer(0));
+            result = (value ? 1 : 0);
         }
         else
         {
-            result = value.toString();
+            result = String.valueOf(value);
         }
         return result;
     }

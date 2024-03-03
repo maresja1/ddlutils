@@ -19,13 +19,6 @@ package org.apache.ddlutils.io;
  * under the License.
  */
 
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.sql.Types;
-import java.util.Iterator;
-
-import junit.framework.TestCase;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ddlutils.model.CascadeActionEnum;
 import org.apache.ddlutils.model.Column;
@@ -37,14 +30,24 @@ import org.apache.ddlutils.model.ModelException;
 import org.apache.ddlutils.model.Reference;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.TypeMap;
+import org.junit.jupiter.api.Assertions;
+
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.sql.Types;
+import java.util.Iterator;
+
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Tests the database XML reading/writing via the {@link org.apache.ddlutils.io.DatabaseIO} class.
  * 
  * @version $Revision: 289996 $
  */
-public class TestDatabaseIO extends TestCase
+public class TestDatabaseIO
 {
+
     /**
      * Reads the database model from the given string.
      * 
@@ -1087,9 +1090,9 @@ public class TestDatabaseIO extends TestCase
             CascadeActionEnum enumValue = (CascadeActionEnum)it.next();
 
             modelXml.append("    <foreign-key name='foreignkey ");
-            modelXml.append(enumValue.getName());
+            modelXml.append(enumValue.name());
             modelXml.append("' foreignTable='SomeTable' onUpdate='");
-            modelXml.append(enumValue.getName());
+            modelXml.append(enumValue.name());
             modelXml.append("'>\n");
             modelXml.append("       <reference local='Some_ID' foreign='ID'/>\n");
             modelXml.append("    </foreign-key>\n");
@@ -1123,7 +1126,7 @@ public class TestDatabaseIO extends TestCase
             CascadeActionEnum enumValue = (CascadeActionEnum)it.next();
             ForeignKey        fk        = anotherTable.getForeignKey(idx);
 
-            assertEquals("foreignkey " + enumValue.getName(), enumValue, CascadeActionEnum.NONE, someTable, 1, fk);
+            assertEquals("foreignkey " + enumValue.name(), enumValue, CascadeActionEnum.NONE, someTable, 1, fk);
             assertEquals(anotherTable.getColumn(0), someTable.getColumn(0), fk.getReference(0));
         }
 
@@ -1140,11 +1143,11 @@ public class TestDatabaseIO extends TestCase
             CascadeActionEnum enumValue = (CascadeActionEnum)it.next();
 
             modelXml.append("    <foreign-key foreignTable=\"SomeTable\" name=\"foreignkey ");
-            modelXml.append(enumValue.getName());
+            modelXml.append(enumValue.name());
             if (enumValue != CascadeActionEnum.NONE)
             {
                 modelXml.append("\" onUpdate=\"");
-                modelXml.append(enumValue.getName());
+                modelXml.append(enumValue.name());
             }
             modelXml.append("\">\n");
             modelXml.append("      <reference local=\"Some_ID\" foreign=\"ID\" />\n");
@@ -1184,9 +1187,9 @@ public class TestDatabaseIO extends TestCase
             CascadeActionEnum enumValue = (CascadeActionEnum)it.next();
 
             modelXml.append("    <foreign-key name='foreignkey ");
-            modelXml.append(enumValue.getName());
+            modelXml.append(enumValue.name());
             modelXml.append("' foreignTable='SomeTable' onDelete='");
-            modelXml.append(enumValue.getName());
+            modelXml.append(enumValue.name());
             modelXml.append("'>\n");
             modelXml.append("       <reference local='Some_ID' foreign='ID'/>\n");
             modelXml.append("    </foreign-key>\n");
@@ -1220,7 +1223,7 @@ public class TestDatabaseIO extends TestCase
             CascadeActionEnum enumValue = (CascadeActionEnum)it.next();
             ForeignKey        fk        = anotherTable.getForeignKey(idx);
 
-            assertEquals("foreignkey " + enumValue.getName(), CascadeActionEnum.NONE, enumValue, someTable, 1, fk);
+            assertEquals("foreignkey " + enumValue.name(), CascadeActionEnum.NONE, enumValue, someTable, 1, fk);
             assertEquals(anotherTable.getColumn(0), someTable.getColumn(0), fk.getReference(0));
         }
 
@@ -1237,11 +1240,11 @@ public class TestDatabaseIO extends TestCase
             CascadeActionEnum enumValue = (CascadeActionEnum)it.next();
 
             modelXml.append("    <foreign-key foreignTable=\"SomeTable\" name=\"foreignkey ");
-            modelXml.append(enumValue.getName());
+            modelXml.append(enumValue.name());
             if (enumValue != CascadeActionEnum.NONE)
             {
                 modelXml.append("\" onDelete=\"");
-                modelXml.append(enumValue.getName());
+                modelXml.append(enumValue.name());
             }
             modelXml.append("\">\n");
             modelXml.append("      <reference local=\"Some_ID\" foreign=\"ID\" />\n");
@@ -2741,4 +2744,15 @@ public class TestDatabaseIO extends TestCase
             "</database>\n",
             model);
     }
+
+
+	protected  <T> void assertEquals(final T columnCount, final T columnCount1)
+	{
+		Assertions.assertEquals(columnCount, columnCount1);
+	}
+
+	protected <T> void assertEquals(final String s, final T columnCount, final T columnCount1)
+	{
+		Assertions.assertEquals(columnCount, columnCount1, s);
+	}
 }

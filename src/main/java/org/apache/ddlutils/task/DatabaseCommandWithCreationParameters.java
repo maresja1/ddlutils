@@ -19,12 +19,12 @@ package org.apache.ddlutils.task;
  * under the License.
  */
 
-import java.util.ArrayList;
-import java.util.Iterator;
-
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.CreationParameters;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Base type for database commands that use creation parameters.
@@ -35,7 +35,7 @@ import org.apache.ddlutils.platform.CreationParameters;
 public abstract class DatabaseCommandWithCreationParameters extends DatabaseCommand
 {
     /** The additional creation parameters. */
-    private ArrayList _parameters = new ArrayList();
+    private final List<Parameter> _parameters = new ArrayList<>();
 
     /**
      * Adds a parameter which is a name-value pair.
@@ -59,23 +59,19 @@ public abstract class DatabaseCommandWithCreationParameters extends DatabaseComm
     {
         CreationParameters parameters = new CreationParameters();
 
-        for (Iterator it = _parameters.iterator(); it.hasNext();)
-        {
-            TableSpecificParameter param = (TableSpecificParameter)it.next();
+		for (final Parameter parameter : _parameters) {
+			TableSpecificParameter param = (TableSpecificParameter) parameter;
 
-            if (param.isForPlatform(platformName))
-            {
-                for (int idx = 0; idx < model.getTableCount(); idx++)
-                {
-                    Table table = model.getTable(idx);
+			if (param.isForPlatform(platformName)) {
+				for (int idx = 0; idx < model.getTableCount(); idx++) {
+					Table table = model.getTable(idx);
 
-                    if (param.isForTable(table, isCaseSensitive))
-                    {
-                        parameters.addParameter(table, param.getName(), param.getValue());
-                    }
-                }
-            }
-        }
+					if (param.isForTable(table, isCaseSensitive)) {
+						parameters.addParameter(table, param.getName(), param.getValue());
+					}
+				}
+			}
+		}
         return parameters;
     }
 }

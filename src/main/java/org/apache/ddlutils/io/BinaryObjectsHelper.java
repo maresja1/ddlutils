@@ -19,15 +19,13 @@ package org.apache.ddlutils.io;
  * under the License.
  */
 
+import org.apache.ddlutils.DdlUtilsException;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.sql.Types;
-
-import org.apache.ddlutils.DdlUtilsException;
-import org.apache.ddlutils.io.converters.ByteArrayBase64Converter;
 
 /**
  * Helper class for dealing with the serialization and Base64 encoding of objects.
@@ -84,48 +82,5 @@ public class BinaryObjectsHelper
             throw new DdlUtilsException("Could find class for deserialized object", ex);
         }
     }
-    
-    /**
-     * Encodes the serialized form of the given object to its Base64 form.
-     *   
-     * @param obj The object
-     * @return The Base64 string
-     */
-    public String encode(Object obj)
-    {
-        return encodeByteArray(serialize(obj));
-    }
 
-    /**
-     * Encodes the given byte array to its Base64 form.
-     *   
-     * @param data The data to encode
-     * @return The Base64 string
-     */
-    public String encodeByteArray(byte[] data)
-    {
-        return new ByteArrayBase64Converter().convertToString(data, Types.BINARY);
-    }
-
-    /**
-     * Decodes an object from the serialized form encoded in the given Base64 string.
-     *   
-     * @param base64Rep The serialized form encoded in Base64
-     * @return The object
-     */
-    public Object decode(String base64Rep)
-    {
-        return deserialize(decodeByteArray(base64Rep));
-    }
-
-    /**
-     * Decodes the given Base64 form to a byte array.
-     *   
-     * @param base64Rep The Base64 string to decode
-     * @return The byte array
-     */
-    public byte[] decodeByteArray(String base64Rep)
-    {
-        return (byte[])new ByteArrayBase64Converter().convertFromString(base64Rep, Types.BINARY);
-    }
 }

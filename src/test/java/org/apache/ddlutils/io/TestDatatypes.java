@@ -19,6 +19,14 @@ package org.apache.ddlutils.io;
  * under the License.
  */
 
+import org.apache.ddlutils.TestAgainstLiveDatabaseBase;
+import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.platform.interbase.InterbasePlatform;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -31,12 +39,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.TreeSet;
 
-import junit.framework.Test;
-
-import org.apache.ddlutils.TestAgainstLiveDatabaseBase;
-import org.apache.ddlutils.model.Database;
-import org.apache.ddlutils.platform.interbase.InterbasePlatform;
-
 /**
  * Performs roundtrip datatype tests.
  * 
@@ -44,17 +46,18 @@ import org.apache.ddlutils.platform.interbase.InterbasePlatform;
  */
 public class TestDatatypes extends TestAgainstLiveDatabaseBase
 {
-    // TODO: special columns (java_object, array, distinct, ...)
 
-    /**
-     * Parameterized test case pattern.
-     * 
-     * @return The tests
-     */
-    public static Test suite() throws Exception
-    {
-        return getTests(TestDatatypes.class);
-    }
+	@BeforeEach
+	protected void setUp() throws Exception
+	{
+		super.setUp();
+	}
+
+	@AfterEach
+	protected void tearDown() throws Exception
+	{
+		super.tearDown();
+	}
 
     /**
      * Performs a data type test.
@@ -102,13 +105,13 @@ public class TestDatatypes extends TestAgainstLiveDatabaseBase
     protected void performDataTypeTest(String modelXml, Object inserted1, Object inserted2, Object expected1, Object expected2)
     {
         createDatabase(modelXml);
-        insertRow("roundtrip", new Object[] { new Integer(1), inserted1 });
-        insertRow("roundtrip", new Object[] { new Integer(2), inserted2 });
+        insertRow("roundtrip", new Object[] { 1, inserted1 });
+        insertRow("roundtrip", new Object[] { 2, inserted2 });
 
         List beans = getRows("roundtrip");
 
-        assertEquals(expected1, beans.get(0), "avalue");
-        assertEquals(expected2, beans.get(1), "avalue");
+        assertEqualsAttr(expected1, beans.get(0), "avalue");
+        assertEqualsAttr(expected2, beans.get(1), "avalue");
 
         Database modelFromDb = readModelFromDatabase("roundtriptest");
         
@@ -117,8 +120,7 @@ public class TestDatatypes extends TestAgainstLiveDatabaseBase
 
         String alterTablesSql = getAlterTablesSql(modelFromDb).trim();
 
-        assertEquals("",
-        		     alterTablesSql);
+        Assertions.assertEquals(alterTablesSql, "");
 
         StringWriter   stringWriter = new StringWriter();
         DatabaseDataIO dataIO       = new DatabaseDataIO();
@@ -127,7 +129,7 @@ public class TestDatatypes extends TestAgainstLiveDatabaseBase
 
         String dataSql = stringWriter.toString();
         
-        assertTrue((dataSql != null) && (dataSql.length() > 0));
+        Assertions.assertTrue((dataSql != null) && (dataSql.length() > 0));
 
         getPlatform().dropTables(getModel(), false);
 
@@ -137,13 +139,14 @@ public class TestDatatypes extends TestAgainstLiveDatabaseBase
 
         beans = getRows("roundtrip");
 
-        assertEquals(expected1, beans.get(0), "avalue");
-        assertEquals(expected2, beans.get(1), "avalue");
+        assertEqualsAttr(expected1, beans.get(0), "avalue");
+        assertEqualsAttr(expected2, beans.get(1), "avalue");
     }
 
     /**
      * Tests a simple BIT column.
      */
+	@Test
     public void testBit()
     {
         final String modelXml = 
@@ -161,7 +164,8 @@ public class TestDatatypes extends TestAgainstLiveDatabaseBase
     /**
      * Tests a BIT column with a default value.
      */
-    public void testBitWithDefault()
+	@Test
+	public void testBitWithDefault()
     {
         final String modelXml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -178,7 +182,8 @@ public class TestDatatypes extends TestAgainstLiveDatabaseBase
     /**
      * Tests a simple BOOLEAN column.
      */
-    public void testBoolean()
+	@Test
+	public void testBoolean()
     {
         final String modelXml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -195,7 +200,8 @@ public class TestDatatypes extends TestAgainstLiveDatabaseBase
     /**
      * Tests a BOOLEAN column with a default value.
      */
-    public void testBooleanWithDefault()
+	@Test
+	public void testBooleanWithDefault()
     {
         final String modelXml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -212,7 +218,8 @@ public class TestDatatypes extends TestAgainstLiveDatabaseBase
     /**
      * Tests a simple TINYINT column.
      */
-    public void testTinyInt()
+	@Test
+	public void testTinyInt()
     {
         final String modelXml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -223,13 +230,14 @@ public class TestDatatypes extends TestAgainstLiveDatabaseBase
             "  </table>\n"+
             "</database>";
 
-        performDataTypeTest(modelXml, new Integer(254), new Integer(-254));
+        performDataTypeTest(modelXml, 254, -254);
     }
 
     /**
      * Tests a TINYINT column with a default value.
      */
-    public void testTinyIntWithDefault()
+    @Test
+	public void testTinyIntWithDefault()
     {
         final String modelXml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -240,13 +248,14 @@ public class TestDatatypes extends TestAgainstLiveDatabaseBase
             "  </table>\n"+
             "</database>";
 
-        performDataTypeTest(modelXml, new Integer(128), null, new Integer(-200));
+        performDataTypeTest(modelXml, 128, null, -200);
     }
 
     /**
      * Tests a simple SMALLINT column.
      */
-    public void testSmallInt()
+	@Test
+	public void testSmallInt()
     {
         final String modelXml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -257,13 +266,14 @@ public class TestDatatypes extends TestAgainstLiveDatabaseBase
             "  </table>\n"+
             "</database>";
 
-        performDataTypeTest(modelXml, new Integer(Short.MIN_VALUE), new Integer(Short.MAX_VALUE));
+        performDataTypeTest(modelXml, (int) Short.MIN_VALUE, (int) Short.MAX_VALUE);
     }
 
     /**
      * Tests a SMALLINT column with a default value.
      */
-    public void testSmallIntWithDefault()
+	@Test
+	public void testSmallIntWithDefault()
     {
         final String modelXml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -274,13 +284,14 @@ public class TestDatatypes extends TestAgainstLiveDatabaseBase
             "  </table>\n"+
             "</database>";
 
-        performDataTypeTest(modelXml, new Integer(256), null, new Integer(-30000));
+        performDataTypeTest(modelXml, 256, null, -30000);
     }
 
     /**
      * Tests a simple INTEGER column.
      */
-    public void testInteger()
+	@Test
+	public void testInteger()
     {
         final String modelXml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -291,13 +302,14 @@ public class TestDatatypes extends TestAgainstLiveDatabaseBase
             "  </table>\n"+
             "</database>";
 
-        performDataTypeTest(modelXml, new Integer(0), new Integer(-2147483648));
+        performDataTypeTest(modelXml, 0, -2147483648);
     }
 
     /**
      * Tests a INTEGER column with a default value.
      */
-    public void testIntegerWithDefault()
+	@Test
+	public void testIntegerWithDefault()
     {
         final String modelXml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -308,13 +320,14 @@ public class TestDatatypes extends TestAgainstLiveDatabaseBase
             "  </table>\n"+
             "</database>";
 
-        performDataTypeTest(modelXml, null, new Integer(2147483646), new Integer(2147483647));
+        performDataTypeTest(modelXml, null, 2147483646, 2147483647);
     }
 
     /**
      * Tests a simple BIGINT column.
      */
-    public void testBigInt()
+	@Test
+	public void testBigInt()
     {
         final String modelXml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -325,13 +338,14 @@ public class TestDatatypes extends TestAgainstLiveDatabaseBase
             "  </table>\n"+
             "</database>";
 
-        performDataTypeTest(modelXml, new Long(Long.MAX_VALUE), new Long(0l));
+        performDataTypeTest(modelXml, Long.MAX_VALUE, 0l);
     }
 
     /**
      * Tests a BIGINT column with a default value.
      */
-    public void testBigIntWithDefault()
+	@Test
+	public void testBigIntWithDefault()
     {
         final String modelXml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -342,47 +356,50 @@ public class TestDatatypes extends TestAgainstLiveDatabaseBase
             "  </table>\n"+
             "</database>";
 
-        performDataTypeTest(modelXml, null, new Long(-1l), new Long(-9000000000000000000l));
+        performDataTypeTest(modelXml, null, -1l, -9000000000000000000l);
     }
 
     /**
      * Tests a simple REAL column.
      */
-    public void testReal()
+	@Test
+	public void testReal()
     {
         final String modelXml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='roundtriptest'>\n"+
             "  <table name='roundtrip'>\n"+
             "    <column name='pk' type='INTEGER' primaryKey='true' required='true'/>\n"+
-            "    <column name='avalue' type='REAL'/>\n"+
+            "    <column name='avalue' type='DOUBLE'/>\n"+
             "  </table>\n"+
             "</database>";
 
-        performDataTypeTest(modelXml, new Float(12345.6f), new Float(0.0f));
+        performDataTypeTest(modelXml, 12345.6f, 0.0f);
     }
 
     /**
      * Tests a REAL column with a default value.
      */
-    public void testRealWithDefault()
+	@Test
+	public void testRealWithDefault()
     {
         final String modelXml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='roundtriptest'>\n"+
             "  <table name='roundtrip'>\n"+
             "    <column name='pk' type='INTEGER' primaryKey='true' required='true'/>\n"+
-            "    <column name='avalue' type='REAL' required='true' default='-1.01234'/>\n"+
+            "    <column name='avalue' type='DOUBLE' required='true' default='-1.01234'/>\n"+
             "  </table>\n"+
             "</database>";
 
-        performDataTypeTest(modelXml, new Float(1e+20f), null, new Float(-1.01234f));
+        performDataTypeTest(modelXml, 1e+20f, null, -1.01234f);
     }
 
     /**
      * Tests a simple FLOAT column.
      */
-    public void testFloat()
+	@Test
+	public void testFloat()
     {
         final String modelXml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -393,7 +410,7 @@ public class TestDatatypes extends TestAgainstLiveDatabaseBase
             "  </table>\n"+
             "</database>";
 
-        performDataTypeTest(modelXml, new Double(-1.0), new Double(1e-45));
+        performDataTypeTest(modelXml, -1.0, 1e-45);
     }
 
     /**
@@ -410,7 +427,7 @@ public class TestDatatypes extends TestAgainstLiveDatabaseBase
             "  </table>\n"+
             "</database>";
 
-        performDataTypeTest(modelXml, null, new Double(1e+25), new Double(12345678.9012345));
+        performDataTypeTest(modelXml, null, 1e+25, 12345678.9012345);
     }
 
     /**
@@ -427,7 +444,7 @@ public class TestDatatypes extends TestAgainstLiveDatabaseBase
             "  </table>\n"+
             "</database>";
 
-        performDataTypeTest(modelXml, new Double(1e+38), new Double(1.01));
+        performDataTypeTest(modelXml, 1e+38, 1.01);
     }
 
     /**
@@ -444,7 +461,7 @@ public class TestDatatypes extends TestAgainstLiveDatabaseBase
             "  </table>\n"+
             "</database>";
 
-        performDataTypeTest(modelXml, new Double(-1e+25), null, new Double(-987654321.098765));
+        performDataTypeTest(modelXml, -1e+25, null, -987654321.098765);
     }
 
     /**

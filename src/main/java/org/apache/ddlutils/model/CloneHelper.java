@@ -119,7 +119,7 @@ public class CloneHelper
 
         result.setName(source.getName());
         result.setJavaName(source.getJavaName());
-        result.setPrimaryKey(clonePrimaryKeyStatus ? source.isPrimaryKey() : false);
+        result.setPrimaryKey(clonePrimaryKeyStatus && source.isPrimaryKey());
         result.setRequired(source.isRequired());
         result.setAutoIncrement(source.isAutoIncrement());
         result.setTypeCode(source.getTypeCode());
@@ -165,7 +165,7 @@ public class CloneHelper
     {
         IndexColumn result = new IndexColumn();
 
-        result.setColumn(targetTable.findColumn(source.getName(), caseSensitive));
+        result.setColumn(targetTable.findColumn(source.getName(), caseSensitive).orElseThrow());
         result.setOrdinalPosition(source.getOrdinalPosition());
         result.setSize(source.getSize());
         return result;
@@ -184,7 +184,8 @@ public class CloneHelper
     public ForeignKey clone(ForeignKey source, Table owningTable, Database targetModel, boolean caseSensitive)
     {
         ForeignKey result       = new ForeignKey();
-        Table      foreignTable = targetModel.findTable(source.getForeignTableName(), caseSensitive);
+        Table      foreignTable = targetModel.findTable(source.getForeignTableName(), caseSensitive)
+			.orElseThrow();
         
         result.setName(source.getName());
         result.setForeignTable(foreignTable);
@@ -216,8 +217,8 @@ public class CloneHelper
     {
         Reference result = new Reference();
 
-        result.setLocalColumn(localTable.findColumn(source.getLocalColumnName(), caseSensitive));
-        result.setForeignColumn(foreignTable.findColumn(source.getForeignColumnName(), caseSensitive));
+        result.setLocalColumn(localTable.findColumn(source.getLocalColumnName(), caseSensitive).orElseThrow());
+        result.setForeignColumn(foreignTable.findColumn(source.getForeignColumnName(), caseSensitive).orElseThrow());
         return result;
     }
 }

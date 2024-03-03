@@ -20,6 +20,7 @@ package org.apache.ddlutils.task;
  */
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Contains some utility functions for the Ant tasks.
@@ -35,41 +36,36 @@ public class TaskHelper
      * @param stringList The comma-separated list of strings
      * @return The strings as an array
      */
-    public String[] parseCommaSeparatedStringList(String stringList)
+    public List<String> parseCommaSeparatedStringList(String stringList)
     {
-        String[]  tokens = stringList.split(",");
-        ArrayList values = new ArrayList();
-        String    last   = null;
+        String[] tokens = stringList.split(",");
+        var values = new ArrayList<String>();
+        StringBuilder last = null;
 
-        for (int idx = 0; idx < tokens.length; idx++)
-        {
-            String  str         = tokens[idx];
-            int     strLen      = str.length();
-            boolean endsInSlash = (strLen > 0) && (str.charAt(strLen - 1) == '\\') &&
-                                  ((strLen == 1) || (str.charAt(strLen - 2) != '\\'));
+		for (String str : tokens) {
+			int strLen = str.length();
+			boolean endsInSlash = (strLen > 0) && (str.charAt(strLen - 1) == '\\') && (
+				(strLen == 1) || (
+					str.charAt(strLen - 2) != '\\'
+				)
+			);
 
-            if (last != null)
-            {
-                last += "," + str;
-                if (!endsInSlash)
-                {
-                    values.add(last);
-                    last = null;
-                }
-            }
-            else if (endsInSlash)
-            {
-                last = str.substring(0, strLen - 1);
-            }
-            else
-            {
-                values.add(str);
-            }
-        }
+			if (last != null) {
+				last.append(",").append(str);
+				if (!endsInSlash) {
+					values.add(last.toString());
+					last = null;
+				}
+			} else if (endsInSlash) {
+				last = new StringBuilder(str.substring(0, strLen - 1));
+			} else {
+				values.add(str);
+			}
+		}
         if (last != null)
         {
             values.add(last + ",");
         }
-        return (String[])values.toArray(new String[values.size()]);
+        return values;
     }
 }

@@ -103,25 +103,16 @@ public class MetaDataColumnDescriptor
      */
     public Object readColumn(ResultSet resultSet) throws SQLException
     {
-        Object result = null;
+        Object result;
 
         try
         {
-            switch (_jdbcType)
-            {
-                case Types.BIT:
-                    result = new Boolean(resultSet.getBoolean(_columnName));
-                    break;
-                case Types.INTEGER:
-                    result = new Integer(resultSet.getInt(_columnName));
-                    break;
-                case Types.TINYINT:
-                    result = new Short(resultSet.getShort(_columnName));
-                    break;
-                default:
-                    result = resultSet.getString(_columnName);
-                break;
-            }
+			result = switch (_jdbcType) {
+				case Types.BIT -> resultSet.getBoolean(_columnName);
+				case Types.INTEGER -> resultSet.getInt(_columnName);
+				case Types.TINYINT -> resultSet.getShort(_columnName);
+				default -> resultSet.getString(_columnName);
+			};
             if (resultSet.wasNull())
             {
                 result = null;

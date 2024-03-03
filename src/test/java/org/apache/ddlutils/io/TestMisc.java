@@ -19,18 +19,6 @@ package org.apache.ddlutils.io;
  * under the License.
  */
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.Reader;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-
-import junit.framework.Test;
-
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.ddlutils.TestAgainstLiveDatabaseBase;
 import org.apache.ddlutils.model.Database;
@@ -44,8 +32,24 @@ import org.apache.ddlutils.platform.postgresql.PostgreSqlPlatform;
 import org.apache.ddlutils.platform.sybase.SybasePlatform;
 import org.dom4j.Document;
 import org.dom4j.Element;
+import org.dom4j.Node;
 import org.dom4j.io.SAXReader;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.xml.sax.InputSource;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Contains misc tests.
@@ -54,20 +58,24 @@ import org.xml.sax.InputSource;
  */
 public class TestMisc extends TestAgainstLiveDatabaseBase
 {
-    /**
-     * Parameterized test case pattern.
-     * 
-     * @return The tests
-     */
-    public static Test suite() throws Exception
-    {
-        return getTests(TestMisc.class);
-    }
+
+	@BeforeEach
+	protected void setUp() throws Exception
+	{
+		super.setUp();
+	}
+
+	@AfterEach
+	protected void tearDown() throws Exception
+	{
+		super.tearDown();
+	}
 
     /**
      * Tests the backup and restore of a table with an identity column and a foreign key to
      * it when identity override is turned on.
      */
+    @Test
     public void testIdentityOverrideOn() throws Exception
     {
         if (!getPlatformInfo().isIdentityOverrideAllowed())
@@ -123,19 +131,19 @@ public class TestMisc extends TestAgainstLiveDatabaseBase
 
         if (isSybase)
         {
-            insertRow("misc1", new Object[] { new BigDecimal(10), new Integer(1) });
-            insertRow("misc1", new Object[] { new BigDecimal(12), new Integer(2) });
-            insertRow("misc1", new Object[] { new BigDecimal(13), new Integer(3) });
-            insertRow("misc2", new Object[] { new Integer(1), new BigDecimal(10) });
-            insertRow("misc2", new Object[] { new Integer(2), new BigDecimal(13) });
+            insertRow("misc1", new Object[] { new BigDecimal(10), 1 });
+            insertRow("misc1", new Object[] { new BigDecimal(12), 2 });
+            insertRow("misc1", new Object[] { new BigDecimal(13), 3 });
+            insertRow("misc2", new Object[] { 1, new BigDecimal(10) });
+            insertRow("misc2", new Object[] { 2, new BigDecimal(13) });
         }
         else
         {
-            insertRow("misc1", new Object[] { new Integer(10), new Integer(1) });
-            insertRow("misc1", new Object[] { new Integer(12), new Integer(2) });
-            insertRow("misc1", new Object[] { new Integer(13), new Integer(3) });
-            insertRow("misc2", new Object[] { new Integer(1), new Integer(10) });
-            insertRow("misc2", new Object[] { new Integer(2), new Integer(13) });
+            insertRow("misc1", new Object[] { 10, 1 });
+            insertRow("misc1", new Object[] { 12, 2 });
+            insertRow("misc1", new Object[] { 13, 3 });
+            insertRow("misc2", new Object[] { 1, 10 });
+            insertRow("misc2", new Object[] { 2, 13 });
         }
 
         StringWriter   stringWriter = new StringWriter();
@@ -186,33 +194,33 @@ public class TestMisc extends TestAgainstLiveDatabaseBase
 
         if (isSybase)
         {
-            assertEquals(new BigDecimal(10), beans.get(0), "pk");
-            assertEquals(new BigDecimal(12), beans.get(1), "pk");
-            assertEquals(new BigDecimal(13), beans.get(2), "pk");
+            assertEqualsAttr(new BigDecimal(10), beans.get(0), "pk");
+            assertEqualsAttr(new BigDecimal(12), beans.get(1), "pk");
+            assertEqualsAttr(new BigDecimal(13), beans.get(2), "pk");
         }
         else
         {
-            assertEquals(new Integer(10), beans.get(0), "pk");
-            assertEquals(new Integer(12), beans.get(1), "pk");
-            assertEquals(new Integer(13), beans.get(2), "pk");
+            assertEqualsAttr(10, beans.get(0), "pk");
+            assertEqualsAttr(12, beans.get(1), "pk");
+            assertEqualsAttr(13, beans.get(2), "pk");
         }
-        assertEquals(new Integer(1),  beans.get(0), "avalue");
-        assertEquals(new Integer(2),  beans.get(1), "avalue");
-        assertEquals(new Integer(3),  beans.get(2), "avalue");
+        assertEqualsAttr(1,  beans.get(0), "avalue");
+        assertEqualsAttr(2,  beans.get(1), "avalue");
+        assertEqualsAttr(3,  beans.get(2), "avalue");
 
         beans = getRows("misc2");
 
-        assertEquals(new Integer(1),  beans.get(0), "pk");
-        assertEquals(new Integer(2),  beans.get(1), "pk");
+        assertEqualsAttr(1,  beans.get(0), "pk");
+        assertEqualsAttr(2,  beans.get(1), "pk");
         if (isSybase)
         {
-            assertEquals(new BigDecimal(10), beans.get(0), "fk");
-            assertEquals(new BigDecimal(13), beans.get(1), "fk");
+            assertEqualsAttr(new BigDecimal(10), beans.get(0), "fk");
+            assertEqualsAttr(new BigDecimal(13), beans.get(1), "fk");
         }
         else
         {
-            assertEquals(new Integer(10), beans.get(0), "fk");
-            assertEquals(new Integer(13), beans.get(1), "fk");
+            assertEqualsAttr(10, beans.get(0), "fk");
+            assertEqualsAttr(13, beans.get(1), "fk");
         }
     }
 
@@ -220,6 +228,7 @@ public class TestMisc extends TestAgainstLiveDatabaseBase
      * Tests the backup and restore of a table with an identity column and a foreign key to
      * it when identity override is turned off.
      */
+    @Test
     public void testIdentityOverrideOff() throws Exception
     {
         if (!getPlatformInfo().isIdentityOverrideAllowed())
@@ -275,19 +284,19 @@ public class TestMisc extends TestAgainstLiveDatabaseBase
 
         if (isSybase)
         {
-            insertRow("misc1", new Object[] { new BigDecimal(10), new Integer(1) });
-            insertRow("misc1", new Object[] { new BigDecimal(12), new Integer(2) });
-            insertRow("misc1", new Object[] { new BigDecimal(13), new Integer(3) });
-            insertRow("misc2", new Object[] { new Integer(1), new BigDecimal(10) });
-            insertRow("misc2", new Object[] { new Integer(2), new BigDecimal(13) });
+            insertRow("misc1", new Object[] { new BigDecimal(10), 1 });
+            insertRow("misc1", new Object[] { new BigDecimal(12), 2 });
+            insertRow("misc1", new Object[] { new BigDecimal(13), 3 });
+            insertRow("misc2", new Object[] { 1, new BigDecimal(10) });
+            insertRow("misc2", new Object[] { 2, new BigDecimal(13) });
         }
         else
         {
-            insertRow("misc1", new Object[] { new Integer(10), new Integer(1) });
-            insertRow("misc1", new Object[] { new Integer(12), new Integer(2) });
-            insertRow("misc1", new Object[] { new Integer(13), new Integer(3) });
-            insertRow("misc2", new Object[] { new Integer(1), new Integer(10) });
-            insertRow("misc2", new Object[] { new Integer(2), new Integer(13) });
+            insertRow("misc1", new Object[] { 10, 1 });
+            insertRow("misc1", new Object[] { 12, 2 });
+            insertRow("misc1", new Object[] { 13, 3 });
+            insertRow("misc2", new Object[] { 1, 10 });
+            insertRow("misc2", new Object[] { 2, 13 });
         }
 
         StringWriter   stringWriter = new StringWriter();
@@ -340,33 +349,33 @@ public class TestMisc extends TestAgainstLiveDatabaseBase
 
         if (isSybase)
         {
-            assertEquals(new BigDecimal(1), beans.get(0), "pk");
-            assertEquals(new BigDecimal(2), beans.get(1), "pk");
-            assertEquals(new BigDecimal(3), beans.get(2), "pk");
+            assertEqualsAttr(new BigDecimal(1), beans.get(0), "pk");
+            assertEqualsAttr(new BigDecimal(2), beans.get(1), "pk");
+            assertEqualsAttr(new BigDecimal(3), beans.get(2), "pk");
         }
         else
         {
-            assertEquals(new Integer(1), beans.get(0), "pk");
-            assertEquals(new Integer(2), beans.get(1), "pk");
-            assertEquals(new Integer(3), beans.get(2), "pk");
+            assertEqualsAttr(1, beans.get(0), "pk");
+            assertEqualsAttr(2, beans.get(1), "pk");
+            assertEqualsAttr(3, beans.get(2), "pk");
         }
-        assertEquals(new Integer(1), beans.get(0), "avalue");
-        assertEquals(new Integer(2), beans.get(1), "avalue");
-        assertEquals(new Integer(3), beans.get(2), "avalue");
+        assertEqualsAttr(1, beans.get(0), "avalue");
+        assertEqualsAttr(2, beans.get(1), "avalue");
+        assertEqualsAttr(3, beans.get(2), "avalue");
 
         beans = getRows("misc2");
 
-        assertEquals(new Integer(1), beans.get(0), "pk");
-        assertEquals(new Integer(2), beans.get(1), "pk");
+        assertEqualsAttr(1, beans.get(0), "pk");
+        assertEqualsAttr(2, beans.get(1), "pk");
         if (isSybase)
         {
-            assertEquals(new BigDecimal(1), beans.get(0), "fk");
-            assertEquals(new BigDecimal(3), beans.get(1), "fk");
+            assertEqualsAttr(new BigDecimal(1), beans.get(0), "fk");
+            assertEqualsAttr(new BigDecimal(3), beans.get(1), "fk");
         }
         else
         {
-            assertEquals(new Integer(1), beans.get(0), "fk");
-            assertEquals(new Integer(3), beans.get(1), "fk");
+            assertEqualsAttr(1, beans.get(0), "fk");
+            assertEqualsAttr(3, beans.get(1), "fk");
         }
     }
 
@@ -374,6 +383,7 @@ public class TestMisc extends TestAgainstLiveDatabaseBase
      * Tests the backup and restore of a table with an identity column and a foreign key to
      * itself while identity override is off.
      */
+    @Test
     public void testSelfReferenceIdentityOverrideOff() throws Exception
     {
         // Hsqldb does not allow rows to reference themselves
@@ -428,10 +438,10 @@ public class TestMisc extends TestAgainstLiveDatabaseBase
         }
         else
         {
-            insertRow("misc", new Object[] { new Integer(1), null });
-            insertRow("misc", new Object[] { new Integer(2), new Integer(1) });
-            insertRow("misc", new Object[] { new Integer(3), new Integer(2) });
-            insertRow("misc", new Object[] { new Integer(4), new Integer(4) });
+            insertRow("misc", new Object[] { 1, null });
+            insertRow("misc", new Object[] { 2, 1 });
+            insertRow("misc", new Object[] { 3, 2 });
+            insertRow("misc", new Object[] { 4, 4 });
         }
 
         StringWriter   stringWriter = new StringWriter();
@@ -475,25 +485,25 @@ public class TestMisc extends TestAgainstLiveDatabaseBase
 
         if (isSybase)
         {
-            assertEquals(new BigDecimal(1), beans.get(0), "pk");
+            assertEqualsAttr(new BigDecimal(1), beans.get(0), "pk");
             assertNull(((DynaBean)beans.get(0)).get("fk"));
-            assertEquals(new BigDecimal(2), beans.get(1), "pk");
-            assertEquals(new BigDecimal(1), beans.get(1), "fk");
-            assertEquals(new BigDecimal(3), beans.get(2), "pk");
-            assertEquals(new BigDecimal(2), beans.get(2), "fk");
-            assertEquals(new BigDecimal(4), beans.get(3), "pk");
-            assertEquals(new BigDecimal(4), beans.get(3), "fk");
+            assertEqualsAttr(new BigDecimal(2), beans.get(1), "pk");
+            assertEqualsAttr(new BigDecimal(1), beans.get(1), "fk");
+            assertEqualsAttr(new BigDecimal(3), beans.get(2), "pk");
+            assertEqualsAttr(new BigDecimal(2), beans.get(2), "fk");
+            assertEqualsAttr(new BigDecimal(4), beans.get(3), "pk");
+            assertEqualsAttr(new BigDecimal(4), beans.get(3), "fk");
         }
         else
         {
-            assertEquals(new Integer(1), beans.get(0), "pk");
+            assertEqualsAttr(1, beans.get(0), "pk");
             assertNull(((DynaBean)beans.get(0)).get("fk"));
-            assertEquals(new Integer(2), beans.get(1), "pk");
-            assertEquals(new Integer(1), beans.get(1), "fk");
-            assertEquals(new Integer(3), beans.get(2), "pk");
-            assertEquals(new Integer(2), beans.get(2), "fk");
-            assertEquals(new Integer(4), beans.get(3), "pk");
-            assertEquals(new Integer(4), beans.get(3), "fk");
+            assertEqualsAttr(2, beans.get(1), "pk");
+            assertEqualsAttr(1, beans.get(1), "fk");
+            assertEqualsAttr(3, beans.get(2), "pk");
+            assertEqualsAttr(2, beans.get(2), "fk");
+            assertEqualsAttr(4, beans.get(3), "pk");
+            assertEqualsAttr(4, beans.get(3), "fk");
         }
     }
 
@@ -501,6 +511,7 @@ public class TestMisc extends TestAgainstLiveDatabaseBase
      * Tests the backup and restore of a table with an identity column and a foreign key to
      * itself while identity override is off.
      */
+    @Test
     public void testSelfReferenceIdentityOverrideOn() throws Exception
     {
         if (!getPlatformInfo().isIdentityOverrideAllowed())
@@ -555,10 +566,10 @@ public class TestMisc extends TestAgainstLiveDatabaseBase
         }
         else
         {
-            insertRow("misc", new Object[] { new Integer(10), null });
-            insertRow("misc", new Object[] { new Integer(11), new Integer(10) });
-            insertRow("misc", new Object[] { new Integer(12), new Integer(11) });
-            insertRow("misc", new Object[] { new Integer(13), new Integer(13) });
+            insertRow("misc", new Object[] { 10, null });
+            insertRow("misc", new Object[] { 11, 10 });
+            insertRow("misc", new Object[] { 12, 11 });
+            insertRow("misc", new Object[] { 13, 13 });
         }
 
         StringWriter   stringWriter = new StringWriter();
@@ -602,31 +613,32 @@ public class TestMisc extends TestAgainstLiveDatabaseBase
 
         if (isSybase)
         {
-            assertEquals(new BigDecimal(10), beans.get(0), "pk");
+            assertEqualsAttr(new BigDecimal(10), beans.get(0), "pk");
             assertNull(((DynaBean)beans.get(0)).get("fk"));
-            assertEquals(new BigDecimal(11), beans.get(1), "pk");
-            assertEquals(new BigDecimal(10), beans.get(1), "fk");
-            assertEquals(new BigDecimal(12), beans.get(2), "pk");
-            assertEquals(new BigDecimal(11), beans.get(2), "fk");
-            assertEquals(new BigDecimal(13), beans.get(3), "pk");
-            assertEquals(new BigDecimal(13), beans.get(3), "fk");
+            assertEqualsAttr(new BigDecimal(11), beans.get(1), "pk");
+            assertEqualsAttr(new BigDecimal(10), beans.get(1), "fk");
+            assertEqualsAttr(new BigDecimal(12), beans.get(2), "pk");
+            assertEqualsAttr(new BigDecimal(11), beans.get(2), "fk");
+            assertEqualsAttr(new BigDecimal(13), beans.get(3), "pk");
+            assertEqualsAttr(new BigDecimal(13), beans.get(3), "fk");
         }
         else
         {
-            assertEquals(new Integer(10), beans.get(0), "pk");
+            assertEqualsAttr(10, beans.get(0), "pk");
             assertNull(((DynaBean)beans.get(0)).get("fk"));
-            assertEquals(new Integer(11), beans.get(1), "pk");
-            assertEquals(new Integer(10), beans.get(1), "fk");
-            assertEquals(new Integer(12), beans.get(2), "pk");
-            assertEquals(new Integer(11), beans.get(2), "fk");
-            assertEquals(new Integer(13), beans.get(3), "pk");
-            assertEquals(new Integer(13), beans.get(3), "fk");
+            assertEqualsAttr(11, beans.get(1), "pk");
+            assertEqualsAttr(10, beans.get(1), "fk");
+            assertEqualsAttr(12, beans.get(2), "pk");
+            assertEqualsAttr(11, beans.get(2), "fk");
+            assertEqualsAttr(13, beans.get(3), "pk");
+            assertEqualsAttr(13, beans.get(3), "fk");
         }
     }
 
     /**
      * Tests the backup and restore of a self-referencing data set.
      */
+    @Test
     public void testSelfReferences() throws Exception
     {
         if (!getPlatformInfo().isIdentityOverrideAllowed())
@@ -699,58 +711,58 @@ public class TestMisc extends TestAgainstLiveDatabaseBase
         if (isSybase)
         {
             assertEquals(12, beans.size());
-            assertEquals(new BigDecimal(1),  beans.get(0), "id");
+            assertEqualsAttr(new BigDecimal(1),  beans.get(0), "id");
             assertNull(((DynaBean)beans.get(0)).get("parent_id"));
-            assertEquals(new BigDecimal(2),  beans.get(1), "id");
+            assertEqualsAttr(new BigDecimal(2),  beans.get(1), "id");
             assertNull(((DynaBean)beans.get(1)).get("parent_id"));
-            assertEquals(new BigDecimal(3),  beans.get(2), "id");
-            assertEquals(new BigDecimal(2),  beans.get(2), "parent_id");
-            assertEquals(new BigDecimal(4),  beans.get(3), "id");
-            assertEquals(new BigDecimal(1),  beans.get(3), "parent_id");
-            assertEquals(new BigDecimal(5),  beans.get(4), "id");
-            assertEquals(new BigDecimal(3),  beans.get(4), "parent_id");
-            assertEquals(new BigDecimal(6),  beans.get(5), "id");
+            assertEqualsAttr(new BigDecimal(3),  beans.get(2), "id");
+            assertEqualsAttr(new BigDecimal(2),  beans.get(2), "parent_id");
+            assertEqualsAttr(new BigDecimal(4),  beans.get(3), "id");
+            assertEqualsAttr(new BigDecimal(1),  beans.get(3), "parent_id");
+            assertEqualsAttr(new BigDecimal(5),  beans.get(4), "id");
+            assertEqualsAttr(new BigDecimal(3),  beans.get(4), "parent_id");
+            assertEqualsAttr(new BigDecimal(6),  beans.get(5), "id");
             assertNull(((DynaBean)beans.get(5)).get("parent_id"));
-            assertEquals(new BigDecimal(7),  beans.get(6), "id");
-            assertEquals(new BigDecimal(1),  beans.get(6), "parent_id");
-            assertEquals(new BigDecimal(8),  beans.get(7), "id");
-            assertEquals(new BigDecimal(7),  beans.get(7), "parent_id");
-            assertEquals(new BigDecimal(9),  beans.get(8), "id");
-            assertEquals(new BigDecimal(6),  beans.get(8), "parent_id");
-            assertEquals(new BigDecimal(10), beans.get(9), "id");
-            assertEquals(new BigDecimal(4),  beans.get(9), "parent_id");
-            assertEquals(new BigDecimal(11), beans.get(10), "id");
+            assertEqualsAttr(new BigDecimal(7),  beans.get(6), "id");
+            assertEqualsAttr(new BigDecimal(1),  beans.get(6), "parent_id");
+            assertEqualsAttr(new BigDecimal(8),  beans.get(7), "id");
+            assertEqualsAttr(new BigDecimal(7),  beans.get(7), "parent_id");
+            assertEqualsAttr(new BigDecimal(9),  beans.get(8), "id");
+            assertEqualsAttr(new BigDecimal(6),  beans.get(8), "parent_id");
+            assertEqualsAttr(new BigDecimal(10), beans.get(9), "id");
+            assertEqualsAttr(new BigDecimal(4),  beans.get(9), "parent_id");
+            assertEqualsAttr(new BigDecimal(11), beans.get(10), "id");
             assertNull(((DynaBean)beans.get(10)).get("parent_id"));
-            assertEquals(new BigDecimal(12), beans.get(11), "id");
-            assertEquals(new BigDecimal(11), beans.get(11), "parent_id");
+            assertEqualsAttr(new BigDecimal(12), beans.get(11), "id");
+            assertEqualsAttr(new BigDecimal(11), beans.get(11), "parent_id");
         }
         else
         {
             assertEquals(12, beans.size());
-            assertEquals(new Integer(1),  beans.get(0), "id");
+            assertEqualsAttr(1,  beans.get(0), "id");
             assertNull(((DynaBean)beans.get(0)).get("parent_id"));
-            assertEquals(new Integer(2),  beans.get(1), "id");
+            assertEqualsAttr(2,  beans.get(1), "id");
             assertNull(((DynaBean)beans.get(1)).get("parent_id"));
-            assertEquals(new Integer(3),  beans.get(2), "id");
-            assertEquals(new Integer(2),  beans.get(2), "parent_id");
-            assertEquals(new Integer(4),  beans.get(3), "id");
-            assertEquals(new Integer(1),  beans.get(3), "parent_id");
-            assertEquals(new Integer(5),  beans.get(4), "id");
-            assertEquals(new Integer(3),  beans.get(4), "parent_id");
-            assertEquals(new Integer(6),  beans.get(5), "id");
+            assertEqualsAttr(3,  beans.get(2), "id");
+            assertEqualsAttr(2,  beans.get(2), "parent_id");
+            assertEqualsAttr(4,  beans.get(3), "id");
+            assertEqualsAttr(1,  beans.get(3), "parent_id");
+            assertEqualsAttr(5,  beans.get(4), "id");
+            assertEqualsAttr(3,  beans.get(4), "parent_id");
+            assertEqualsAttr(6,  beans.get(5), "id");
             assertNull(((DynaBean)beans.get(5)).get("parent_id"));
-            assertEquals(new Integer(7),  beans.get(6), "id");
-            assertEquals(new Integer(1),  beans.get(6), "parent_id");
-            assertEquals(new Integer(8),  beans.get(7), "id");
-            assertEquals(new Integer(7),  beans.get(7), "parent_id");
-            assertEquals(new Integer(9),  beans.get(8), "id");
-            assertEquals(new Integer(6),  beans.get(8), "parent_id");
-            assertEquals(new Integer(10), beans.get(9), "id");
-            assertEquals(new Integer(4),  beans.get(9), "parent_id");
-            assertEquals(new Integer(11), beans.get(10), "id");
+            assertEqualsAttr(7,  beans.get(6), "id");
+            assertEqualsAttr(1,  beans.get(6), "parent_id");
+            assertEqualsAttr(8,  beans.get(7), "id");
+            assertEqualsAttr(7,  beans.get(7), "parent_id");
+            assertEqualsAttr(9,  beans.get(8), "id");
+            assertEqualsAttr(6,  beans.get(8), "parent_id");
+            assertEqualsAttr(10, beans.get(9), "id");
+            assertEqualsAttr(4,  beans.get(9), "parent_id");
+            assertEqualsAttr(11, beans.get(10), "id");
             assertNull(((DynaBean)beans.get(10)).get("parent_id"));
-            assertEquals(new Integer(12), beans.get(11), "id");
-            assertEquals(new Integer(11), beans.get(11), "parent_id");
+            assertEqualsAttr(12, beans.get(11), "id");
+            assertEqualsAttr(11, beans.get(11), "parent_id");
         }
     }
 
@@ -758,6 +770,7 @@ public class TestMisc extends TestAgainstLiveDatabaseBase
      * Tests the backup and restore of a self-referencing data set (with multiple self references
      * in the same table).
      */
+    @Test
     public void testMultiSelfReferences() throws Exception
     {
         if (!getPlatformInfo().isIdentityOverrideAllowed())
@@ -832,45 +845,45 @@ public class TestMisc extends TestAgainstLiveDatabaseBase
         assertEquals(6, beans.size());
         if (isSybase)
         {
-            assertEquals(new BigDecimal(1), beans.get(0), "id");
-            assertEquals(new BigDecimal(2), beans.get(0), "left_id");
-            assertEquals(new BigDecimal(3), beans.get(0), "right_id");
-            assertEquals(new BigDecimal(2), beans.get(1), "id");
-            assertEquals(new BigDecimal(5), beans.get(1), "left_id");
-            assertEquals(new BigDecimal(4), beans.get(1), "right_id");
-            assertEquals(new BigDecimal(3), beans.get(2), "id");
-            assertEquals(new BigDecimal(2), beans.get(2), "left_id");
-            assertEquals(new BigDecimal(4), beans.get(2), "right_id");
-            assertEquals(new BigDecimal(4), beans.get(3), "id");
-            assertEquals(new BigDecimal(6), beans.get(3), "left_id");
-            assertEquals((Object)null,      beans.get(3), "right_id");
-            assertEquals(new BigDecimal(5), beans.get(4), "id");
-            assertEquals((Object)null,      beans.get(4), "left_id");
-            assertEquals(new BigDecimal(6), beans.get(4), "right_id");
-            assertEquals(new BigDecimal(6), beans.get(5), "id");
-            assertEquals((Object)null,      beans.get(5), "left_id");
-            assertEquals((Object)null,      beans.get(5), "right_id");
+            assertEqualsAttr(new BigDecimal(1), beans.get(0), "id");
+            assertEqualsAttr(new BigDecimal(2), beans.get(0), "left_id");
+            assertEqualsAttr(new BigDecimal(3), beans.get(0), "right_id");
+            assertEqualsAttr(new BigDecimal(2), beans.get(1), "id");
+            assertEqualsAttr(new BigDecimal(5), beans.get(1), "left_id");
+            assertEqualsAttr(new BigDecimal(4), beans.get(1), "right_id");
+            assertEqualsAttr(new BigDecimal(3), beans.get(2), "id");
+            assertEqualsAttr(new BigDecimal(2), beans.get(2), "left_id");
+            assertEqualsAttr(new BigDecimal(4), beans.get(2), "right_id");
+            assertEqualsAttr(new BigDecimal(4), beans.get(3), "id");
+            assertEqualsAttr(new BigDecimal(6), beans.get(3), "left_id");
+            assertEqualsAttr((Object)null,      beans.get(3), "right_id");
+            assertEqualsAttr(new BigDecimal(5), beans.get(4), "id");
+            assertEqualsAttr((Object)null,      beans.get(4), "left_id");
+            assertEqualsAttr(new BigDecimal(6), beans.get(4), "right_id");
+            assertEqualsAttr(new BigDecimal(6), beans.get(5), "id");
+            assertEqualsAttr((Object)null,      beans.get(5), "left_id");
+            assertEqualsAttr((Object)null,      beans.get(5), "right_id");
         }
         else
         {
-            assertEquals(new Integer(1), beans.get(0), "id");
-            assertEquals(new Integer(2), beans.get(0), "left_id");
-            assertEquals(new Integer(3), beans.get(0), "right_id");
-            assertEquals(new Integer(2), beans.get(1), "id");
-            assertEquals(new Integer(5), beans.get(1), "left_id");
-            assertEquals(new Integer(4), beans.get(1), "right_id");
-            assertEquals(new Integer(3), beans.get(2), "id");
-            assertEquals(new Integer(2), beans.get(2), "left_id");
-            assertEquals(new Integer(4), beans.get(2), "right_id");
-            assertEquals(new Integer(4), beans.get(3), "id");
-            assertEquals(new Integer(6), beans.get(3), "left_id");
-            assertEquals((Object)null,   beans.get(3), "right_id");
-            assertEquals(new Integer(5), beans.get(4), "id");
-            assertEquals((Object)null,   beans.get(4), "left_id");
-            assertEquals(new Integer(6), beans.get(4), "right_id");
-            assertEquals(new Integer(6), beans.get(5), "id");
-            assertEquals((Object)null,   beans.get(5), "left_id");
-            assertEquals((Object)null,   beans.get(5), "right_id");
+            assertEqualsAttr(1, beans.get(0), "id");
+            assertEqualsAttr(2, beans.get(0), "left_id");
+            assertEqualsAttr(3, beans.get(0), "right_id");
+            assertEqualsAttr(2, beans.get(1), "id");
+            assertEqualsAttr(5, beans.get(1), "left_id");
+            assertEqualsAttr(4, beans.get(1), "right_id");
+            assertEqualsAttr(3, beans.get(2), "id");
+            assertEqualsAttr(2, beans.get(2), "left_id");
+            assertEqualsAttr(4, beans.get(2), "right_id");
+            assertEqualsAttr(4, beans.get(3), "id");
+            assertEqualsAttr(6, beans.get(3), "left_id");
+            assertEqualsAttr((Object)null,   beans.get(3), "right_id");
+            assertEqualsAttr(5, beans.get(4), "id");
+            assertEqualsAttr((Object)null,   beans.get(4), "left_id");
+            assertEqualsAttr(6, beans.get(4), "right_id");
+            assertEqualsAttr(6, beans.get(5), "id");
+            assertEqualsAttr((Object)null,   beans.get(5), "left_id");
+            assertEqualsAttr((Object)null,   beans.get(5), "right_id");
         }
     }
 
@@ -878,6 +891,7 @@ public class TestMisc extends TestAgainstLiveDatabaseBase
      * Tests the backup and restore of several tables with complex relationships with an identity column and a foreign key to
      * itself while identity override is off.
      */
+    @Test
     public void testComplexTableModel() throws Exception
     {
         // A: self-reference (A1->A2)
@@ -943,18 +957,18 @@ public class TestMisc extends TestAgainstLiveDatabaseBase
         getPlatform().setIdentityOverrideOn(true);
 
         // this is the optimal insertion order
-        insertRow("E", new Object[] { new Integer(1) });
-        insertRow("G", new Object[] { new Integer(1) });
-        insertRow("G", new Object[] { new Integer(2) });
-        insertRow("A", new Object[] { new Integer(2), null });
-        insertRow("A", new Object[] { new Integer(1), new Integer(2) });
-        insertRow("B", new Object[] { new Integer(2), null,           new Integer(2) });
-        insertRow("B", new Object[] { new Integer(1), new Integer(2), new Integer(1) });
-        insertRow("D", new Object[] { new Integer(2), null });
-        insertRow("C", new Object[] { new Integer(2), new Integer(2) });
-        insertRow("F", new Object[] { new Integer(1), new Integer(2) });
-        insertRow("D", new Object[] { new Integer(1), new Integer(1) });
-        insertRow("C", new Object[] { new Integer(1), new Integer(1) });
+        insertRow("E", new Object[] { 1 });
+        insertRow("G", new Object[] { 1 });
+        insertRow("G", new Object[] { 2 });
+        insertRow("A", new Object[] { 2, null });
+        insertRow("A", new Object[] { 1, 2 });
+        insertRow("B", new Object[] { 2, null,           2 });
+        insertRow("B", new Object[] { 1, 2, 1 });
+        insertRow("D", new Object[] { 2, null });
+        insertRow("C", new Object[] { 2, 2 });
+        insertRow("F", new Object[] { 1, 2 });
+        insertRow("D", new Object[] { 1, 1 });
+        insertRow("C", new Object[] { 1, 1 });
 
         StringWriter   stringWriter = new StringWriter();
         DatabaseDataIO dataIO       = new DatabaseDataIO();
@@ -966,16 +980,16 @@ public class TestMisc extends TestAgainstLiveDatabaseBase
         // the somewhat optimized order that DdlUtils currently generates is:
         // E1, G1, G2, A2, A1, B2, B1, C2, C1, D2, D1, F1
         // note that the order per table is the insertion order above
-        SAXReader reader       = new SAXReader();
-        Document  testDoc      = reader.read(new InputSource(new StringReader(dataAsXml)));
-        boolean   uppercase    = false;
-        List      rows         = testDoc.selectNodes("/*/*");
-        String    pkColumnName = "pk";
+        SAXReader  reader       = new SAXReader();
+        Document   testDoc      = reader.read(new InputSource(new StringReader(dataAsXml)));
+        boolean    uppercase    = false;
+        List<Node> rows         = testDoc.selectNodes("/*/*");
+        String     pkColumnName = "pk";
 
         assertEquals(12, rows.size());
-        if (!"e".equals(((Element)rows.get(0)).getName()))
+        if (!"e".equals((rows.get(0)).getName()))
         {
-            assertEquals("E", ((Element)rows.get(0)).getName());
+            assertEquals("E", (rows.get(0)).getName());
             uppercase    = true;
         }
         if (!"pk".equals(((Element)rows.get(0)).attribute(0).getName()))
@@ -1052,6 +1066,7 @@ public class TestMisc extends TestAgainstLiveDatabaseBase
     /**
      * Test for DDLUTILS-178.
      */
+    @Test
     public void testDdlUtils178() throws Exception
     {
         if (!getPlatformInfo().isIndicesSupported())
@@ -1082,6 +1097,7 @@ public class TestMisc extends TestAgainstLiveDatabaseBase
     /**
      * Test for DDLUTILS-179.
      */
+    @Test
     public void testDdlUtils179() throws Exception
     {
         final String modelXml = 
@@ -1167,6 +1183,7 @@ public class TestMisc extends TestAgainstLiveDatabaseBase
     /**
      * Test for DDLUTILS-214.
      */
+    @Test
     public void testDdlUtils214() throws Exception
     {
         final String modelXml = 
@@ -1189,42 +1206,43 @@ public class TestMisc extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModel);
 
-        insertRow("roundtrip1", new Object[] { new Integer(1), "foo" });
-        insertRow("roundtrip1", new Object[] { new Integer(2), "bar" });
-        insertRow("roundtrip2", new Object[] { "foo", new Integer(1) });
-        insertRow("roundtrip2", new Object[] { "bar", new Integer(2) });
+        insertRow("roundtrip1", new Object[] { 1, "foo" });
+        insertRow("roundtrip1", new Object[] { 2, "bar" });
+        insertRow("roundtrip2", new Object[] { "foo", 1 });
+        insertRow("roundtrip2", new Object[] { "bar", 2 });
 
         List beans1 = getRows("roundtrip1", "pk1");
         List beans2 = getRows("roundtrip2", "pk1");
 
         assertEquals(2, beans1.size());
         assertEquals(2, beans2.size());
-        assertEquals(new Integer(1), beans1.get(0), "pk1");
-        assertEquals((Object)"foo",  beans1.get(0), "pk2");
-        assertEquals(new Integer(2), beans1.get(1), "pk1");
-        assertEquals((Object)"bar",  beans1.get(1), "pk2");
-        assertEquals(new Integer(1), beans2.get(0), "pk1");
-        assertEquals((Object)"foo",  beans2.get(0), "pk2");
-        assertEquals(new Integer(2), beans2.get(1), "pk1");
-        assertEquals((Object)"bar",  beans2.get(1), "pk2");
+        assertEqualsAttr(1, beans1.get(0), "pk1");
+        assertEqualsAttr((Object)"foo",  beans1.get(0), "pk2");
+        assertEqualsAttr(2, beans1.get(1), "pk1");
+        assertEqualsAttr((Object)"bar",  beans1.get(1), "pk2");
+        assertEqualsAttr(1, beans2.get(0), "pk1");
+        assertEqualsAttr((Object)"foo",  beans2.get(0), "pk2");
+        assertEqualsAttr(2, beans2.get(1), "pk1");
+        assertEqualsAttr((Object)"bar",  beans2.get(1), "pk2");
 
-        deleteRow("roundtrip1", new Object[] { new Integer(1), "foo" });
-        deleteRow("roundtrip2", new Object[] { "foo", new Integer(1) });
+        deleteRow("roundtrip1", new Object[] { 1, "foo" });
+        deleteRow("roundtrip2", new Object[] { "foo", 1 });
 
         beans1 = getRows("roundtrip1", "pk1");
         beans2 = getRows("roundtrip2", "pk1");
 
         assertEquals(1, beans1.size());
         assertEquals(1, beans2.size());
-        assertEquals(new Integer(2), beans1.get(0), "pk1");
-        assertEquals((Object)"bar",  beans1.get(0), "pk2");
-        assertEquals(new Integer(2), beans2.get(0), "pk1");
-        assertEquals((Object)"bar",  beans2.get(0), "pk2");
+        assertEqualsAttr(2, beans1.get(0), "pk1");
+        assertEqualsAttr((Object)"bar",  beans1.get(0), "pk2");
+        assertEqualsAttr(2, beans2.get(0), "pk1");
+        assertEqualsAttr((Object)"bar",  beans2.get(0), "pk2");
     }
 
     /**
      * Test for DDLUTILS-227.
      */
+    @Test
     public void testDdlUtils227() throws Exception
     {
         final String modelXml = 
@@ -1243,13 +1261,13 @@ public class TestMisc extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModel);
 
-        insertRow("Roundtrip", new Object[] { new Integer(1), "foo" });
+        insertRow("Roundtrip", new Object[] { 1, "foo" });
 
         List beans = getRows("Roundtrip");
 
         assertEquals(1, beans.size());
-        assertEquals(new Integer(1), beans.get(0), "Pk");
-        assertEquals((Object)"foo",  beans.get(0), "Avalue");
+        assertEqualsAttr(1, beans.get(0), "Pk");
+        assertEqualsAttr((Object)"foo",  beans.get(0), "Avalue");
 
         Table        table = getModel().findTable("Roundtrip", getPlatform().isDelimitedIdentifierModeOn());
         StringBuffer query = new StringBuffer();
@@ -1287,7 +1305,7 @@ public class TestMisc extends TestAgainstLiveDatabaseBase
         beans = getPlatform().fetch(getModel(), query.toString(), new Table[] { table });
 
         assertEquals(1, beans.size());
-        assertEquals(new Integer(1), beans.get(0), "Pk");
-        assertEquals((Object)"foo",  beans.get(0), "Avalue");
+        assertEqualsAttr(1, beans.get(0), "Pk");
+        assertEqualsAttr((Object)"foo",  beans.get(0), "Avalue");
     }
 }

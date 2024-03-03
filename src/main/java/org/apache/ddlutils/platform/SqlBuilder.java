@@ -19,7 +19,7 @@ package org.apache.ddlutils.platform;
  * under the License.
  */
 
-import org.apache.commons.collections.map.ListOrderedMap;
+import org.apache.commons.collections4.map.ListOrderedMap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -44,6 +44,7 @@ import java.sql.Types;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -428,7 +429,7 @@ public abstract class SqlBuilder
      * @param table      The table
      * @param parameters Additional platform-specific parameters for the table creation
      */
-    protected void createTemporaryTable(Database database, Table table, Map parameters) throws IOException 
+    protected void createTemporaryTable(Database database, Table table, Map<?, ?> parameters) throws IOException
     {
         createTable(database, table, parameters);
     }
@@ -456,39 +457,37 @@ public abstract class SqlBuilder
      */
     protected void copyData(Table sourceTable, Table targetTable) throws IOException
     {
-        ListOrderedMap columns = new ListOrderedMap();
+        ListOrderedMap<Column, Column> columns = new ListOrderedMap<>();
 
         for (int idx = 0; idx < sourceTable.getColumnCount(); idx++)
         {
-            Column sourceColumn = sourceTable.getColumn(idx);
-            Column targetColumn = targetTable.findColumn(sourceColumn.getName(),
-                                                         getPlatform().isDelimitedIdentifierModeOn());
-
-
-            if (targetColumn != null)
-            {
-                columns.put(sourceColumn, targetColumn);
-            }
+			final var sourceColumn = sourceTable.getColumn(idx);
+            targetTable.findColumn(
+				sourceColumn.getName(),
+				getPlatform().isDelimitedIdentifierModeOn()
+			)
+				.ifPresent(targetColumn -> {
+					columns.put(sourceColumn, targetColumn);
+				});
         }
 
         print("INSERT INTO ");
         printIdentifier(getTableName(targetTable));
         print(" (");
-        for (Iterator columnIt = columns.keySet().iterator(); columnIt.hasNext();)
+        for (var columnIt = columns.keySet().iterator(); columnIt.hasNext();)
         {
-            printIdentifier(getColumnName((Column)columnIt.next()));
+            printIdentifier(getColumnName(columnIt.next()));
             if (columnIt.hasNext())
             {
                 print(",");
             }
         }
         print(") SELECT ");
-        for (Iterator columnsIt = columns.entrySet().iterator(); columnsIt.hasNext();)
+        for (var columnsIt = columns.entrySet().iterator(); columnsIt.hasNext();)
         {
-            Map.Entry entry = (Map.Entry)columnsIt.next();
+            var entry = columnsIt.next();
 
-            writeCastExpression((Column)entry.getKey(),
-                                (Column)entry.getValue());
+            writeCastExpression(entry.getKey(), entry.getValue());
             if (columnsIt.hasNext())
             {
                 print(",");
@@ -546,14 +545,14 @@ public abstract class SqlBuilder
      * @param table      The table
      * @param parameters Additional platform-specific parameters for the table creation
      */
-    public void createTable(Database database, Table table, Map parameters) throws IOException 
+    public void createTable(Database database, Table table, Map<?, ?> parameters) throws IOException
     {
         writeTableCreationStmt(database, table, parameters);
         writeTableCreationStmtEnding(table, parameters);
 
         if (!getPlatformInfo().isPrimaryKeyEmbedded())
         {
-            createPrimaryKey(table, table.getPrimaryKeyColumns());
+            createPrimaryKey(table, table.getPrimaryKeyColumns().toList());
         }
         if (!getPlatformInfo().isIndicesEmbedded())
         {
@@ -567,9 +566,9 @@ public abstract class SqlBuilder
      * @param table             The table
      * @param primaryKeyColumns The primary key columns 
      */
-    public void createPrimaryKey(Table table, Column[] primaryKeyColumns) throws IOException
+    public void createPrimaryKey(Table table, List<Column> primaryKeyColumns) throws IOException
     {
-        if ((primaryKeyColumns.length > 0) && shouldGeneratePrimaryKeys(primaryKeyColumns))
+        if ((!primaryKeyColumns.isEmpty()) && shouldGeneratePrimaryKeys(primaryKeyColumns))
         {
             print("ALTER TABLE ");
             printlnIdentifier(getTableName(table));
@@ -633,13 +632,9 @@ public abstract class SqlBuilder
             for (int idx = 0; idx < index.getColumnCount(); idx++)
             {
                 IndexColumn idxColumn = index.getColumn(idx);
-                Column      col       = table.findColumn(idxColumn.getName());
+                var col = table.findColumn(idxColumn.getName())
+					.orElseThrow(() -> new ModelException("Invalid column '" + idxColumn.getName() + "' on index " + index.getName() + " for table " + table.getName()));
 
-                if (col == null)
-                {
-                    // would get null pointer on next line anyway, so throw exception
-                    throw new ModelException("Invalid column '" + idxColumn.getName() + "' on index " + index.getName() + " for table " + table.getName());
-                }
                 if (idx > 0)
                 {
                     print(", ");
@@ -705,7 +700,7 @@ public abstract class SqlBuilder
             print(" FOREIGN KEY (");
             writeLocalReferences(foreignKey);
             print(") REFERENCES ");
-            printIdentifier(getTableName(database.findTable(foreignKey.getForeignTableName())));
+            printIdentifier(getTableName(database.findTable(foreignKey.getForeignTableName()).orElseThrow()));
             print(" (");
             writeForeignReferences(foreignKey);
             print(")");
@@ -922,7 +917,7 @@ public abstract class SqlBuilder
      *                        prepared statement (both for the pk values and the object values)
      * @return The update sql
      */
-    public String getUpdateSql(Table table, Map columnValues, boolean genPlaceholders)
+    public String getUpdateSql(Table table, Map<String, Object> columnValues, boolean genPlaceholders)
     {
         StringBuffer buffer = new StringBuffer("UPDATE ");
         boolean      addSep = false;
@@ -1076,30 +1071,23 @@ public abstract class SqlBuilder
         {
             buffer.append(" WHERE ");
 
-            Column[] pkCols = table.getPrimaryKeyColumns();
+            var pkCols = table.getPrimaryKeyColumns().toList();
 
-            for (int pkColIdx = 0; pkColIdx < pkCols.length; pkColIdx++)
-            {
-                Column column = pkCols[pkColIdx];
-
-                if (pkValues.containsKey(column.getName())) {
-                    if (addSep)
-                    {
-                        buffer.append(" AND ");
-                    }
-                    buffer.append(getDelimitedIdentifier(column.getName()));
-                    buffer.append(" = ");
-                    if (genPlaceholders)
-                    {
-                        buffer.append("?");
-                    }
-                    else
-                    {
-                        buffer.append(getValueAsString(column, pkValues.get(column.getName())));
-                    }
-                    addSep = true;
-                }
-            }
+			for (Column column : pkCols) {
+				if (pkValues.containsKey(column.getName())) {
+					if (addSep) {
+						buffer.append(" AND ");
+					}
+					buffer.append(getDelimitedIdentifier(column.getName()));
+					buffer.append(" = ");
+					if (genPlaceholders) {
+						buffer.append("?");
+					} else {
+						buffer.append(getValueAsString(column, pkValues.get(column.getName())));
+					}
+					addSep = true;
+				}
+			}
         }
         return buffer.toString();
     }
@@ -1315,7 +1303,7 @@ public abstract class SqlBuilder
      * @param table      The table
      * @param parameters Additional platform-specific parameters for the table creation
      */
-    protected void writeTableCreationStmtEnding(Table table, Map parameters) throws IOException
+    protected void writeTableCreationStmtEnding(Table table, Map<?, ?> parameters) throws IOException
     {
         printEndOfStatement();
     }
@@ -1743,9 +1731,9 @@ public abstract class SqlBuilder
      */
     protected void writeEmbeddedPrimaryKeysStmt(Table table) throws IOException
     {
-        Column[] primaryKeyColumns = table.getPrimaryKeyColumns();
+        var primaryKeyColumns = table.getPrimaryKeyColumns().toList();
 
-        if ((primaryKeyColumns.length > 0) && shouldGeneratePrimaryKeys(primaryKeyColumns))
+        if ((!primaryKeyColumns.isEmpty()) && shouldGeneratePrimaryKeys(primaryKeyColumns))
         {
             printStartOfEmbeddedStatement();
             writePrimaryKeyStmt(table, primaryKeyColumns);
@@ -1759,7 +1747,7 @@ public abstract class SqlBuilder
      * @param primaryKeyColumns The pk columns
      * @return <code>true</code> if a pk statement should be generated for the columns
      */
-    protected boolean shouldGeneratePrimaryKeys(Column[] primaryKeyColumns)
+    protected boolean shouldGeneratePrimaryKeys(List<Column> primaryKeyColumns)
     {
         return true;
     }
@@ -1770,13 +1758,13 @@ public abstract class SqlBuilder
      * @param table             The table
      * @param primaryKeyColumns The primary columns
      */
-    protected void writePrimaryKeyStmt(Table table, Column[] primaryKeyColumns) throws IOException
+    protected void writePrimaryKeyStmt(Table table, List<Column> primaryKeyColumns) throws IOException
     {
         print("PRIMARY KEY (");
-        for (int idx = 0; idx < primaryKeyColumns.length; idx++)
+        for (int idx = 0; idx < primaryKeyColumns.size(); idx++)
         {
-            printIdentifier(getColumnName(primaryKeyColumns[idx]));
-            if (idx < primaryKeyColumns.length - 1)
+            printIdentifier(getColumnName(primaryKeyColumns.get(idx)));
+            if (idx < primaryKeyColumns.size() - 1)
             {
                 print(", ");
             }
@@ -1838,13 +1826,9 @@ public abstract class SqlBuilder
         for (int idx = 0; idx < index.getColumnCount(); idx++)
         {
             IndexColumn idxColumn = index.getColumn(idx);
-            Column      col       = table.findColumn(idxColumn.getName());
+            var col = table.findColumn(idxColumn.getName())
+				.orElseThrow(() -> new ModelException("Invalid column '" + idxColumn.getName() + "' on index " + index.getName() + " for table " + table.getName()));
 
-            if (col == null)
-            {
-                // would get null pointer on next line anyway, so throw exception
-                throw new ModelException("Invalid column '" + idxColumn.getName() + "' on index " + index.getName() + " for table " + table.getName());
-            }
             if (idx > 0)
             {
                 print(", ");
@@ -1906,7 +1890,10 @@ public abstract class SqlBuilder
                 print("FOREIGN KEY (");
                 writeLocalReferences(foreignKey);
                 print(") REFERENCES ");
-                printIdentifier(getTableName(database.findTable(foreignKey.getForeignTableName())));
+                printIdentifier(getTableName(
+					database.findTable(foreignKey.getForeignTableName())
+						.orElseThrow()
+				));
                 print(" (");
                 writeForeignReferences(foreignKey);
                 print(")");

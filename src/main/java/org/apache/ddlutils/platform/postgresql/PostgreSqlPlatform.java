@@ -19,17 +19,6 @@ package org.apache.ddlutils.platform.postgresql;
  * under the License.
  */
 
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Types;
-import java.util.Iterator;
-import java.util.Map;
-
-import org.apache.commons.beanutils.DynaBean;
 import org.apache.ddlutils.DatabaseOperationException;
 import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.alteration.AddColumnChange;
@@ -37,13 +26,21 @@ import org.apache.ddlutils.alteration.ModelComparator;
 import org.apache.ddlutils.alteration.RemoveColumnChange;
 import org.apache.ddlutils.alteration.TableChange;
 import org.apache.ddlutils.alteration.TableDefinitionChangesPredicate;
-import org.apache.ddlutils.dynabean.SqlDynaProperty;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.CreationParameters;
 import org.apache.ddlutils.platform.DefaultTableDefinitionChangesPredicate;
 import org.apache.ddlutils.platform.PlatformImplBase;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * The platform implementation for PostgresSql.
@@ -226,36 +223,6 @@ public class PostgreSqlPlatform extends PlatformImplBase
     /**
      * {@inheritDoc}
      */
-    protected void setObject(PreparedStatement statement, int sqlIndex, DynaBean dynaBean, SqlDynaProperty property) throws SQLException
-    {
-        int     typeCode = property.getColumn().getTypeCode();
-        Object  value    = dynaBean.get(property.getName());
-
-        // PostgreSQL doesn't like setNull for BYTEA columns
-        if (value == null)
-        {
-            switch (typeCode)
-            {
-                case Types.BINARY:
-                case Types.VARBINARY:
-                case Types.LONGVARBINARY:
-                case Types.BLOB:
-                    statement.setBytes(sqlIndex, null);
-                    break;
-                default:
-                    statement.setNull(sqlIndex, typeCode);
-                    break;
-            }
-        }
-        else
-        {
-            super.setObject(statement, sqlIndex, dynaBean, property);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     protected ModelComparator getModelComparator()
     {
         ModelComparator comparator = super.getModelComparator();
@@ -315,7 +282,8 @@ public class PostgreSqlPlatform extends PlatformImplBase
                               RemoveColumnChange change) throws IOException
     {
         Table  changedTable  = findChangedTable(currentModel, change);
-        Column removedColumn = changedTable.findColumn(change.getChangedColumn(), isDelimitedIdentifierModeOn());
+        Column removedColumn = changedTable.findColumn(change.getChangedColumn(), isDelimitedIdentifierModeOn())
+			.orElseThrow();
 
         ((PostgreSqlBuilder)getSqlBuilder()).dropColumn(changedTable, removedColumn);
         change.apply(currentModel, isDelimitedIdentifierModeOn());

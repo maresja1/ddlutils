@@ -33,6 +33,7 @@ import org.apache.ddlutils.util.StringUtilsExt;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Compares two database models and creates change objects that express how to
@@ -162,8 +163,10 @@ public class ModelComparator
         for (int tableIdx = 0; tableIdx < intermediateModel.getTableCount(); tableIdx++)
         {
             Table intermediateTable = intermediateModel.getTable(tableIdx);
-            Table sourceTable       = sourceModel.findTable(intermediateTable.getName(), _caseSensitive);
-            Table targetTable       = targetModel.findTable(intermediateTable.getName(), _caseSensitive);
+            Table sourceTable       = sourceModel.findTable(intermediateTable.getName(), _caseSensitive)
+				.orElseThrow();
+            Table targetTable       = targetModel.findTable(intermediateTable.getName(), _caseSensitive)
+				.orElseThrow();
             List<? extends TableChange>  tableChanges      = compareTables(sourceModel, sourceTable,
                                                     intermediateModel, intermediateTable,
                                                     targetModel, targetTable);
@@ -194,7 +197,8 @@ public class ModelComparator
         for (int tableIdx = 0; tableIdx < intermediateModel.getTableCount(); tableIdx++)
         {
             Table        intermediateTable = intermediateModel.getTable(tableIdx);
-            Table        targetTable       = targetModel.findTable(intermediateTable.getName(), _caseSensitive);
+            Table        targetTable       = targetModel.findTable(intermediateTable.getName(), _caseSensitive)
+				.orElseThrow();
             ForeignKey[] intermediateFks   = intermediateTable.getForeignKeys();
 
             // Dropping foreign keys from tables to be removed might not be necessary, but some databases might require it
@@ -235,7 +239,8 @@ public class ModelComparator
         for (int tableIdx = 0; tableIdx < targetModel.getTableCount(); tableIdx++)
         {
             Table targetTable       = targetModel.getTable(tableIdx);
-            Table intermediateTable = intermediateModel.findTable(targetTable.getName(), _caseSensitive);
+            Table intermediateTable = intermediateModel.findTable(targetTable.getName(), _caseSensitive)
+				.orElseThrow();
 
             for (int fkIdx = 0; fkIdx < targetTable.getForeignKeyCount(); fkIdx++)
             {
@@ -275,26 +280,23 @@ public class ModelComparator
                                          Database targetModel)
     {
         List<RemoveTableChange> changes            = new ArrayList<>();
-        Table[]                 intermediateTables = intermediateModel.getTables();
+        List<Table>                 intermediateTables = intermediateModel.getTables();
 
-        for (int tableIdx = 0; tableIdx < intermediateTables.length; tableIdx++)
-        {
-            Table intermediateTable = intermediateTables[tableIdx];
-            Table targetTable       = targetModel.findTable(intermediateTable.getName(), _caseSensitive);
+		for (Table intermediateTable : intermediateTables) {
+			Table targetTable = targetModel.findTable(intermediateTable.getName(), _caseSensitive)
+				.orElseThrow();
 
-            if (targetTable == null)
-            {
-                if (_log.isInfoEnabled())
-                {
-                    _log.info("Table " + intermediateTable.getName() + " needs to be removed");
-                }
+			if (targetTable == null) {
+				if (_log.isInfoEnabled()) {
+					_log.info("Table " + intermediateTable.getName() + " needs to be removed");
+				}
 
-                RemoveTableChange tableChange = new RemoveTableChange(intermediateTable.getName());
+				RemoveTableChange tableChange = new RemoveTableChange(intermediateTable.getName());
 
-                changes.add(tableChange);
-                tableChange.apply(intermediateModel, _caseSensitive);
-            }
-        }
+				changes.add(tableChange);
+				tableChange.apply(intermediateModel, _caseSensitive);
+			}
+		}
         return changes;
     }
 
@@ -316,7 +318,8 @@ public class ModelComparator
         for (int tableIdx = 0; tableIdx < targetModel.getTableCount(); tableIdx++)
         {
             Table targetTable       = targetModel.getTable(tableIdx);
-            Table intermediateTable = intermediateModel.findTable(targetTable.getName(), _caseSensitive);
+            Table intermediateTable = intermediateModel.findTable(targetTable.getName(), _caseSensitive)
+				.orElseThrow();
 
             if (intermediateTable == null)
             {
@@ -440,15 +443,13 @@ public class ModelComparator
      * @param intermediateTable The intermediate table
      * @return The column names
      */
-    protected String[] getIntermediateColumnNamesFor(Column[] columns, Table intermediateTable)
+    protected Stream<String> getIntermediateColumnNamesFor(Stream<Column> columns, Table intermediateTable)
     {
-        String[] result = new String[columns.length];
-
-        for (int idx = 0; idx < columns.length; idx++)
-        {
-            result[idx] = intermediateTable.findColumn(columns[idx].getName(), _caseSensitive).getName();
-        }
-        return result;
+        return columns.map(
+			column -> intermediateTable.findColumn(column.getName(), _caseSensitive)
+				.orElseThrow()
+				.getName()
+		);
     }
 
     /**
@@ -471,7 +472,7 @@ public class ModelComparator
                                           Table    targetTable)
     {
         List<RemoveIndexChange>    changes = new ArrayList<>();
-        Index[] indexes = intermediateTable.getIndices();
+        List<Index> indexes = intermediateTable.getIndices();
 
 		for (Index sourceIndex : indexes) {
 			Index targetIndex = findCorrespondingIndex(targetTable, sourceIndex);
@@ -561,12 +562,8 @@ public class ModelComparator
         for (int columnIdx = 0; columnIdx < targetTable.getColumnCount(); columnIdx++)
         {
             Column targetColumn = targetTable.getColumn(columnIdx);
-            Column sourceColumn = intermediateTable.findColumn(targetColumn.getName(), _caseSensitive);
-
-            if (sourceColumn != null)
-            {
-                targetOrder.add(sourceColumn);
-            }
+            intermediateTable.findColumn(targetColumn.getName(), _caseSensitive)
+				.ifPresent(targetOrder::add);
         }
 
         HashMap<String, Integer> newPositions = new HashMap<>();
@@ -595,8 +592,14 @@ public class ModelComparator
             {
                 // create pk change that only covers the order change
                 // fortunately, the order change will have adjusted the pk order already
-                changes.add(new PrimaryKeyChange(intermediateTable.getName(),
-                                                 getIntermediateColumnNamesFor(intermediateTable.getPrimaryKeyColumns(), intermediateTable)));
+                changes.add(new PrimaryKeyChange(
+					intermediateTable.getName(),
+					getIntermediateColumnNamesFor(
+						intermediateTable.getPrimaryKeyColumns(),
+						intermediateTable
+					)
+						.toList()
+				));
             }
             changes.add(change);
         }
@@ -626,22 +629,21 @@ public class ModelComparator
         // generate appropriate pk changes
 
         List<RemoveColumnChange> changes = new ArrayList<>();
-        Column[] columns = intermediateTable.getColumns();
+        List<Column> columns = intermediateTable.getColumns();
 
 		for (Column sourceColumn : columns) {
-			Column targetColumn = targetTable.findColumn(sourceColumn.getName(), _caseSensitive);
+			targetTable.findColumn(sourceColumn.getName(), _caseSensitive)
+				.ifPresent(targetColumn -> {
+					if (_log.isInfoEnabled()) {
+						_log.info("Column " + sourceColumn.getName() + " needs to be removed from table " +
+							intermediateTable.getName());
+					}
 
-			if (targetColumn == null) {
-				if (_log.isInfoEnabled()) {
-					_log.info("Column " + sourceColumn.getName() + " needs to be removed from table " +
-						intermediateTable.getName());
-				}
+					RemoveColumnChange change = new RemoveColumnChange(intermediateTable.getName(), sourceColumn.getName());
 
-				RemoveColumnChange change = new RemoveColumnChange(intermediateTable.getName(), sourceColumn.getName());
-
-				changes.add(change);
-				change.apply(intermediateModel, _caseSensitive);
-			}
+					changes.add(change);
+					change.apply(intermediateModel, _caseSensitive);
+				});
 		}
         return changes;
     }
@@ -670,9 +672,9 @@ public class ModelComparator
         for (int columnIdx = 0; columnIdx < targetTable.getColumnCount(); columnIdx++)
         {
             Column targetColumn = targetTable.getColumn(columnIdx);
-            Column sourceColumn = intermediateTable.findColumn(targetColumn.getName(), _caseSensitive);
+            var sourceColumnOpt = intermediateTable.findColumn(targetColumn.getName(), _caseSensitive);
 
-            if (sourceColumn == null)
+            if (sourceColumnOpt.isPresent())
             {
                 String          prevColumn   = (columnIdx > 0 ? intermediateTable.getColumn(columnIdx - 1).getName() : null);
                 String          nextColumn   = (columnIdx < intermediateTable.getColumnCount()  ? intermediateTable.getColumn(columnIdx).getName() : null);
@@ -710,18 +712,16 @@ public class ModelComparator
         for (int columnIdx = 0; columnIdx < targetTable.getColumnCount(); columnIdx++)
         {
             Column targetColumn = targetTable.getColumn(columnIdx);
-            Column sourceColumn = intermediateTable.findColumn(targetColumn.getName(), _caseSensitive);
+            intermediateTable.findColumn(targetColumn.getName(), _caseSensitive)
+				.ifPresent(sourceColumn -> {
+					ColumnDefinitionChange change = compareColumns(intermediateTable, sourceColumn, targetTable, targetColumn);
 
-            if (sourceColumn != null)
-            {
-                ColumnDefinitionChange change = compareColumns(intermediateTable, sourceColumn, targetTable, targetColumn);
-
-                if (change != null)
-                {
-                    changes.add(change);
-                    change.apply(intermediateModel, _caseSensitive);
-                }
-            }
+					if (change != null)
+					{
+						changes.add(change);
+						change.apply(intermediateModel, _caseSensitive);
+					}
+				});
         }
         return changes;
     }
@@ -745,23 +745,26 @@ public class ModelComparator
                                              Table    targetTable)
     {
         List<TableChange>     changes  = new ArrayList<>();
-        Column[] sourcePK = sourceTable.getPrimaryKeyColumns();
-        Column[] curPK    = intermediateTable.getPrimaryKeyColumns();
-        Column[] targetPK = targetTable.getPrimaryKeyColumns();
+		List<Column> sourcePK = sourceTable.getPrimaryKeyColumns().toList();
+		List<Column> curPK    = intermediateTable.getPrimaryKeyColumns().toList();
+		List<Column> targetPK = targetTable.getPrimaryKeyColumns().toList();
 
-        if ((curPK.length == 0) && (targetPK.length > 0))
+        if ((curPK.isEmpty()) && (!targetPK.isEmpty()))
         {
             if (_log.isInfoEnabled())
             {
                 _log.info("A primary key needs to be added to the table " + intermediateTable.getName());
             }
 
-            AddPrimaryKeyChange change = new AddPrimaryKeyChange(intermediateTable.getName(), getIntermediateColumnNamesFor(targetPK, intermediateTable));
+            AddPrimaryKeyChange change = new AddPrimaryKeyChange(
+				intermediateTable.getName(),
+				getIntermediateColumnNamesFor(targetPK.stream(), intermediateTable).toList()
+			);
 
             changes.add(change);
             change.apply(intermediateModel, _caseSensitive);
         }
-        else if ((targetPK.length == 0) && (curPK.length > 0))
+        else if ((targetPK.isEmpty()) && (!curPK.isEmpty()))
         {
             if (_log.isInfoEnabled())
             {
@@ -777,15 +780,15 @@ public class ModelComparator
         {
             boolean changePK = false;
 
-            if ((curPK.length != targetPK.length) || (!_canDropPrimaryKeyColumns && sourcePK.length > targetPK.length))
+            if ((curPK.size() != targetPK.size()) || (!_canDropPrimaryKeyColumns && sourcePK.size() > targetPK.size()))
             {
                 changePK = true;
             }
-            else if (curPK.length > 0)
+            else if (curPK.size() > 0)
             {
-                for (int pkColumnIdx = 0; (pkColumnIdx < curPK.length) && !changePK; pkColumnIdx++)
+                for (int pkColumnIdx = 0; (pkColumnIdx < curPK.size()) && !changePK; pkColumnIdx++)
                 {
-                    if (!StringUtilsExt.equals(curPK[pkColumnIdx].getName(), targetPK[pkColumnIdx].getName(), _caseSensitive))
+                    if (!StringUtilsExt.equals(curPK.get(pkColumnIdx).getName(), targetPK.get(pkColumnIdx).getName(), _caseSensitive))
                     {
                         changePK = true;
                     }
@@ -799,8 +802,11 @@ public class ModelComparator
                 }
                 if (_generatePrimaryKeyChanges)
                 {
-                    PrimaryKeyChange change = new PrimaryKeyChange(intermediateTable.getName(),
-                                                                   getIntermediateColumnNamesFor(targetPK, intermediateTable));
+                    PrimaryKeyChange change = new PrimaryKeyChange(
+						intermediateTable.getName(),
+                        getIntermediateColumnNamesFor(targetPK.stream(), intermediateTable)
+							.toList()
+					);
     
                     changes.add(change);
                     change.apply(intermediateModel, changePK);
@@ -808,8 +814,11 @@ public class ModelComparator
                 else
                 {
                     RemovePrimaryKeyChange removePKChange = new RemovePrimaryKeyChange(intermediateTable.getName());
-                    AddPrimaryKeyChange    addPKChange    = new AddPrimaryKeyChange(intermediateTable.getName(),
-                                                                                    getIntermediateColumnNamesFor(targetPK, intermediateTable));
+                    AddPrimaryKeyChange    addPKChange    = new AddPrimaryKeyChange(
+						intermediateTable.getName(),
+						getIntermediateColumnNamesFor(targetPK.stream(), intermediateTable)
+							.toList()
+					);
 
                     changes.add(removePKChange);
                     changes.add(addPKChange);

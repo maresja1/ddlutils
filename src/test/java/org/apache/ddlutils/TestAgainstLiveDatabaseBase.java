@@ -19,39 +19,9 @@ package org.apache.ddlutils;
  * under the License.
  */
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.sql.Types;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
-import javax.sql.DataSource;
-
-import junit.framework.AssertionFailedError;
-import junit.framework.TestSuite;
-
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.beanutils.DynaBean;
-import org.apache.commons.beanutils.DynaProperty;
-import org.apache.commons.dbcp.BasicDataSource;
+import jodd.bean.BeanUtil;
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ddlutils.dynabean.SqlDynaBean;
-import org.apache.ddlutils.dynabean.SqlDynaClass;
-import org.apache.ddlutils.dynabean.SqlDynaProperty;
-import org.apache.ddlutils.io.BinaryObjectsHelper;
-import org.apache.ddlutils.io.DataReader;
-import org.apache.ddlutils.io.DataToDatabaseSink;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.CloneHelper;
 import org.apache.ddlutils.model.Column;
@@ -61,12 +31,31 @@ import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.IndexColumn;
 import org.apache.ddlutils.model.Reference;
 import org.apache.ddlutils.model.Table;
-import org.apache.ddlutils.model.TypeMap;
 import org.apache.ddlutils.platform.CreationParameters;
 import org.apache.ddlutils.platform.DefaultValueHelper;
 import org.apache.ddlutils.platform.firebird.FirebirdPlatform;
 import org.apache.ddlutils.platform.interbase.InterbasePlatform;
 import org.apache.ddlutils.util.StringUtilsExt;
+import org.opentest4j.AssertionFailedError;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import javax.sql.DataSource;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Base class tests that are executed against a live database.
@@ -89,79 +78,80 @@ public abstract class TestAgainstLiveDatabaseBase extends TestPlatformBase
     public static final String DDLUTILS_SCHEMA_PROPERTY = DDLUTILS_PROPERTY_PREFIX + "schema";
     /** The prefix for table creation properties. */
     public static final String DDLUTILS_TABLE_CREATION_PREFIX = DDLUTILS_PROPERTY_PREFIX + "tableCreation.";
+//
+//    /**
+//     * Creates the test suite for the given test class which must be a sub class of
+//     * {@link RoundtripTestBase}. If the platform supports it, it will be tested
+//     * with both delimited and undelimited identifiers.
+//     *
+//     * @param testedClass The tested class
+//     * @return The tests
+//     */
+//    protected static TestSuite getTests(Class testedClass)
+//    {
+//        if (!TestAgainstLiveDatabaseBase.class.isAssignableFrom(testedClass) ||
+//            Modifier.isAbstract(testedClass.getModifiers()))
+//        {
+//            throw new DdlUtilsException("Cannot create parameterized tests for class "+testedClass.getName());
+//        }
+//
+//        TestSuite  suite      = new TestSuite();
+//        Properties props      = readTestProperties();
+//
+//        if (props == null)
+//        {
+//            return suite;
+//        }
+//
+//        DataSource dataSource   = initDataSourceFromProperties(props);
+//        String     databaseName = determineDatabaseName(props, dataSource);
+//
+//        try
+//        {
+//            Method[]               methods = testedClass.getMethods();
+//            PlatformInfo           info    = null;
+//            TestAgainstLiveDatabaseBase newTest;
+//
+//            for (int idx = 0; (methods != null) && (idx < methods.length); idx++)
+//            {
+//                if (methods[idx].getName().startsWith("test") &&
+//                    ((methods[idx].getParameterTypes() == null) || (methods[idx].getParameterTypes().length == 0)))
+//                {
+//                    newTest = (TestAgainstLiveDatabaseBase)testedClass.newInstance();
+//                    newTest.setName(methods[idx].getName());
+//                    newTest.setTestProperties(props);
+//                    newTest.setDataSource(dataSource);
+//                    newTest.setDatabaseName(databaseName);
+//                    newTest.setUseDelimitedIdentifiers(false);
+//                    suite.addTest(newTest);
+//
+//                    if (info == null)
+//                    {
+//                        info = PlatformFactory.createNewPlatformInstance(newTest.getDatabaseName()).getPlatformInfo();
+//                    }
+//                    if (info.isDelimitedIdentifiersSupported())
+//                    {
+//                        newTest = (TestAgainstLiveDatabaseBase)testedClass.newInstance();
+//                        newTest.setName(methods[idx].getName());
+//                        newTest.setTestProperties(props);
+//                        newTest.setDataSource(dataSource);
+//                        newTest.setDatabaseName(databaseName);
+//                        newTest.setUseDelimitedIdentifiers(true);
+//                        suite.addTest(newTest);
+//                    }
+//                }
+//            }
+//        }
+//        catch (Exception ex)
+//        {
+//            throw new DdlUtilsException(ex);
+//        }
+//
+//        return suite;
+//    }
 
-    /**
-     * Creates the test suite for the given test class which must be a sub class of
-     * {@link RoundtripTestBase}. If the platform supports it, it will be tested
-     * with both delimited and undelimited identifiers.
-     * 
-     * @param testedClass The tested class
-     * @return The tests
-     */
-    protected static TestSuite getTests(Class testedClass)
-    {
-        if (!TestAgainstLiveDatabaseBase.class.isAssignableFrom(testedClass) ||
-            Modifier.isAbstract(testedClass.getModifiers()))
-        {
-            throw new DdlUtilsException("Cannot create parameterized tests for class "+testedClass.getName());
-        }
 
-        TestSuite  suite      = new TestSuite();
-        Properties props      = readTestProperties();
-
-        if (props == null)
-        {
-            return suite;
-        }
-
-        DataSource dataSource   = initDataSourceFromProperties(props);
-        String     databaseName = determineDatabaseName(props, dataSource);
-
-        try
-        {
-            Method[]               methods = testedClass.getMethods();
-            PlatformInfo           info    = null;
-            TestAgainstLiveDatabaseBase newTest;
-    
-            for (int idx = 0; (methods != null) && (idx < methods.length); idx++)
-            {
-                if (methods[idx].getName().startsWith("test") &&
-                    ((methods[idx].getParameterTypes() == null) || (methods[idx].getParameterTypes().length == 0)))
-                {
-                    newTest = (TestAgainstLiveDatabaseBase)testedClass.newInstance();
-                    newTest.setName(methods[idx].getName());
-                    newTest.setTestProperties(props);
-                    newTest.setDataSource(dataSource);
-                    newTest.setDatabaseName(databaseName);
-                    newTest.setUseDelimitedIdentifiers(false);
-                    suite.addTest(newTest);
-
-                    if (info == null)
-                    {
-                        info = PlatformFactory.createNewPlatformInstance(newTest.getDatabaseName()).getPlatformInfo();
-                    }
-                    if (info.isDelimitedIdentifiersSupported())
-                    {
-                        newTest = (TestAgainstLiveDatabaseBase)testedClass.newInstance();
-                        newTest.setName(methods[idx].getName());
-                        newTest.setTestProperties(props);
-                        newTest.setDataSource(dataSource);
-                        newTest.setDatabaseName(databaseName);
-                        newTest.setUseDelimitedIdentifiers(true);
-                        suite.addTest(newTest);
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            throw new DdlUtilsException(ex);
-        }
-        
-        return suite;
-    }
-
-    /**
+	/**
      * Reads the test properties as specified by the property.
      * 
      * @return The properties or <code>null</code> if no properties have been specified
@@ -219,28 +209,22 @@ public abstract class TestAgainstLiveDatabaseBase extends TestPlatformBase
      */
     private static DataSource initDataSourceFromProperties(Properties props)
     {
-        if (props == null)
-        {
-            return null;
-        }
-
         try
         {
-            String     dataSourceClass = props.getProperty(DATASOURCE_PROPERTY_PREFIX + "class", BasicDataSource.class.getName());
-            DataSource dataSource      = (DataSource)Class.forName(dataSourceClass).newInstance();
+            String dataSourceClass = props.getProperty(DATASOURCE_PROPERTY_PREFIX + "class", BasicDataSource.class.getName());
+            DataSource dataSource = (DataSource)Class.forName(dataSourceClass)
+				.getDeclaredConstructor()
+				.newInstance();
 
-            for (Iterator it = props.entrySet().iterator(); it.hasNext();)
-            {
-                Map.Entry entry    = (Map.Entry)it.next();
-                String    propName = (String)entry.getKey();
+			for (var entry : props.entrySet()) {
+				String propName = (String) entry.getKey();
 
-                if (propName.startsWith(DATASOURCE_PROPERTY_PREFIX) && !propName.equals(DATASOURCE_PROPERTY_PREFIX +"class"))
-                {
-                    BeanUtils.setProperty(dataSource,
-                                          propName.substring(DATASOURCE_PROPERTY_PREFIX.length()),
-                                          entry.getValue());
-                }
-            }
+				if (propName.startsWith(DATASOURCE_PROPERTY_PREFIX) && !propName.equals(
+					DATASOURCE_PROPERTY_PREFIX + "class")) {
+					final var propNameLocal = propName.substring(DATASOURCE_PROPERTY_PREFIX.length());
+					BeanUtil.pojo.setProperty(dataSource, propNameLocal, entry.getValue());
+				}
+			}
             return dataSource;
         }
         catch (Exception ex)
@@ -315,21 +299,17 @@ public abstract class TestAgainstLiveDatabaseBase extends TestPlatformBase
     {
         CreationParameters params = new CreationParameters();
 
-        for (Iterator entryIt = _testProps.entrySet().iterator(); entryIt.hasNext();)
-        {
-            Map.Entry entry = (Map.Entry)entryIt.next();
-            String    name  = (String)entry.getKey();
-            String    value = (String)entry.getValue();
+		for (var entry : _testProps.entrySet()) {
+			String name = (String) entry.getKey();
+			String value = (String) entry.getValue();
 
-            if (name.startsWith(DDLUTILS_TABLE_CREATION_PREFIX))
-            {
-                name = name.substring(DDLUTILS_TABLE_CREATION_PREFIX.length());
-                for (int tableIdx = 0; tableIdx < model.getTableCount(); tableIdx++)
-                {
-                    params.addParameter(model.getTable(tableIdx), name, value);
-                }
-            }
-        }
+			if (name.startsWith(DDLUTILS_TABLE_CREATION_PREFIX)) {
+				name = name.substring(DDLUTILS_TABLE_CREATION_PREFIX.length());
+				for (int tableIdx = 0; tableIdx < model.getTableCount(); tableIdx++) {
+					params.addParameter(model.getTable(tableIdx), name, value);
+				}
+			}
+		}
         return params;
     }
 
@@ -406,7 +386,13 @@ public abstract class TestAgainstLiveDatabaseBase extends TestPlatformBase
      */
     protected void setUp() throws Exception
     {
-        super.setUp();
+		final var props = readTestProperties();
+		final var dataSource = initDataSourceFromProperties(props);
+		setTestProperties(props);
+		setDataSource(dataSource);
+		setDatabaseName(determineDatabaseName(props, dataSource));
+		setUseDelimitedIdentifiers(false);
+		super.setUp();
         getPlatform().setDataSource(getDataSource());
         getPlatform().setDelimitedIdentifierModeOn(_useDelimitedIdentifiers);
     }
@@ -489,37 +475,11 @@ public abstract class TestAgainstLiveDatabaseBase extends TestPlatformBase
         try
         {
             _model = desiredModel;
-            _model.resetDynaClassCache();
 
             Database liveModel = readModelFromDatabase(desiredModel.getName());
 
             getPlatform().setSqlCommentsOn(false);
             getPlatform().alterModel(liveModel, _model, getTableCreationParameters(_model), false);
-        }
-        catch (Exception ex)
-        {
-            throw new DatabaseOperationException(ex);
-        }
-    }
-
-    /**
-     * Inserts data into the database.
-     * 
-     * @param dataXml The data xml
-     * @return The database
-     */
-    protected Database insertData(String dataXml) throws DatabaseOperationException
-    {
-        try
-        {
-            DataReader dataReader = new DataReader();
-
-            dataReader.setModel(_model);
-            dataReader.setSink(new DataToDatabaseSink(getPlatform(), _model));
-            dataReader.getSink().start();
-            dataReader.read(new StringReader(dataXml));
-            dataReader.getSink().end();
-            return _model;
         }
         catch (Exception ex)
         {
@@ -537,72 +497,61 @@ public abstract class TestAgainstLiveDatabaseBase extends TestPlatformBase
 
     /**
      * Inserts a row into the designated table.
-     * 
+     *
      * @param tableName    The name of the table (case insensitive)
      * @param columnValues The values for the columns in order of definition
      * @return The dyna bean for the row
      */
-    protected DynaBean insertRow(String tableName, Object[] columnValues)
+    protected Map<String, Object> insertRow(String tableName, Object[] columnValues)
     {
-        Table    table = getModel().findTable(tableName);
-        DynaBean bean  = getModel().createDynaBeanFor(table);
+        Table table = getModel().findTable(tableName)
+			.orElseThrow();
 
+		var data = new HashMap<String, Object>();
         for (int idx = 0; (idx < table.getColumnCount()) && (idx < columnValues.length); idx++)
         {
             Column column = table.getColumn(idx);
 
-            bean.set(column.getName(), columnValues[idx]);
+            data.put(column.getName(), columnValues[idx]);
         }
-        getPlatform().insert(getModel(), bean);
-        return bean;
+		return getPlatform().insert(getModel(), tableName, data);
     }
 
     /**
      * Updates the row in the designated table.
-     * 
+     *
      * @param tableName    The name of the table (case insensitive)
-     * @param oldBean      The bean representing the current row
      * @param columnValues The values for the columns in order of definition
-     * @return The dyna bean for the new row
      */
-    protected DynaBean updateRow(String tableName, DynaBean oldBean, Object[] columnValues)
+    protected void updateRow(String tableName, Map<String, Object> columnValues)
     {
-        Table    table = getModel().findTable(tableName);
-        DynaBean bean  = getModel().createDynaBeanFor(table);
-
-        for (int idx = 0; (idx < table.getColumnCount()) && (idx < columnValues.length); idx++)
-        {
-            Column column = table.getColumn(idx);
-
-            bean.set(column.getName(), columnValues[idx]);
-        }
-        getPlatform().update(getModel(), oldBean, bean);
-        return bean;
+        Table table = getModel().findTable(tableName).orElseThrow();
+        getPlatform().update(getModel(), table, columnValues);
     }
 
     /**
      * Deletes the specified row from the table.
-     * 
+     *
      * @param tableName      The name of the table (case insensitive)
      * @param pkColumnValues The values for the pk columns in order of definition
      */
     protected void deleteRow(String tableName, Object[] pkColumnValues)
     {
-        Table    table     = getModel().findTable(tableName);
-        DynaBean bean      = getModel().createDynaBeanFor(table);
-        Column[] pkColumns = table.getPrimaryKeyColumns();
+        Table table = getModel().findTable(tableName).orElseThrow();
+        List<Column> pkColumns = table.getPrimaryKeyColumns().toList();
 
-        for (int idx = 0; (idx < pkColumns.length) && (idx < pkColumnValues.length); idx++)
+		var data = new HashMap<String, Object>();
+        for (int idx = 0; (idx < pkColumns.size()) && (idx < pkColumnValues.length); idx++)
         {
-            bean.set(pkColumns[idx].getName(), pkColumnValues[idx]);
+			data.put(pkColumns.get(idx).getName(), pkColumnValues[idx]);
         }
-        getPlatform().delete(getModel(), bean);
+        getPlatform().delete(getModel(), tableName, data);
     }
 
     /**
      * Returns a "SELECT * FROM [table name]" statement. It also takes
      * delimited identifier mode into account if enabled.
-     *  
+     *
      * @param table       The table
      * @param orderColumn The column to order the rows by (can be <code>null</code>)
      * @return The statement
@@ -639,33 +588,35 @@ public abstract class TestAgainstLiveDatabaseBase extends TestPlatformBase
 
     /**
      * Retrieves all rows from the given table.
-     * 
+     *
      * @param tableName The table
      * @return The rows
      */
-    protected List getRows(String tableName)
+    protected List<Map<String, Object>> getRows(String tableName)
     {
-        Table table = getModel().findTable(tableName, getPlatform().isDelimitedIdentifierModeOn());
-        
+        Table table = getModel().findTable(tableName, getPlatform().isDelimitedIdentifierModeOn())
+			.orElseThrow();
+
         return getPlatform().fetch(getModel(),
                                    getSelectQueryForAllString(table, null),
-                                   new Table[] { table });
+                                   List.of(table));
     }
 
     /**
      * Retrieves all rows from the given table.
-     * 
+     *
      * @param tableName   The table
      * @param orderColumn The column to order the rows by
      * @return The rows
      */
-    protected List getRows(String tableName, String orderColumn)
+    protected List<Map<String, Object>> getRows(String tableName, String orderColumn)
     {
-        Table table = getModel().findTable(tableName, getPlatform().isDelimitedIdentifierModeOn());
-        
+        Table table = getModel().findTable(tableName, getPlatform().isDelimitedIdentifierModeOn())
+			.orElseThrow();
+
         return getPlatform().fetch(getModel(),
                                    getSelectQueryForAllString(table, orderColumn),
-                                   new Table[] { table });
+									List.of(table));
     }
 
     /**
@@ -965,35 +916,6 @@ public abstract class TestAgainstLiveDatabaseBase extends TestPlatformBase
     }
 
     /**
-     * Determines the value of the bean's property that has the given name. Depending on the
-     * case-setting of the current builder, the case of teh name is considered or not. 
-     * 
-     * @param bean     The bean
-     * @param propName The name of the property
-     * @return The value
-     */
-    protected Object getPropertyValue(DynaBean bean, String propName)
-    {
-        if (getPlatform().isDelimitedIdentifierModeOn())
-        {
-            return bean.get(propName);
-        }
-        else
-        {
-            DynaProperty[] props = bean.getDynaClass().getDynaProperties();
-    
-            for (int idx = 0; idx < props.length; idx++)
-            {
-                if (propName.equalsIgnoreCase(props[idx].getName()))
-                {
-                    return bean.get(props[idx].getName());
-                }
-            }
-            throw new IllegalArgumentException("The bean has no property with the name "+propName);
-        }
-    }
-
-    /**
      * Asserts that the two given database models are equal, and if not, writes both of them
      * in XML form to <code>stderr</code>.
      * 
@@ -1051,7 +973,7 @@ public abstract class TestAgainstLiveDatabaseBase extends TestPlatformBase
 
     /**
      * Asserts that the two given indices are equal.
-     * 
+     *
      * @param expected The expected index
      * @param actual   The actual index
      */
@@ -1062,7 +984,7 @@ public abstract class TestAgainstLiveDatabaseBase extends TestPlatformBase
 
     /**
      * Asserts that the two given index columns are equal.
-     * 
+     *
      * @param expected The expected index column
      * @param actual   The actual index column
      */
@@ -1072,41 +994,9 @@ public abstract class TestAgainstLiveDatabaseBase extends TestPlatformBase
     }
 
     /**
-     * Compares the specified attribute value of the given bean with the expected object.
-     * 
-     * @param expected The expected object
-     * @param bean     The bean
-     * @param attrName The attribute name
-     */
-    protected void assertEquals(Object expected, Object bean, String attrName)
-    {
-        DynaBean dynaBean = (DynaBean)bean;
-        Object   value    = dynaBean.get(attrName);
-
-        if ((value instanceof byte[]) && !(expected instanceof byte[]) && (dynaBean instanceof SqlDynaBean))
-        {
-            SqlDynaClass dynaClass = (SqlDynaClass)((SqlDynaBean)dynaBean).getDynaClass();
-            Column       column    = ((SqlDynaProperty)dynaClass.getDynaProperty(attrName)).getColumn();
-
-            if (TypeMap.isBinaryType(column.getTypeCode()))
-            {
-                value = new BinaryObjectsHelper().deserialize((byte[])value);
-            }
-        }
-        if (expected == null)
-        {
-            assertNull(value);
-        }
-        else
-        {
-            assertEquals(expected, value);
-        }
-    }
-
-    /**
      * Asserts that the two given database models are equal, and if not, writes both of them
      * in XML form to <code>stderr</code>.
-     * 
+     *
      * @param expected      The expected model
      * @param actual        The actual model
      * @param caseSensitive Whether case matters when comparing
@@ -1155,7 +1045,7 @@ public abstract class TestAgainstLiveDatabaseBase extends TestPlatformBase
 
     /**
      * Asserts that the two given database tables are equal.
-     * 
+     *
      * @param expected      The expected table
      * @param actual        The actual table
      * @param caseSensitive Whether case matters when comparing
@@ -1216,7 +1106,7 @@ public abstract class TestAgainstLiveDatabaseBase extends TestPlatformBase
         }
     }
 
-    /**
+	/**
      * Asserts that the two given columns are equal.
      * 
      * @param expected      The expected column
@@ -1237,7 +1127,7 @@ public abstract class TestAgainstLiveDatabaseBase extends TestPlatformBase
                          getPlatform().getSqlBuilder().shortenName(expected.getName().toUpperCase(), getSqlBuilder().getMaxColumnNameLength()),
                          getPlatform().getSqlBuilder().shortenName(actual.getName().toUpperCase(), getSqlBuilder().getMaxColumnNameLength()));
         }
-        assertEquals("Primary key status not the same for column "+actual.getName()+".",
+		assertEquals("Primary key status not the same for column "+actual.getName()+".",
                      expected.isPrimaryKey(),
                      actual.isPrimaryKey());
         assertEquals("Required status not the same for column "+actual.getName()+".",
@@ -1311,12 +1201,16 @@ public abstract class TestAgainstLiveDatabaseBase extends TestPlatformBase
                          getPlatform().getSqlBuilder().shortenName(actual.getForeignTableName().toUpperCase(), getSqlBuilder().getMaxTableNameLength()));
         }
 
-        assertTrue("Not the same onUpdate setting in foreign key "+actual.getName()+": expected = "+expected.getOnUpdate()+", actual = "+actual.getOnUpdate(),
-                   expected.getOnUpdate().equals(actual.getOnUpdate()) ||
-                   getPlatformInfo().areEquivalentOnUpdateActions(expected.getOnUpdate(), actual.getOnUpdate()));
-        assertTrue("Not the same onDelete setting in foreign key "+actual.getName()+": expected = "+expected.getOnDelete()+", actual = "+actual.getOnDelete(),
-                   expected.getOnDelete().equals(actual.getOnDelete()) ||
-                   getPlatformInfo().areEquivalentOnDeleteActions(expected.getOnDelete(), actual.getOnDelete()));
+        assertTrue(
+            expected.getOnUpdate().equals(actual.getOnUpdate()) ||
+                getPlatformInfo().areEquivalentOnUpdateActions(expected.getOnUpdate(), actual.getOnUpdate()),
+			"Not the same onUpdate setting in foreign key "+actual.getName()+": expected = "+expected.getOnUpdate()+", actual = "+actual.getOnUpdate()
+		);
+        assertTrue(
+            expected.getOnDelete().equals(actual.getOnDelete()) ||
+                getPlatformInfo().areEquivalentOnDeleteActions(expected.getOnDelete(), actual.getOnDelete()),
+			"Not the same onDelete setting in foreign key "+actual.getName()+": expected = "+expected.getOnDelete()+", actual = "+actual.getOnDelete()
+		);
 
         assertEquals("Not the same number of references in foreign key "+actual.getName()+".",
                      expected.getReferenceCount(),
@@ -1360,7 +1254,7 @@ public abstract class TestAgainstLiveDatabaseBase extends TestPlatformBase
 
     /**
      * Asserts that the two given indices are equal.
-     * 
+     *
      * @param expected      The expected index
      * @param actual        The actual index
      * @param caseSensitive Whether case matters when comparing
@@ -1395,7 +1289,7 @@ public abstract class TestAgainstLiveDatabaseBase extends TestPlatformBase
 
     /**
      * Asserts that the two given index columns are equal.
-     * 
+     *
      * @param expected      The expected index column
      * @param actual        The actual index column
      * @param caseSensitive Whether case matters when comparing
@@ -1410,11 +1304,11 @@ public abstract class TestAgainstLiveDatabaseBase extends TestPlatformBase
         }
         else
         {
-            assertEquals("Index column names do not match (ignoring case).",
+			assertEquals("Index column names do not match (ignoring case).",
                          getPlatform().getSqlBuilder().shortenName(expected.getName().toUpperCase(), getSqlBuilder().getMaxColumnNameLength()),
                          getPlatform().getSqlBuilder().shortenName(actual.getName().toUpperCase(), getSqlBuilder().getMaxColumnNameLength()));
         }
-        assertEquals("Size not the same for index column "+actual.getName()+".",
+		assertEquals("Size not the same for index column "+actual.getName()+".",
                      expected.getSize(),
                      actual.getSize());
     }

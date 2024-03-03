@@ -19,21 +19,19 @@ package org.apache.ddlutils.task;
  * under the License.
  */
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import junit.framework.Test;
-
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.ddlutils.dynabean.SqlDynaClass;
 import org.apache.ddlutils.io.DataReader;
 import org.apache.ddlutils.io.DataSink;
 import org.apache.ddlutils.io.DataSinkException;
 import org.apache.ddlutils.io.DatabaseIO;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Tests the writeDataToFile sub task.
@@ -42,15 +40,6 @@ import org.apache.ddlutils.io.DatabaseIO;
  */
 public class TestWriteDataToFileCommand extends TestTaskBase
 {
-    /**
-     * Parameterized test case pattern.
-     * 
-     * @return The tests
-     */
-    public static Test suite() throws Exception
-    {
-        return getTests(TestWriteDataToFileCommand.class);
-    }
 
     /**
      * Adds the writeDataToFile sub task to the given task, executes it, and checks its output.
@@ -135,7 +124,7 @@ public class TestWriteDataToFileCommand extends TestTaskBase
 
         List beans = new ArrayList();
 
-        beans.add(insertRow("roundtrip", new Object[] { "test1", new Integer(1) }));
+        beans.add(insertRow("roundtrip", new Object[] { "test1", 1 }));
         beans.add(insertRow("roundtrip", new Object[] { "test2", null }));
 
         Map expected = new HashMap();
@@ -182,15 +171,15 @@ public class TestWriteDataToFileCommand extends TestTaskBase
         List beans3 = new ArrayList();
 
         beans1.add(insertRow("Roundtrip_1", new Object[] { "test1", null }));
-        beans2.add(insertRow("Roundtrip_2", new Object[] { new Integer(3), null }));
-        beans3.add(insertRow("Roundtrip_3", new Object[] { new Integer(1), "test1" }));
-        beans2.add(insertRow("Roundtrip_2", new Object[] { new Integer(2), new Integer(1) }));
-        beans1.add(insertRow("Roundtrip_1", new Object[] { "test2", new Integer(1) }));
-        beans3.add(insertRow("Roundtrip_3", new Object[] { new Integer(3), null }));
-        beans3.add(insertRow("Roundtrip_3", new Object[] { new Integer(4), "test2" }));
-        beans1.add(insertRow("Roundtrip_1", new Object[] { "test3", new Integer(3) }));
-        beans3.add(insertRow("Roundtrip_3", new Object[] { new Integer(2), "test3" }));
-        beans2.add(insertRow("Roundtrip_2", new Object[] { new Integer(1), new Integer(2) }));
+        beans2.add(insertRow("Roundtrip_2", new Object[] { 3, null }));
+        beans3.add(insertRow("Roundtrip_3", new Object[] { 1, "test1" }));
+        beans2.add(insertRow("Roundtrip_2", new Object[] { 2, 1 }));
+        beans1.add(insertRow("Roundtrip_1", new Object[] { "test2", 1 }));
+        beans3.add(insertRow("Roundtrip_3", new Object[] { 3, null }));
+        beans3.add(insertRow("Roundtrip_3", new Object[] { 4, "test2" }));
+        beans1.add(insertRow("Roundtrip_1", new Object[] { "test3", 3 }));
+        beans3.add(insertRow("Roundtrip_3", new Object[] { 2, "test3" }));
+        beans2.add(insertRow("Roundtrip_2", new Object[] { 1, 2 }));
 
         Map expected = new HashMap();
 

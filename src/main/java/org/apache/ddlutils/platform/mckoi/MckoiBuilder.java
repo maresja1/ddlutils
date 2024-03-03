@@ -19,14 +19,14 @@ package org.apache.ddlutils.platform.mckoi;
  * under the License.
  */
 
-import java.io.IOException;
-import java.util.Map;
-
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.SqlBuilder;
+
+import java.io.IOException;
+import java.util.Map;
 
 /**
  * The SQL Builder for the Mckoi database.
@@ -56,12 +56,11 @@ public class MckoiBuilder extends SqlBuilder
     {
         // we use sequences instead of the UNIQUEKEY function because this way
         // we can read their values back
-        Column[] columns = table.getAutoIncrementColumns();
+        var columns = table.getAutoIncrementColumns().toList();
 
-        for (int idx = 0; idx < columns.length; idx++)
-        {
-            createAutoIncrementSequence(table, columns[idx]);
-        }
+		for (final Column column : columns) {
+			createAutoIncrementSequence(table, column);
+		}
 
         super.createTable(database, table, parameters);
     }
@@ -75,12 +74,11 @@ public class MckoiBuilder extends SqlBuilder
         printIdentifier(getTableName(table));
         printEndOfStatement();
 
-        Column[] columns = table.getAutoIncrementColumns();
+        var columns = table.getAutoIncrementColumns().toList();
 
-        for (int idx = 0; idx < columns.length; idx++)
-        {
-            dropAutoIncrementSequence(table, columns[idx]);
-        }
+		for (final Column column : columns) {
+			dropAutoIncrementSequence(table, column);
+		}
     }
 
     /**
@@ -140,21 +138,21 @@ public class MckoiBuilder extends SqlBuilder
      */
     public String getSelectLastIdentityValues(Table table)
     {
-        Column[] columns = table.getAutoIncrementColumns();
+        var columns = table.getAutoIncrementColumns().toList();
 
-        if (columns.length > 0)
+        if (!columns.isEmpty())
         {
-            StringBuffer result = new StringBuffer();
+            StringBuilder result = new StringBuilder();
 
             result.append("SELECT ");
-            for (int idx = 0; idx < columns.length; idx++)
+            for (int idx = 0; idx < columns.size(); idx++)
             {
                 if (idx > 0)
                 {
                     result.append(",");
                 }
                 result.append("CURRVAL('");
-                result.append(getConstraintName("seq", table, columns[idx].getName(), null));
+                result.append(getConstraintName("seq", table, columns.get(idx).getName(), null));
                 result.append("')");
             }
             return result.toString();
@@ -172,7 +170,7 @@ public class MckoiBuilder extends SqlBuilder
      * @param table      The table to recreate
      * @param parameters The table creation parameters
      */
-    protected void writeRecreateTableStmt(Database model, Table table, Map parameters) throws IOException
+    protected void writeRecreateTableStmt(Database model, Table table, Map<?, ?> parameters) throws IOException
     {
         print("ALTER ");
         super.createTable(model, table, parameters);

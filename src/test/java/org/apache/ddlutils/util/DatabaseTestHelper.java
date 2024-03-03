@@ -19,12 +19,6 @@ package org.apache.ddlutils.util;
  * under the License.
  */
 
-import java.util.Collection;
-import java.util.Iterator;
-
-import junit.framework.Assert;
-import junit.framework.AssertionFailedError;
-
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,13 +26,18 @@ import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
+import org.junit.jupiter.api.AssertionFailureBuilder;
+import org.junit.jupiter.api.Assertions;
+
+import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * Class that provides utility stuff for cpmaring data in databases.
  *
  * @version $Revision: 264616 $
  */
-public class DatabaseTestHelper extends Assert
+public class DatabaseTestHelper extends Assertions
 {
     /** The log for this class. */
     private final Log _log = LogFactory.getLog(DatabaseTestHelper.class);
@@ -92,7 +91,7 @@ public class DatabaseTestHelper extends Assert
                     }
                     else
                     {
-                        throw new AssertionFailedError(failureMsg);
+						AssertionFailureBuilder.assertionFailure().message(failureMsg).buildAndThrow();
                     }
                 }
                 else if (result.size() > 1)
@@ -115,7 +114,7 @@ public class DatabaseTestHelper extends Assert
                     }
                     else
                     {
-                        throw new AssertionFailedError(failureMsg);
+						AssertionFailureBuilder.assertionFailure().message(failureMsg).buildAndThrow();
                     }
                 }
                 else
@@ -132,7 +131,7 @@ public class DatabaseTestHelper extends Assert
                         }
                         else
                         {
-                            throw new AssertionFailedError(failureMsg);
+							AssertionFailureBuilder.assertionFailure().message(failureMsg).buildAndThrow();
                         }
                     }
                 }
@@ -140,7 +139,7 @@ public class DatabaseTestHelper extends Assert
         }
         if (hasError)
         {
-            throw new AssertionFailedError(failureMsg);
+			AssertionFailureBuilder.assertionFailure().message(failureMsg).buildAndThrow();
         }
     }
 

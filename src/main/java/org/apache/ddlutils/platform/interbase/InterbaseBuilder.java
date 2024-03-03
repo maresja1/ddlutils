@@ -19,16 +19,16 @@ package org.apache.ddlutils.platform.interbase;
  * under the License.
  */
 
-import java.io.IOException;
-import java.sql.Types;
-import java.util.Map;
-
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.SqlBuilder;
+
+import java.io.IOException;
+import java.sql.Types;
+import java.util.Map;
 
 /**
  * The SQL Builder for the Interbase database.
@@ -56,12 +56,11 @@ public class InterbaseBuilder extends SqlBuilder
         super.createTable(database, table, parameters);
 
         // creating generator and trigger for auto-increment
-        Column[] columns = table.getAutoIncrementColumns();
+        var columns = table.getAutoIncrementColumns().toList();
 
-        for (int idx = 0; idx < columns.length; idx++)
-        {
-            writeAutoIncrementCreateStmts(database, table, columns[idx]);
-        }
+		for (final Column column : columns) {
+			writeAutoIncrementCreateStmts(database, table, column);
+		}
     }
 
     /**
@@ -85,12 +84,11 @@ public class InterbaseBuilder extends SqlBuilder
     public void dropTable(Table table) throws IOException
     {
         // dropping generators for auto-increment
-        Column[] columns = table.getAutoIncrementColumns();
+        var columns = table.getAutoIncrementColumns().toList();
 
-        for (int idx = 0; idx < columns.length; idx++)
-        {
-            writeAutoIncrementDropStmts(table, columns[idx]);
-        }
+		for (final Column column : columns) {
+			writeAutoIncrementDropStmts(table, column);
+		}
         super.dropTable(table);
     }
 
@@ -188,23 +186,22 @@ public class InterbaseBuilder extends SqlBuilder
      */
     public String getSelectLastIdentityValues(Table table)
     {
-        Column[] columns = table.getAutoIncrementColumns();
+        var columns = table.getAutoIncrementColumns().toList();
 
-        if (columns.length == 0)
+        if (columns.isEmpty())
         {
             return null;
         }
         else
         {
-            StringBuffer result = new StringBuffer();
+            StringBuilder result = new StringBuilder();
     
             result.append("SELECT ");
-            for (int idx = 0; idx < columns.length; idx++)
-            {
-                result.append("GEN_ID(");
-                result.append(getDelimitedIdentifier(getGeneratorName(table, columns[idx])));
-                result.append(", 0)");
-            }
+			for (Column column : columns) {
+				result.append("GEN_ID(");
+				result.append(getDelimitedIdentifier(getGeneratorName(table, column)));
+				result.append(", 0)");
+			}
             result.append(" FROM RDB$DATABASE");
             return result.toString();
         }

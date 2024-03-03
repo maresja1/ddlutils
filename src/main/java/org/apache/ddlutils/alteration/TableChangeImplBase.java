@@ -55,6 +55,7 @@ public abstract class TableChangeImplBase implements TableChange
      */
     public Table findChangedTable(Database model, boolean caseSensitive)
     {
-    	return model.findTable(_tableName, caseSensitive);
+    	return model.findTable(_tableName, caseSensitive)
+			.orElseThrow();
     }
 }

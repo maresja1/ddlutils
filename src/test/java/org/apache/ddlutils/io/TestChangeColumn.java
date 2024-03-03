@@ -19,17 +19,18 @@ package org.apache.ddlutils.io;
  * under the License.
  */
 
+import org.apache.ddlutils.TestAgainstLiveDatabaseBase;
+import org.apache.ddlutils.platform.sybase.SybasePlatform;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.util.Date;
-import java.util.List;
 
-import junit.framework.Test;
-
-import org.apache.commons.beanutils.DynaBean;
-import org.apache.ddlutils.TestAgainstLiveDatabaseBase;
-import org.apache.ddlutils.platform.sybase.SybasePlatform;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests changing columns, e.g. changing the data type or size.
@@ -42,15 +43,6 @@ import org.apache.ddlutils.platform.sybase.SybasePlatform;
  */
 public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 {
-    /**
-     * Parameterized test case pattern.
-     * 
-     * @return The tests
-     */
-    public static Test suite() throws Exception
-    {
-        return getTests(TestChangeColumn.class);
-    }
 
 //  - change default value (add default, remove default, change default)
 //  - combined changes, e.g
@@ -61,10 +53,23 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 //    - required & default value
 //  - for each of the above: normal column, pk column, fk column (local), index column, unique index column
 
+	@BeforeEach
+	protected void setUp() throws Exception
+	{
+		super.setUp();
+	}
+
+	@AfterEach
+	protected void tearDown() throws Exception
+	{
+		super.tearDown();
+	}
+
     /**
      * Tests the alteration of a column datatype change from integer to double.
      */
-    public void testColumnTypeIntegerToDouble()
+    @Test
+	public void testColumnTypeIntegerToDouble()
     {
         final String model1Xml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -85,17 +90,17 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2) });
+        insertRow("roundtrip", new Object[] { 1, 2 });
 
     	alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1),  beans.get(0), "pk");
-        assertEquals(new Double(2.0), beans.get(0), "avalue");
+        assertEqualsAttr(1,  beans.get(0), "pk");
+        assertEqualsAttr(2.0, beans.get(0), "avalue");
     }
 
     /**
@@ -122,23 +127,23 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Short((short)2) });
+        insertRow("roundtrip", new Object[] { 1, new Short((short)2) });
 
     	alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List     beans = getRows("roundtrip");
-        DynaBean bean  = (DynaBean)beans.get(0); 
+        var beans = getRows("roundtrip");
+        var bean  = beans.get(0);
 
         // Some databases (e.g. DB2) pad the string for some reason, so we manually trim it
         if (bean.get("avalue") instanceof String)
         {
-            bean.set("avalue", ((String)bean.get("avalue")).trim());
+            bean.put("avalue", ((String)bean.get("avalue")).trim());
         }
-        assertEquals(new Integer(1), beans.get(0), "pk");
-        assertEquals((Object)"2",    beans.get(0), "avalue");
+        assertEqualsAttr(1, beans.get(0), "pk");
+        assertEqualsAttr((Object)"2",    beans.get(0), "avalue");
     }
 
     /**
@@ -163,16 +168,16 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Double(2.0) });
+        insertRow("roundtrip", new Object[] { 2.0 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Double(2.0), beans.get(0), "pk");
+        assertEqualsAttr(2.0, beans.get(0), "pk");
     }
 
     /**
@@ -197,22 +202,22 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1) });
+        insertRow("roundtrip", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List     beans = getRows("roundtrip");
-        DynaBean bean  = (DynaBean)beans.get(0);
+        var beans = getRows("roundtrip");
+        var bean  = beans.get(0);
 
         // Some databases (e.g. DB2) pad the string for some reason, so we manually trim it
         if (bean.get("pk") instanceof String)
         {
-            bean.set("pk", ((String)bean.get("pk")).trim());
+            bean.put("pk", ((String)bean.get("pk")).trim());
         }
-        assertEquals((Object)"1", beans.get(0), "pk");
+        assertEqualsAttr((Object)"1", beans.get(0), "pk");
     }
 
     /**
@@ -251,31 +256,31 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip1", new Object[] { new Integer(1) });
-        insertRow("roundtrip2", new Object[] { new Integer(1), new Integer(1) });
+        insertRow("roundtrip1", new Object[] { 1 });
+        insertRow("roundtrip2", new Object[] { 1, 1 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List     beans1 = getRows("roundtrip1");
-        List     beans2 = getRows("roundtrip2");
-        DynaBean bean1  = (DynaBean)beans1.get(0);
-        DynaBean bean2  = (DynaBean)beans2.get(0);
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
+        var bean1  = beans1.get(0);
+        var bean2  = beans2.get(0);
 
         // Some databases (e.g. DB2) pad the string for some reason, so we manually trim it
         if (bean1.get("pk") instanceof String)
         {
-            bean1.set("pk", ((String)bean1.get("pk")).trim());
+            bean1.put("pk", ((String)bean1.get("pk")).trim());
         }
         if (bean2.get("fk") instanceof String)
         {
-            bean2.set("fk", ((String)bean2.get("fk")).trim());
+            bean2.put("fk", ((String)bean2.get("fk")).trim());
         }
-        assertEquals((Object)"1",    bean1, "pk");
-        assertEquals(new Integer(1), bean2, "pk");
-        assertEquals((Object)"1",    bean2, "fk");
+        assertEqualsAttr("1",    bean1, "pk");
+        assertEqualsAttr(1, bean2, "pk");
+        assertEqualsAttr("1",    bean2, "fk");
     }
 
     /**
@@ -312,31 +317,31 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip1", new Object[] { new Integer(1) });
-        insertRow("roundtrip2", new Object[] { new Integer(1), new Integer(1) });
+        insertRow("roundtrip1", new Object[] { 1 });
+        insertRow("roundtrip2", new Object[] { 1, 1 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List     beans1 = getRows("roundtrip1");
-        List     beans2 = getRows("roundtrip2");
-        DynaBean bean1  = (DynaBean)beans1.get(0);
-        DynaBean bean2  = (DynaBean)beans2.get(0);
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
+        var bean1  = beans1.get(0);
+        var bean2  = beans2.get(0);
 
         // Some databases (e.g. DB2) pad the string for some reason, so we manually trim it
         if (bean1.get("pk") instanceof String)
         {
-            bean1.set("pk", ((String)bean1.get("pk")).trim());
+            bean1.put("pk", ((String)bean1.get("pk")).trim());
         }
         if (bean2.get("fk") instanceof String)
         {
-            bean2.set("fk", ((String)bean2.get("fk")).trim());
+            bean2.put("fk", ((String)bean2.get("fk")).trim());
         }
-        assertEquals((Object)"1",    bean1, "pk");
-        assertEquals(new Integer(1), bean2, "pk");
-        assertEquals((Object)"1",    bean2, "fk");
+        assertEqualsAttr((Object)"1",    bean1, "pk");
+        assertEqualsAttr(1, bean2, "pk");
+        assertEqualsAttr((Object)"1",    bean2, "fk");
     }
 
     /**
@@ -378,18 +383,18 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2), "text" });
+        insertRow("roundtrip", new Object[] { 1, 2, "text" });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1),  beans.get(0), "pk");
-        assertEquals(new Double(2.0), beans.get(0), "avalue1");
-        assertEquals((Object)"text",  beans.get(0), "avalue2");
+        assertEqualsAttr(1,  beans.get(0), "pk");
+        assertEqualsAttr(2.0, beans.get(0), "avalue1");
+        assertEqualsAttr((Object)"text",  beans.get(0), "avalue2");
     }
 
     /**
@@ -431,24 +436,24 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Short((short)2), new Double(3.0) });
+        insertRow("roundtrip", new Object[] { 1, new Short((short)2), 3.0 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List     beans = getRows("roundtrip");
-        DynaBean bean  = (DynaBean)beans.get(0); 
+        var beans = getRows("roundtrip");
+        var bean  = beans.get(0); 
 
         // Some databases (e.g. DB2) pad the string for some reason, so we manually trim it
         if (bean.get("avalue1") instanceof String)
         {
-            bean.set("avalue1", ((String)bean.get("avalue1")).trim());
+            bean.put("avalue1", ((String)bean.get("avalue1")).trim());
         }
-        assertEquals(new Integer(1),  beans.get(0), "pk");
-        assertEquals((Object)"2",     beans.get(0), "avalue1");
-        assertEquals(new Double(3.0), beans.get(0), "avalue2");
+        assertEqualsAttr(1,  beans.get(0), "pk");
+        assertEqualsAttr((Object)"2",     beans.get(0), "avalue1");
+        assertEqualsAttr(3.0, beans.get(0), "avalue2");
     }
 
     /**
@@ -484,20 +489,20 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(1) });
-        insertRow("roundtrip", new Object[] { new Integer(2), new Integer(10) });
+        insertRow("roundtrip", new Object[] { 1, 1 });
+        insertRow("roundtrip", new Object[] { 2, 10 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1),  beans.get(0), "pk");
-        assertEquals(new Integer(1),  beans.get(0), "avalue");
-        assertEquals(new Integer(2),  beans.get(1), "pk");
-        assertEquals(new Integer(10), beans.get(1), "avalue");
+        assertEqualsAttr(1,  beans.get(0), "pk");
+        assertEqualsAttr(1,  beans.get(0), "avalue");
+        assertEqualsAttr(2,  beans.get(1), "pk");
+        assertEqualsAttr(10, beans.get(1), "avalue");
     }
 
     /**
@@ -539,18 +544,18 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2), "text" });
+        insertRow("roundtrip", new Object[] { 1, 2, "text" });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1),  beans.get(0), "pk");
-        assertEquals(new Double(2.0), beans.get(0), "avalue1");
-        assertEquals((Object)"text",  beans.get(0), "avalue2");
+        assertEqualsAttr(1,  beans.get(0), "pk");
+        assertEqualsAttr(2.0, beans.get(0), "avalue1");
+        assertEqualsAttr((Object)"text",  beans.get(0), "avalue2");
     }
 
     /**
@@ -592,24 +597,24 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Short((short)2), new Double(3.0) });
+        insertRow("roundtrip", new Object[] { 1, new Short((short)2), 3.0 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List     beans = getRows("roundtrip");
-        DynaBean bean  = (DynaBean)beans.get(0); 
+        var beans = getRows("roundtrip");
+        var bean  = beans.get(0); 
 
         // Some databases (e.g. DB2) pad the string for some reason, so we manually trim it
         if (bean.get("avalue1") instanceof String)
         {
-            bean.set("avalue1", ((String)bean.get("avalue1")).trim());
+            bean.put("avalue1", ((String)bean.get("avalue1")).trim());
         }
-        assertEquals(new Integer(1),  beans.get(0), "pk");
-        assertEquals((Object)"2",     beans.get(0), "avalue1");
-        assertEquals(new Double(3.0), beans.get(0), "avalue2");
+        assertEqualsAttr(1,  beans.get(0), "pk");
+        assertEqualsAttr((Object)"2",     beans.get(0), "avalue1");
+        assertEqualsAttr(3.0, beans.get(0), "avalue2");
     }
 
     /**
@@ -636,17 +641,17 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), "test" });
+        insertRow("roundtrip", new Object[] { 1, "test" });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1), beans.get(0), "pk");
-        assertEquals((Object)"test", beans.get(0), "avalue");
+        assertEqualsAttr(1, beans.get(0), "pk");
+        assertEqualsAttr((Object)"test", beans.get(0), "avalue");
     }
 
     /**
@@ -673,17 +678,17 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), "12345678901234567890123456789012" });
+        insertRow("roundtrip", new Object[] { 1, "12345678901234567890123456789012" });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List     beans = getRows("roundtrip");
-        DynaBean bean  = (DynaBean)beans.get(0);
+        var beans = getRows("roundtrip");
+        var bean  = beans.get(0);
 
-        assertEquals(new Integer(1), bean, "pk");
+        assertEqualsAttr(1, bean, "pk");
         assertTrue("12345678901234567890123456789012".equals(bean.get("avalue")) || "1234567890123456".equals(bean.get("avalue")));
     }
 
@@ -716,8 +721,8 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List     beans = getRows("roundtrip");
-        DynaBean bean  = (DynaBean)beans.get(0);
+        var beans = getRows("roundtrip");
+        var bean  = beans.get(0);
 
         assertEquals("test", ((String)bean.get("pk")).trim());
     }
@@ -751,8 +756,8 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List     beans = getRows("roundtrip");
-        DynaBean bean  = (DynaBean)beans.get(0);
+        var beans = getRows("roundtrip");
+        var bean  = beans.get(0);
 
         assertTrue("12345678901234567890123456789012".equals(bean.get("pk")) || "1234567890123456".equals(bean.get("pk")));
     }
@@ -794,19 +799,19 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
         createDatabase(model1Xml);
 
         insertRow("roundtrip1", new Object[] { "test" });
-        insertRow("roundtrip2", new Object[] { new Integer(1), "test" });
+        insertRow("roundtrip2", new Object[] { 1, "test" });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
-        assertEquals((Object)"test", beans1.get(0), "pk");
-        assertEquals(new Integer(1), beans2.get(0), "pk");
-        assertEquals((Object)"test", beans2.get(0), "fk");
+        assertEqualsAttr((Object)"test", beans1.get(0), "pk");
+        assertEqualsAttr(1, beans2.get(0), "pk");
+        assertEqualsAttr((Object)"test", beans2.get(0), "fk");
     }
 
     /**
@@ -846,20 +851,20 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
         createDatabase(model1Xml);
 
         insertRow("roundtrip1", new Object[] { "test" });
-        insertRow("roundtrip2", new Object[] { new Integer(1), "test" });
+        insertRow("roundtrip2", new Object[] { 1, "test" });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List     beans1 = getRows("roundtrip1");
-        List     beans2 = getRows("roundtrip2");
-        DynaBean bean1  = (DynaBean)beans1.get(0);
-        DynaBean bean2  = (DynaBean)beans2.get(0);
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
+        var bean1  = beans1.get(0);
+        var bean2  = beans2.get(0);
 
         assertEquals("test", ((String)bean1.get("pk")).trim());
-        assertEquals(new Integer(1),             bean2, "pk");
+        assertEqualsAttr(1,             bean2, "pk");
         assertEquals("test", ((String)bean2.get("fk")).trim());
     }
 
@@ -902,18 +907,18 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2), "text" });
+        insertRow("roundtrip", new Object[] { 1, 2, "text" });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1), beans.get(0), "pk");
-        assertEquals(new Integer(2), beans.get(0), "avalue1");
-        assertEquals((Object)"text", beans.get(0), "avalue2");
+        assertEqualsAttr(1, beans.get(0), "pk");
+        assertEqualsAttr(2, beans.get(0), "avalue1");
+        assertEqualsAttr((Object)"text", beans.get(0), "avalue2");
     }
 
     /**
@@ -955,18 +960,18 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2), "text" });
+        insertRow("roundtrip", new Object[] { 1, 2, "text" });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List     beans = getRows("roundtrip");
-        DynaBean bean  = (DynaBean)beans.get(0);
+        var beans = getRows("roundtrip");
+        var bean  = beans.get(0);
 
-        assertEquals(new Integer(1), bean, "pk");
-        assertEquals(new Integer(2), bean, "avalue1");
+        assertEqualsAttr(1, bean, "pk");
+        assertEqualsAttr(2, bean, "avalue1");
         assertEquals((Object)"text", ((String)bean.get("avalue2")).trim());
     }
 
@@ -1009,18 +1014,18 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2), "text" });
+        insertRow("roundtrip", new Object[] { 1, 2, "text" });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List     beans = getRows("roundtrip");
-        DynaBean bean  = (DynaBean)beans.get(0);
+        var beans = getRows("roundtrip");
+        var bean  = beans.get(0);
 
-        assertEquals(new Integer(1), bean, "pk");
-        assertEquals(new Integer(2), bean, "avalue1");
+        assertEqualsAttr(1, bean, "pk");
+        assertEqualsAttr(2, bean, "avalue1");
         assertEquals((Object)"text", ((String)bean.get("avalue2")).trim());
     }
 
@@ -1063,18 +1068,18 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2), "text" });
+        insertRow("roundtrip", new Object[] { 1, 2, "text" });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1), beans.get(0), "pk");
-        assertEquals(new Integer(2), beans.get(0), "avalue1");
-        assertEquals((Object)"text", beans.get(0), "avalue2");
+        assertEqualsAttr(1, beans.get(0), "pk");
+        assertEqualsAttr(2, beans.get(0), "avalue1");
+        assertEqualsAttr((Object)"text", beans.get(0), "avalue2");
     }
 
     /**
@@ -1101,17 +1106,17 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new BigDecimal("12345.12345") });
+        insertRow("roundtrip", new Object[] { 1, new BigDecimal("12345.12345") });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1), beans.get(0), "pk");
-        assertEquals(new BigDecimal("12345.12345"), beans.get(0), "avalue");
+        assertEqualsAttr(1, beans.get(0), "pk");
+        assertEqualsAttr(new BigDecimal("12345.12345"), beans.get(0), "avalue");
     }
 
     /**
@@ -1138,17 +1143,17 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new BigDecimal("12345.12345") });
+        insertRow("roundtrip", new Object[] { 1, new BigDecimal("12345.12345") });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1), beans.get(0), "pk");
-        assertEquals(new BigDecimal("12345.12345"), beans.get(0), "avalue");
+        assertEqualsAttr(1, beans.get(0), "pk");
+        assertEqualsAttr(new BigDecimal("12345.12345"), beans.get(0), "avalue");
     }
 
     /**
@@ -1180,9 +1185,9 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new BigDecimal("12345.12345"), beans.get(0), "pk");
+        assertEqualsAttr(new BigDecimal("12345.12345"), beans.get(0), "pk");
     }
 
     /**
@@ -1214,9 +1219,9 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new BigDecimal("12345.12345"), beans.get(0), "pk");
+        assertEqualsAttr(new BigDecimal("12345.12345"), beans.get(0), "pk");
     }
 
     /**
@@ -1256,19 +1261,19 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
         createDatabase(model1Xml);
 
         insertRow("roundtrip1", new Object[] { new BigDecimal("123456.12") });
-        insertRow("roundtrip2", new Object[] { new Integer(1), new BigDecimal("123456.12") });
+        insertRow("roundtrip2", new Object[] { 1, new BigDecimal("123456.12") });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
-        assertEquals(new BigDecimal("123456.12"), beans1.get(0), "pk");
-        assertEquals(new Integer(1),              beans2.get(0), "pk");
-        assertEquals(new BigDecimal("123456.12"), beans2.get(0), "fk");
+        assertEqualsAttr(new BigDecimal("123456.12"), beans1.get(0), "pk");
+        assertEqualsAttr(1,              beans2.get(0), "pk");
+        assertEqualsAttr(new BigDecimal("123456.12"), beans2.get(0), "fk");
     }
 
     /**
@@ -1308,19 +1313,19 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
         createDatabase(model1Xml);
 
         insertRow("roundtrip1", new Object[] { new BigDecimal("123456.12") });
-        insertRow("roundtrip2", new Object[] { new Integer(1), new BigDecimal("123456.12") });
+        insertRow("roundtrip2", new Object[] { 1, new BigDecimal("123456.12") });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
-        assertEquals(new BigDecimal("123456.12"), beans1.get(0), "pk");
-        assertEquals(new Integer(1),              beans2.get(0), "pk");
-        assertEquals(new BigDecimal("123456.12"), beans2.get(0), "fk");
+        assertEqualsAttr(new BigDecimal("123456.12"), beans1.get(0), "pk");
+        assertEqualsAttr(1,              beans2.get(0), "pk");
+        assertEqualsAttr(new BigDecimal("123456.12"), beans2.get(0), "fk");
     }
 
     /**
@@ -1362,18 +1367,18 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new BigDecimal("123456.12"), new Integer(2) });
+        insertRow("roundtrip", new Object[] { 1, new BigDecimal("123456.12"), 2 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1),              beans.get(0), "pk");
-        assertEquals(new BigDecimal("123456.12"), beans.get(0), "avalue1");
-        assertEquals(new Integer(2),              beans.get(0), "avalue2");
+        assertEqualsAttr(1,              beans.get(0), "pk");
+        assertEqualsAttr(new BigDecimal("123456.12"), beans.get(0), "avalue1");
+        assertEqualsAttr(2,              beans.get(0), "avalue2");
     }
 
     /**
@@ -1415,18 +1420,18 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new BigDecimal("123456.12"), new Integer(2) });
+        insertRow("roundtrip", new Object[] { 1, new BigDecimal("123456.12"), 2 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1),              beans.get(0), "pk");
-        assertEquals(new BigDecimal("123456.12"), beans.get(0), "avalue1");
-        assertEquals(new Integer(2),              beans.get(0), "avalue2");
+        assertEqualsAttr(1,              beans.get(0), "pk");
+        assertEqualsAttr(new BigDecimal("123456.12"), beans.get(0), "avalue1");
+        assertEqualsAttr(2,              beans.get(0), "avalue2");
     }
 
     /**
@@ -1468,18 +1473,18 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2), new BigDecimal("123456.12") });
+        insertRow("roundtrip", new Object[] { 1, 2, new BigDecimal("123456.12") });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1),              beans.get(0), "pk");
-        assertEquals(new Integer(2),              beans.get(0), "avalue1");
-        assertEquals(new BigDecimal("123456.12"), beans.get(0), "avalue2");
+        assertEqualsAttr(1,              beans.get(0), "pk");
+        assertEqualsAttr(2,              beans.get(0), "avalue1");
+        assertEqualsAttr(new BigDecimal("123456.12"), beans.get(0), "avalue2");
     }
 
     /**
@@ -1521,18 +1526,18 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2), new BigDecimal("123456.12") });
+        insertRow("roundtrip", new Object[] { 1, 2, new BigDecimal("123456.12") });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1),              beans.get(0), "pk");
-        assertEquals(new Integer(2),              beans.get(0), "avalue1");
-        assertEquals(new BigDecimal("123456.12"), beans.get(0), "avalue2");
+        assertEqualsAttr(1,              beans.get(0), "pk");
+        assertEqualsAttr(2,              beans.get(0), "avalue1");
+        assertEqualsAttr(new BigDecimal("123456.12"), beans.get(0), "avalue2");
     }
 
     /**
@@ -1559,17 +1564,17 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new BigDecimal("12345.1234") });
+        insertRow("roundtrip", new Object[] { 1, new BigDecimal("12345.1234") });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List     beans = getRows("roundtrip");
-        DynaBean bean  = (DynaBean)beans.get(0);
+        var beans = getRows("roundtrip");
+        var bean  = beans.get(0);
 
-        assertEquals(new Integer(1), bean, "pk");
+        assertEqualsAttr(1, bean, "pk");
         // Some DBs return the BigDecimal with the five digits scale, some don't
         assertTrue(bean.get("avalue").equals(new BigDecimal("12345.1234")) ||
                    bean.get("avalue").equals(new BigDecimal("12345.12340")));
@@ -1599,17 +1604,17 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new BigDecimal("12345.123") });
+        insertRow("roundtrip", new Object[] { 1, new BigDecimal("12345.123") });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1), beans.get(0), "pk");
-        assertEquals(new BigDecimal("12345.123"), beans.get(0), "avalue");
+        assertEqualsAttr(1, beans.get(0), "pk");
+        assertEqualsAttr(new BigDecimal("12345.123"), beans.get(0), "avalue");
     }
 
     /**
@@ -1641,8 +1646,8 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List     beans = getRows("roundtrip");
-        DynaBean bean  = (DynaBean)beans.get(0);
+        var beans = getRows("roundtrip");
+        var bean  = beans.get(0);
 
         // Some DBs return the BigDecimal with the three digits scale, some don't
         assertTrue(bean.get("pk").equals(new BigDecimal("12345.123")) ||
@@ -1678,9 +1683,9 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new BigDecimal("12345.123"), beans.get(0), "pk");
+        assertEqualsAttr(new BigDecimal("12345.123"), beans.get(0), "pk");
     }
 
     /**
@@ -1720,22 +1725,22 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
         createDatabase(model1Xml);
 
         insertRow("roundtrip1", new Object[] { new BigDecimal("123456.12") });
-        insertRow("roundtrip2", new Object[] { new Integer(1), new BigDecimal("123456.12") });
+        insertRow("roundtrip2", new Object[] { 1, new BigDecimal("123456.12") });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List     beans1 = getRows("roundtrip1");
-        List     beans2 = getRows("roundtrip2");
-        DynaBean bean1  = (DynaBean)beans1.get(0);
-        DynaBean bean2  = (DynaBean)beans2.get(0);
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
+        var bean1  = beans1.get(0);
+        var bean2  = beans2.get(0);
 
         // Some DBs return the BigDecimal with the three digits scale, some don't
         assertTrue(bean1.get("pk").equals(new BigDecimal("123456.12")) ||
                    bean1.get("pk").equals(new BigDecimal("123456.12000")));
-        assertEquals(new Integer(1),                 beans2.get(0), "pk");
+        assertEqualsAttr(1,                 beans2.get(0), "pk");
         assertTrue(bean2.get("fk").equals(new BigDecimal("123456.12")) ||
                    bean2.get("fk").equals(new BigDecimal("123456.12000")));
     }
@@ -1777,19 +1782,19 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
         createDatabase(model1Xml);
 
         insertRow("roundtrip1", new Object[] { new BigDecimal("123456.12") });
-        insertRow("roundtrip2", new Object[] { new Integer(1), new BigDecimal("123456.12") });
+        insertRow("roundtrip2", new Object[] { 1, new BigDecimal("123456.12") });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
-        assertEquals(new BigDecimal("123456.12"), beans1.get(0), "pk");
-        assertEquals(new Integer(1),              beans2.get(0), "pk");
-        assertEquals(new BigDecimal("123456.12"), beans2.get(0), "fk");
+        assertEqualsAttr(new BigDecimal("123456.12"), beans1.get(0), "pk");
+        assertEqualsAttr(1,              beans2.get(0), "pk");
+        assertEqualsAttr(new BigDecimal("123456.12"), beans2.get(0), "fk");
     }
 
     /**
@@ -1831,18 +1836,18 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new BigDecimal("123456.12"), new Integer(2) });
+        insertRow("roundtrip", new Object[] { 1, new BigDecimal("123456.12"), 2 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List     beans = getRows("roundtrip");
-        DynaBean bean  = (DynaBean)beans.get(0);
+        var beans = getRows("roundtrip");
+        var bean  = beans.get(0);
 
-        assertEquals(new Integer(1), bean, "pk");
-        assertEquals(new Integer(2), bean, "avalue2");
+        assertEqualsAttr(1, bean, "pk");
+        assertEqualsAttr(2, bean, "avalue2");
         assertTrue(new BigDecimal("123456.12").equals(bean.get("avalue1")) || new BigDecimal("123456.12000").equals(bean.get("avalue1")));
     }
 
@@ -1885,18 +1890,18 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new BigDecimal("123456.12"), new Integer(2) });
+        insertRow("roundtrip", new Object[] { 1, new BigDecimal("123456.12"), 2 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1),              beans.get(0), "pk");
-        assertEquals(new BigDecimal("123456.12"), beans.get(0), "avalue1");
-        assertEquals(new Integer(2),              beans.get(0), "avalue2");
+        assertEqualsAttr(1,              beans.get(0), "pk");
+        assertEqualsAttr(new BigDecimal("123456.12"), beans.get(0), "avalue1");
+        assertEqualsAttr(2,              beans.get(0), "avalue2");
     }
 
     /**
@@ -1938,18 +1943,18 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2), new BigDecimal("123456.12") });
+        insertRow("roundtrip", new Object[] { 1, 2, new BigDecimal("123456.12") });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List     beans = getRows("roundtrip");
-        DynaBean bean  = (DynaBean)beans.get(0);
+        var beans = getRows("roundtrip");
+        var bean  = beans.get(0);
 
-        assertEquals(new Integer(1), bean, "pk");
-        assertEquals(new Integer(2), bean, "avalue1");
+        assertEqualsAttr(1, bean, "pk");
+        assertEqualsAttr(2, bean, "avalue1");
         assertTrue(new BigDecimal("123456.12").equals(bean.get("avalue2")) || new BigDecimal("123456.12000").equals(bean.get("avalue2")));
     }
 
@@ -1992,18 +1997,18 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2), new BigDecimal("123456.12") });
+        insertRow("roundtrip", new Object[] { 1, 2, new BigDecimal("123456.12") });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1),              beans.get(0), "pk");
-        assertEquals(new Integer(2),              beans.get(0), "avalue1");
-        assertEquals(new BigDecimal("123456.12"), beans.get(0), "avalue2");
+        assertEqualsAttr(1,              beans.get(0), "pk");
+        assertEqualsAttr(2,              beans.get(0), "avalue1");
+        assertEqualsAttr(new BigDecimal("123456.12"), beans.get(0), "avalue2");
     }
 
     /**
@@ -2030,17 +2035,17 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), "test" });
+        insertRow("roundtrip", new Object[] { 1, "test" });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1), beans.get(0), "pk");
-        assertEquals((Object)"test", beans.get(0), "avalue");
+        assertEqualsAttr(1, beans.get(0), "pk");
+        assertEqualsAttr((Object)"test", beans.get(0), "avalue");
     }
 
     /**
@@ -2067,17 +2072,17 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2) });
+        insertRow("roundtrip", new Object[] { 1, 2 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1), beans.get(0), "pk");
-        assertEquals(new Integer(2), beans.get(0), "avalue");
+        assertEqualsAttr(1, beans.get(0), "pk");
+        assertEqualsAttr(2, beans.get(0), "avalue");
     }
 
     /**
@@ -2115,9 +2120,9 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new BigDecimal("12345678.12"), beans.get(0), "pk");
+        assertEqualsAttr(new BigDecimal("12345678.12"), beans.get(0), "pk");
     }
 
     /**
@@ -2155,9 +2160,9 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new BigDecimal("12345678.12"), beans.get(0), "pk");
+        assertEqualsAttr(new BigDecimal("12345678.12"), beans.get(0), "pk");
     }
 
     /**
@@ -2196,20 +2201,20 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip1", new Object[] { new Double(2.0) });
-        insertRow("roundtrip2", new Object[] { new Integer(1), new Double(2.0) });
+        insertRow("roundtrip1", new Object[] { 2.0 });
+        insertRow("roundtrip2", new Object[] { 1, 2.0 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
-        assertEquals(new Double(2.0), beans1.get(0), "pk");
-        assertEquals(new Integer(1),  beans2.get(0), "pk");
-        assertEquals(new Double(2.0), beans2.get(0), "fk");
+        assertEqualsAttr(2.0, beans1.get(0), "pk");
+        assertEqualsAttr(1,  beans2.get(0), "pk");
+        assertEqualsAttr(2.0, beans2.get(0), "fk");
     }
 
     /**
@@ -2248,20 +2253,20 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip1", new Object[] { new Double(2.0) });
-        insertRow("roundtrip2", new Object[] { new Integer(1), new Double(2.0) });
+        insertRow("roundtrip1", new Object[] { 2.0 });
+        insertRow("roundtrip2", new Object[] { 1, 2.0 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
-        assertEquals(new Double(2.0), beans1.get(0), "pk");
-        assertEquals(new Integer(1),  beans2.get(0), "pk");
-        assertEquals(new Double(2.0), beans2.get(0), "fk");
+        assertEqualsAttr(2.0, beans1.get(0), "pk");
+        assertEqualsAttr(1,  beans2.get(0), "pk");
+        assertEqualsAttr(2.0, beans2.get(0), "fk");
     }
 
     /**
@@ -2307,19 +2312,19 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
         createDatabase(model1Xml);
 
         insertRow("roundtrip1", new Object[] { "1234567890" });
-        insertRow("roundtrip2", new Object[] { new Integer(1), "1234567890" });
+        insertRow("roundtrip2", new Object[] { 1, "1234567890" });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
-        assertEquals((Object)"1234567890", beans1.get(0), "pk");
-        assertEquals(new Integer(1),       beans2.get(0), "pk");
-        assertEquals((Object)"1234567890", beans2.get(0), "fk");
+        assertEqualsAttr((Object)"1234567890", beans1.get(0), "pk");
+        assertEqualsAttr(1,       beans2.get(0), "pk");
+        assertEqualsAttr((Object)"1234567890", beans2.get(0), "fk");
     }
 
     /**
@@ -2364,20 +2369,20 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip1", new Object[] { new Double(2.0) });
-        insertRow("roundtrip2", new Object[] { new Integer(1), new Double(2.0) });
+        insertRow("roundtrip1", new Object[] { 2.0 });
+        insertRow("roundtrip2", new Object[] { 1, 2.0 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
-        assertEquals(new Double(2.0), beans1.get(0), "pk");
-        assertEquals(new Integer(1),  beans2.get(0), "pk");
-        assertEquals(new Double(2.0), beans2.get(0), "fk");
+        assertEqualsAttr(2.0, beans1.get(0), "pk");
+        assertEqualsAttr(1,  beans2.get(0), "pk");
+        assertEqualsAttr(2.0, beans2.get(0), "fk");
     }
 
     /**
@@ -2424,18 +2429,18 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
         // some databases (such as MySql) don't store micro-/nanoseconds
         time.setNanos(0);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2), time });
+        insertRow("roundtrip", new Object[] { 1, 2, time });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1), beans.get(0), "pk");
-        assertEquals(new Integer(2), beans.get(0), "avalue1");
-        assertEquals(time,           beans.get(0), "avalue2");
+        assertEqualsAttr(1, beans.get(0), "pk");
+        assertEqualsAttr(2, beans.get(0), "avalue1");
+        assertEqualsAttr(time,           beans.get(0), "avalue2");
     }
 
     /**
@@ -2482,18 +2487,18 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
         // some databases (such as MySql) don't store micro-/nanoseconds
         time.setNanos(0);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2), time });
+        insertRow("roundtrip", new Object[] { 1, 2, time });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1), beans.get(0), "pk");
-        assertEquals(new Integer(2), beans.get(0), "avalue1");
-        assertEquals(time,           beans.get(0), "avalue2");
+        assertEqualsAttr(1, beans.get(0), "pk");
+        assertEqualsAttr(2, beans.get(0), "avalue1");
+        assertEqualsAttr(time,           beans.get(0), "avalue2");
     }
 
     /**
@@ -2535,18 +2540,18 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2), "text" });
+        insertRow("roundtrip", new Object[] { 1, 2, "text" });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List     beans = getRows("roundtrip");
-        DynaBean bean  = (DynaBean)beans.get(0);
+        var beans = getRows("roundtrip");
+        var bean  = beans.get(0);
 
-        assertEquals(new Integer(1), bean, "pk");
-        assertEquals(new Integer(2), bean, "avalue1");
+        assertEqualsAttr(1, bean, "pk");
+        assertEqualsAttr(2, bean, "avalue1");
         assertEquals((Object)"text", ((String)bean.get("avalue2")).trim());
     }
 
@@ -2589,18 +2594,18 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2), "text" });
+        insertRow("roundtrip", new Object[] { 1, 2, "text" });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List     beans = getRows("roundtrip");
-        DynaBean bean  = (DynaBean)beans.get(0);
+        var beans = getRows("roundtrip");
+        var bean  = beans.get(0);
 
-        assertEquals(new Integer(1), bean, "pk");
-        assertEquals(new Integer(2), bean, "avalue1");
+        assertEqualsAttr(1, bean, "pk");
+        assertEqualsAttr(2, bean, "avalue1");
         assertEquals((Object)"text", ((String)bean.get("avalue2")).trim());
     }
 
@@ -2638,19 +2643,19 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        Object value = isSybase ? (Object)new BigDecimal("0") : new Integer(0);
+        Object value = isSybase ? (Object)new BigDecimal("0") : 0;
         
-        insertRow("roundtrip", new Object[] { new Integer(1), value });
+        insertRow("roundtrip", new Object[] { 1, value });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1), beans.get(0), "pk");
-        assertEquals(value,          beans.get(0), "avalue");
+        assertEqualsAttr(1, beans.get(0), "pk");
+        assertEqualsAttr(value,          beans.get(0), "avalue");
     }
 
     /**
@@ -2687,18 +2692,18 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1) });
+        insertRow("roundtrip", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List   beans = getRows("roundtrip");
-        Object value = isSybase ? (Object)new BigDecimal("1") : new Integer(1);
+        var beans = getRows("roundtrip");
+        Object value = isSybase ? (Object)new BigDecimal("1") : 1;
 
-        assertEquals(new Integer(1), beans.get(0), "pk");
-        assertEquals(value,          beans.get(0), "avalue");
+        assertEqualsAttr(1, beans.get(0), "pk");
+        assertEqualsAttr(value,          beans.get(0), "avalue");
     }
 
     /**
@@ -2728,7 +2733,7 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        Object value = isSybase ? (Object)new BigDecimal("5") : new Integer(5);
+        Object value = isSybase ? (Object)new BigDecimal("5") : 5;
         
         insertRow("roundtrip", new Object[] { value });
 
@@ -2737,9 +2742,9 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(value, beans.get(0), "pk");
+        assertEqualsAttr(value, beans.get(0), "pk");
     }
 
     /**
@@ -2771,18 +2776,18 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { null, new Integer(2) });
+        insertRow("roundtrip", new Object[] { null, 2 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List   beans = getRows("roundtrip");
-        Object value = isSybase ? (Object)new BigDecimal("1") : new Integer(1);
+        var beans = getRows("roundtrip");
+        Object value = isSybase ? (Object)new BigDecimal("1") : 1;
 
-        assertEquals(value,          beans.get(0), "pk");
-        assertEquals(new Integer(2), beans.get(0), "avalue");
+        assertEqualsAttr(value,          beans.get(0), "pk");
+        assertEqualsAttr(2, beans.get(0), "avalue");
     }
 
     /**
@@ -2835,22 +2840,22 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        Object value = isSybase ? (Object)new BigDecimal("0") : new Integer(0);
+        Object value = isSybase ? (Object)new BigDecimal("0") : 0;
 
         insertRow("roundtrip1", new Object[] { value });
-        insertRow("roundtrip2", new Object[] { new Integer(1), value });
+        insertRow("roundtrip2", new Object[] { 1, value });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
-        assertEquals(value,          beans1.get(0), "pk");
-        assertEquals(new Integer(1), beans2.get(0), "pk");
-        assertEquals(value,          beans2.get(0), "fk");
+        assertEqualsAttr(value,          beans1.get(0), "pk");
+        assertEqualsAttr(1, beans2.get(0), "pk");
+        assertEqualsAttr(value,          beans2.get(0), "fk");
     }
 
     /**
@@ -2903,22 +2908,22 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        Object value = isSybase ? (Object)new BigDecimal("1") : new Integer(1);
+        Object value = isSybase ? (Object)new BigDecimal("1") : 1;
 
         insertRow("roundtrip1", new Object[] { value });
-        insertRow("roundtrip2", new Object[] { new Integer(1) });
+        insertRow("roundtrip2", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
-        assertEquals(value,          beans1.get(0), "pk");
-        assertEquals(new Integer(1), beans2.get(0), "pk");
-        assertEquals(value,          beans2.get(0), "fk");
+        assertEqualsAttr(value,          beans1.get(0), "pk");
+        assertEqualsAttr(1, beans2.get(0), "pk");
+        assertEqualsAttr(value,          beans2.get(0), "fk");
     }
 
     /**
@@ -2971,22 +2976,22 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        Object value = isSybase ? (Object)new BigDecimal("0") : new Integer(0);
+        Object value = isSybase ? (Object)new BigDecimal("0") : 0;
 
         insertRow("roundtrip1", new Object[] { value });
-        insertRow("roundtrip2", new Object[] { new Integer(1), value });
+        insertRow("roundtrip2", new Object[] { 1, value });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
-        assertEquals(value,          beans1.get(0), "pk");
-        assertEquals(new Integer(1), beans2.get(0), "pk");
-        assertEquals(value,          beans2.get(0), "fk");
+        assertEqualsAttr(value,          beans1.get(0), "pk");
+        assertEqualsAttr(1, beans2.get(0), "pk");
+        assertEqualsAttr(value,          beans2.get(0), "fk");
     }
 
     /**
@@ -3041,22 +3046,22 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip1", new Object[] { null, new Integer(2) });
-        insertRow("roundtrip2", new Object[] { new Integer(1) });
+        insertRow("roundtrip1", new Object[] { null, 2 });
+        insertRow("roundtrip2", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        Object value  = isSybase ? (Object)new BigDecimal("1") : new Integer(1);
-        List   beans1 = getRows("roundtrip1");
-        List   beans2 = getRows("roundtrip2");
+        Object value  = isSybase ? (Object)new BigDecimal("1") : 1;
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
-        assertEquals(value,          beans1.get(0), "pk");
-        assertEquals(new Integer(2), beans1.get(0), "avalue");
-        assertEquals(new Integer(1), beans2.get(0), "pk");
-        assertEquals(value,          beans2.get(0), "fk");
+        assertEqualsAttr(value,          beans1.get(0), "pk");
+        assertEqualsAttr(2, beans1.get(0), "avalue");
+        assertEqualsAttr(1, beans2.get(0), "pk");
+        assertEqualsAttr(value,          beans2.get(0), "fk");
     }
 
     /**
@@ -3104,24 +3109,24 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        Object    value = isSybase ? (Object)new BigDecimal("0") : new Integer(0);
+        Object    value = isSybase ? (Object)new BigDecimal("0") : 0;
         Timestamp time  = new Timestamp(new Date().getTime());
 
         // to avoid problems with the database's time resolution
         time.setNanos(0);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), value, time });
+        insertRow("roundtrip", new Object[] { 1, value, time });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1), beans.get(0), "pk");
-        assertEquals(time,           beans.get(0), "avalue2");
-        assertEquals(value,          beans.get(0), "avalue1");
+        assertEqualsAttr(1, beans.get(0), "pk");
+        assertEqualsAttr(time,           beans.get(0), "avalue2");
+        assertEqualsAttr(value,          beans.get(0), "avalue1");
     }
 
     /**
@@ -3169,19 +3174,19 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), "test" });
+        insertRow("roundtrip", new Object[] { 1, "test" });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        Object value = isSybase ? (Object)new BigDecimal("1") : new Integer(1);
-        List   beans = getRows("roundtrip");
+        Object value = isSybase ? (Object)new BigDecimal("1") : 1;
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1), beans.get(0), "pk");
-        assertEquals((Object)"test", beans.get(0), "avalue1");
-        assertEquals(value,          beans.get(0), "avalue2");
+        assertEqualsAttr(1, beans.get(0), "pk");
+        assertEqualsAttr((Object)"test", beans.get(0), "avalue1");
+        assertEqualsAttr(value,          beans.get(0), "avalue2");
     }
 
     /**
@@ -3229,20 +3234,20 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        Object value = isSybase ? (Object)new BigDecimal("0") : new Integer(0);
+        Object value = isSybase ? (Object)new BigDecimal("0") : 0;
 
-        insertRow("roundtrip", new Object[] { new Integer(1), "test", value });
+        insertRow("roundtrip", new Object[] { 1, "test", value });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1), beans.get(0), "pk");
-        assertEquals((Object)"test", beans.get(0), "avalue1");
-        assertEquals(value,          beans.get(0), "avalue2");
+        assertEqualsAttr(1, beans.get(0), "pk");
+        assertEqualsAttr((Object)"test", beans.get(0), "avalue1");
+        assertEqualsAttr(value,          beans.get(0), "avalue2");
     }
 
     /**
@@ -3295,19 +3300,19 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
         // to avoid problems with the database's time resolution
         time.setNanos(0);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), null, time });
+        insertRow("roundtrip", new Object[] { 1, null, time });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List   beans = getRows("roundtrip");
-        Object value = isSybase ? (Object)new BigDecimal("1") : new Integer(1);
+        var beans = getRows("roundtrip");
+        Object value = isSybase ? (Object)new BigDecimal("1") : 1;
 
-        assertEquals(new Integer(1), beans.get(0), "pk");
-        assertEquals(value,          beans.get(0), "avalue1");
-        assertEquals(time,           beans.get(0), "avalue2");
+        assertEqualsAttr(1, beans.get(0), "pk");
+        assertEqualsAttr(value,          beans.get(0), "avalue1");
+        assertEqualsAttr(time,           beans.get(0), "avalue2");
     }
 
     /**
@@ -3334,17 +3339,17 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Double(1.0) });
+        insertRow("roundtrip", new Object[] { 1, 1.0 });
 
     	alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1),  beans.get(0), "pk");
-        assertEquals(new Double(1.0), beans.get(0), "avalue");
+        assertEqualsAttr(1,  beans.get(0), "pk");
+        assertEqualsAttr(1.0, beans.get(0), "avalue");
     }
 
     /**
@@ -3371,17 +3376,17 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2) });
+        insertRow("roundtrip", new Object[] { 1, 2 });
 
     	alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1), beans.get(0), "pk");
-        assertEquals(new Integer(2), beans.get(0), "avalue");
+        assertEqualsAttr(1, beans.get(0), "pk");
+        assertEqualsAttr(2, beans.get(0), "avalue");
     }
 
     /**
@@ -3408,17 +3413,17 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1) });
+        insertRow("roundtrip", new Object[] { 1 });
 
     	alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1), beans.get(0), "pk");
-        assertEquals((Object)"test", beans.get(0), "avalue");
+        assertEqualsAttr(1, beans.get(0), "pk");
+        assertEqualsAttr((Object)"test", beans.get(0), "avalue");
     }
 
     /**
@@ -3450,22 +3455,22 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
         // some databases (such as MySql) don't store micro-/nanoseconds
         time.setNanos(0);
 
-        insertRow("roundtrip", new Object[] { time, new Integer(1) });
+        insertRow("roundtrip", new Object[] { time, 1 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        insertRow("roundtrip", new Object[] { null, new Integer(2) });
+        insertRow("roundtrip", new Object[] { null, 2 });
 
-        List      beans       = getRows("roundtrip", "avalue");
+        var beans       = getRows("roundtrip", "avalue");
         Timestamp defaultTime = Timestamp.valueOf("2000-01-01 00:00:00");
 
-        assertEquals(time,           beans.get(0), "pk");
-        assertEquals(new Integer(1), beans.get(0), "avalue");
-        assertEquals(defaultTime,    beans.get(1), "pk");
-        assertEquals(new Integer(2), beans.get(1), "avalue");
+        assertEqualsAttr(time,           beans.get(0), "pk");
+        assertEqualsAttr(1, beans.get(0), "avalue");
+        assertEqualsAttr(defaultTime,    beans.get(1), "pk");
+        assertEqualsAttr(2, beans.get(1), "avalue");
     }
 
     /**
@@ -3492,21 +3497,21 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { null, new Integer(1) });
+        insertRow("roundtrip", new Object[] { null, 1 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        insertRow("roundtrip", new Object[] { null, new Integer(2) });
+        insertRow("roundtrip", new Object[] { null, 2 });
 
-        List beans = getRows("roundtrip", "avalue");
+        var beans = getRows("roundtrip", "avalue");
 
-        assertEquals((Object)"old",  beans.get(0), "pk");
-        assertEquals(new Integer(1), beans.get(0), "avalue");
-        assertEquals((Object)"new",  beans.get(1), "pk");
-        assertEquals(new Integer(2), beans.get(1), "avalue");
+        assertEqualsAttr((Object)"old",  beans.get(0), "pk");
+        assertEqualsAttr(1, beans.get(0), "avalue");
+        assertEqualsAttr((Object)"new",  beans.get(1), "pk");
+        assertEqualsAttr(2, beans.get(1), "avalue");
     }
 
     /**
@@ -3533,19 +3538,19 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { null, new Integer(1) });
+        insertRow("roundtrip", new Object[] { null, 1 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List     beans = getRows("roundtrip");
-        DynaBean bean  = (DynaBean)beans.get(0);
+        var beans = getRows("roundtrip");
+        var bean  = beans.get(0);
 
         // Some DBs return the BigDecimal with the two digits scale, some don't
         assertTrue(bean.get("pk").equals(new BigDecimal("2")) || bean.get("pk").equals(new BigDecimal("2.00")));
-        assertEquals(new Integer(1), bean, "avalue");
+        assertEqualsAttr(1, bean, "avalue");
     }
 
     /**
@@ -3585,7 +3590,7 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
         createDatabase(model1Xml);
 
         insertRow("roundtrip1", new Object[] { "test" });
-        insertRow("roundtrip2", new Object[] { new Integer(1), "test" });
+        insertRow("roundtrip2", new Object[] { 1, "test" });
 
         alterDatabase(model2Xml);
 
@@ -3593,17 +3598,17 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
                      readModelFromDatabase("roundtriptest"));
 
         insertRow("roundtrip1", new Object[] { "text" });
-        insertRow("roundtrip2", new Object[] { new Integer(2) });
+        insertRow("roundtrip2", new Object[] { 2 });
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
-        assertEquals((Object)"test", beans1.get(0), "pk");
-        assertEquals((Object)"text", beans1.get(1), "pk");
-        assertEquals(new Integer(1), beans2.get(0), "pk");
-        assertEquals((Object)"test", beans2.get(0), "fk");
-        assertEquals(new Integer(2), beans2.get(1), "pk");
-        assertEquals((Object)"text", beans2.get(1), "fk");
+        assertEqualsAttr((Object)"test", beans1.get(0), "pk");
+        assertEqualsAttr((Object)"text", beans1.get(1), "pk");
+        assertEqualsAttr(1, beans2.get(0), "pk");
+        assertEqualsAttr((Object)"test", beans2.get(0), "fk");
+        assertEqualsAttr(2, beans2.get(1), "pk");
+        assertEqualsAttr((Object)"text", beans2.get(1), "fk");
     }
 
     /**
@@ -3642,26 +3647,26 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip1", new Object[] { new Double(2.0) });
-        insertRow("roundtrip2", new Object[] { new Integer(1) });
+        insertRow("roundtrip1", new Object[] { 2.0 });
+        insertRow("roundtrip2", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        insertRow("roundtrip1", new Object[] { new Double(3.0) });
-        insertRow("roundtrip2", new Object[] { new Integer(2) });
+        insertRow("roundtrip1", new Object[] { 3.0 });
+        insertRow("roundtrip2", new Object[] { 2 });
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
-        assertEquals(new Double(2.0), beans1.get(0), "pk");
-        assertEquals(new Double(3.0), beans1.get(1), "pk");
-        assertEquals(new Integer(1),  beans2.get(0), "pk");
-        assertEquals(new Double(2.0), beans2.get(0), "fk");
-        assertEquals(new Integer(2),  beans2.get(1), "pk");
-        assertEquals(new Double(3.0), beans2.get(1), "fk");
+        assertEqualsAttr(2.0, beans1.get(0), "pk");
+        assertEqualsAttr(3.0, beans1.get(1), "pk");
+        assertEqualsAttr(1,  beans2.get(0), "pk");
+        assertEqualsAttr(2.0, beans2.get(0), "fk");
+        assertEqualsAttr(2,  beans2.get(1), "pk");
+        assertEqualsAttr(3.0, beans2.get(1), "fk");
     }
 
     /**
@@ -3700,20 +3705,20 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip1", new Object[] { new Integer(2) });
-        insertRow("roundtrip2", new Object[] { new Integer(1) });
+        insertRow("roundtrip1", new Object[] { 2 });
+        insertRow("roundtrip2", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
-        assertEquals(new Integer(2), beans1.get(0), "pk");
-        assertEquals(new Integer(1), beans2.get(0), "pk");
-        assertEquals(new Integer(2), beans2.get(0), "fk");
+        assertEqualsAttr(2, beans1.get(0), "pk");
+        assertEqualsAttr(1, beans2.get(0), "pk");
+        assertEqualsAttr(2, beans2.get(0), "fk");
     }
 
     /**
@@ -3754,28 +3759,28 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip1", new Object[] { new BigDecimal("0"), new Integer(1) });
-        insertRow("roundtrip2", new Object[] { new Integer(1), new BigDecimal("0") });
+        insertRow("roundtrip1", new Object[] { new BigDecimal("0"), 1 });
+        insertRow("roundtrip2", new Object[] { 1, new BigDecimal("0") });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        insertRow("roundtrip1", new Object[] { null, new Integer(2) });
-        insertRow("roundtrip2", new Object[] { new Integer(2) });
+        insertRow("roundtrip1", new Object[] { null, 2 });
+        insertRow("roundtrip2", new Object[] { 2 });
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
-        assertEquals(new BigDecimal("0"), beans1.get(0), "pk");
-        assertEquals(new Integer(1),      beans1.get(0), "avalue");
-        assertEquals(new BigDecimal("1"), beans1.get(1), "pk");
-        assertEquals(new Integer(2),      beans1.get(1), "avalue");
-        assertEquals(new Integer(1),      beans2.get(0), "pk");
-        assertEquals(new BigDecimal("0"), beans2.get(0), "fk");
-        assertEquals(new Integer(2),      beans2.get(1), "pk");
-        assertEquals(new BigDecimal("1"), beans2.get(1), "fk");
+        assertEqualsAttr(new BigDecimal("0"), beans1.get(0), "pk");
+        assertEqualsAttr(1,      beans1.get(0), "avalue");
+        assertEqualsAttr(new BigDecimal("1"), beans1.get(1), "pk");
+        assertEqualsAttr(2,      beans1.get(1), "avalue");
+        assertEqualsAttr(1,      beans2.get(0), "pk");
+        assertEqualsAttr(new BigDecimal("0"), beans2.get(0), "fk");
+        assertEqualsAttr(2,      beans2.get(1), "pk");
+        assertEqualsAttr(new BigDecimal("1"), beans2.get(1), "fk");
     }
 
     /**
@@ -3816,28 +3821,28 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip1", new Object[] { null, new Integer(1) });
-        insertRow("roundtrip2", new Object[] { new Integer(1) });
+        insertRow("roundtrip1", new Object[] { null, 1 });
+        insertRow("roundtrip2", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        insertRow("roundtrip1", new Object[] { null, new Integer(2) });
-        insertRow("roundtrip2", new Object[] { new Integer(2) });
+        insertRow("roundtrip1", new Object[] { null, 2 });
+        insertRow("roundtrip2", new Object[] { 2 });
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
-        assertEquals(new Integer(2), beans1.get(0), "pk");
-        assertEquals(new Integer(1), beans1.get(0), "avalue");
-        assertEquals(new Integer(3), beans1.get(1), "pk");
-        assertEquals(new Integer(2), beans1.get(1), "avalue");
-        assertEquals(new Integer(1), beans2.get(0), "pk");
-        assertEquals(new Integer(2), beans2.get(0), "fk");
-        assertEquals(new Integer(2), beans2.get(1), "pk");
-        assertEquals(new Integer(3), beans2.get(1), "fk");
+        assertEqualsAttr(2, beans1.get(0), "pk");
+        assertEqualsAttr(1, beans1.get(0), "avalue");
+        assertEqualsAttr(3, beans1.get(1), "pk");
+        assertEqualsAttr(2, beans1.get(1), "avalue");
+        assertEqualsAttr(1, beans2.get(0), "pk");
+        assertEqualsAttr(2, beans2.get(0), "fk");
+        assertEqualsAttr(2, beans2.get(1), "pk");
+        assertEqualsAttr(3, beans2.get(1), "fk");
     }
 
     /**
@@ -3878,21 +3883,21 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip1", new Object[] { null, new Integer(1) });
-        insertRow("roundtrip2", new Object[] { new Integer(1) });
+        insertRow("roundtrip1", new Object[] { null, 1 });
+        insertRow("roundtrip2", new Object[] { 1 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
-        assertEquals((Object)"text", beans1.get(0), "pk");
-        assertEquals(new Integer(1), beans1.get(0), "avalue");
-        assertEquals(new Integer(1), beans2.get(0), "pk");
-        assertEquals((Object)"text", beans2.get(0), "fk");
+        assertEqualsAttr((Object)"text", beans1.get(0), "pk");
+        assertEqualsAttr(1, beans1.get(0), "avalue");
+        assertEqualsAttr(1, beans2.get(0), "pk");
+        assertEqualsAttr((Object)"text", beans2.get(0), "fk");
     }
 
     /**
@@ -3939,23 +3944,23 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
         // some databases (such as MySql) don't store micro-/nanoseconds
         time.setNanos(0);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2), time });
+        insertRow("roundtrip", new Object[] { 1, 2, time });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        insertRow("roundtrip", new Object[] { new Integer(2), null, time });
+        insertRow("roundtrip", new Object[] { 2, null, time });
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1), beans.get(0), "pk");
-        assertEquals(new Integer(2), beans.get(0), "avalue1");
-        assertEquals(time,           beans.get(0), "avalue2");
-        assertEquals(new Integer(2), beans.get(1), "pk");
-        assertEquals(new Integer(3), beans.get(1), "avalue1");
-        assertEquals(time,           beans.get(1), "avalue2");
+        assertEqualsAttr(1, beans.get(0), "pk");
+        assertEqualsAttr(2, beans.get(0), "avalue1");
+        assertEqualsAttr(time,           beans.get(0), "avalue2");
+        assertEqualsAttr(2, beans.get(1), "pk");
+        assertEqualsAttr(3, beans.get(1), "avalue1");
+        assertEqualsAttr(time,           beans.get(1), "avalue2");
     }
 
     /**
@@ -3997,23 +4002,23 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2) });
+        insertRow("roundtrip", new Object[] { 1, 2 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        insertRow("roundtrip", new Object[] { new Integer(2), new Integer(3) });
+        insertRow("roundtrip", new Object[] { 2, 3 });
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1),      beans.get(0), "pk");
-        assertEquals(new Integer(2),      beans.get(0), "avalue1");
-        assertEquals(new BigDecimal("3"), beans.get(0), "avalue2");
-        assertEquals(new Integer(2),      beans.get(1), "pk");
-        assertEquals(new Integer(3),      beans.get(1), "avalue1");
-        assertEquals(new BigDecimal("4"), beans.get(1), "avalue2");
+        assertEqualsAttr(1,      beans.get(0), "pk");
+        assertEqualsAttr(2,      beans.get(0), "avalue1");
+        assertEqualsAttr(new BigDecimal("3"), beans.get(0), "avalue2");
+        assertEqualsAttr(2,      beans.get(1), "pk");
+        assertEqualsAttr(3,      beans.get(1), "avalue1");
+        assertEqualsAttr(new BigDecimal("4"), beans.get(1), "avalue2");
     }
 
     /**
@@ -4055,23 +4060,23 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), null, new BigDecimal("3") });
+        insertRow("roundtrip", new Object[] { 1, null, new BigDecimal("3") });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        insertRow("roundtrip", new Object[] { new Integer(2), "test", new BigDecimal("4") });
+        insertRow("roundtrip", new Object[] { 2, "test", new BigDecimal("4") });
 
-        List beans = getRows("roundtrip", "pk");
+        var beans = getRows("roundtrip", "pk");
 
-        assertEquals(new Integer(1),      beans.get(0), "pk");
-        assertEquals((Object)"text",      beans.get(0), "avalue1");
-        assertEquals(new BigDecimal("3"), beans.get(0), "avalue2");
-        assertEquals(new Integer(2),      beans.get(1), "pk");
-        assertEquals((Object)"test",      beans.get(1), "avalue1");
-        assertEquals(new BigDecimal("4"), beans.get(1), "avalue2");
+        assertEqualsAttr(1,      beans.get(0), "pk");
+        assertEqualsAttr((Object)"text",      beans.get(0), "avalue1");
+        assertEqualsAttr(new BigDecimal("3"), beans.get(0), "avalue2");
+        assertEqualsAttr(2,      beans.get(1), "pk");
+        assertEqualsAttr((Object)"test",      beans.get(1), "avalue1");
+        assertEqualsAttr(new BigDecimal("4"), beans.get(1), "avalue2");
     }
 
     /**
@@ -4118,24 +4123,24 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
         // some databases (such as MySql) don't store micro-/nanoseconds
         time.setNanos(0);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(2), time });
+        insertRow("roundtrip", new Object[] { 1, 2, time });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        insertRow("roundtrip", new Object[] { new Integer(2), new Integer(3) });
+        insertRow("roundtrip", new Object[] { 2, 3 });
 
-        List      beans       = getRows("roundtrip");
+        var beans       = getRows("roundtrip");
         Timestamp defaultTime = Timestamp.valueOf("2000-01-01 00:00:00");
 
-        assertEquals(new Integer(1), beans.get(0), "pk");
-        assertEquals(new Integer(2), beans.get(0), "avalue1");
-        assertEquals(time,           beans.get(0), "avalue2");
-        assertEquals(new Integer(2), beans.get(1), "pk");
-        assertEquals(new Integer(3), beans.get(1), "avalue1");
-        assertEquals(defaultTime,    beans.get(1), "avalue2");
+        assertEqualsAttr(1, beans.get(0), "pk");
+        assertEqualsAttr(2, beans.get(0), "avalue1");
+        assertEqualsAttr(time,           beans.get(0), "avalue2");
+        assertEqualsAttr(2, beans.get(1), "pk");
+        assertEqualsAttr(3, beans.get(1), "avalue1");
+        assertEqualsAttr(defaultTime,    beans.get(1), "avalue2");
     }
 
     /**
@@ -4177,23 +4182,23 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), null, new BigDecimal("2") });
+        insertRow("roundtrip", new Object[] { 1, null, new BigDecimal("2") });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        insertRow("roundtrip", new Object[] { new Integer(2), null, new BigDecimal("3") });
+        insertRow("roundtrip", new Object[] { 2, null, new BigDecimal("3") });
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1),      beans.get(0), "pk");
-        assertEquals(new Integer(3),      beans.get(0), "avalue1");
-        assertEquals(new BigDecimal("2"), beans.get(0), "avalue2");
-        assertEquals(new Integer(2),      beans.get(1), "pk");
-        assertEquals(new Integer(4),      beans.get(1), "avalue1");
-        assertEquals(new BigDecimal("3"), beans.get(1), "avalue2");
+        assertEqualsAttr(1,      beans.get(0), "pk");
+        assertEqualsAttr(3,      beans.get(0), "avalue1");
+        assertEqualsAttr(new BigDecimal("2"), beans.get(0), "avalue2");
+        assertEqualsAttr(2,      beans.get(1), "pk");
+        assertEqualsAttr(4,      beans.get(1), "avalue1");
+        assertEqualsAttr(new BigDecimal("3"), beans.get(1), "avalue2");
     }
 
     /**
@@ -4235,23 +4240,23 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new Integer(3) });
+        insertRow("roundtrip", new Object[] { 1, 3 });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        insertRow("roundtrip", new Object[] { new Integer(2), new Integer(4), "test" });
+        insertRow("roundtrip", new Object[] { 2, 4, "test" });
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals(new Integer(1), beans.get(0), "pk");
-        assertEquals(new Integer(3), beans.get(0), "avalue1");
-        assertEquals((Object)"text", beans.get(0), "avalue2");
-        assertEquals(new Integer(2), beans.get(1), "pk");
-        assertEquals(new Integer(4), beans.get(1), "avalue1");
-        assertEquals((Object)"test", beans.get(1), "avalue2");
+        assertEqualsAttr(1, beans.get(0), "pk");
+        assertEqualsAttr(3, beans.get(0), "avalue1");
+        assertEqualsAttr((Object)"text", beans.get(0), "avalue2");
+        assertEqualsAttr(2, beans.get(1), "pk");
+        assertEqualsAttr(4, beans.get(1), "avalue1");
+        assertEqualsAttr((Object)"test", beans.get(1), "avalue2");
     }
 
     /**
@@ -4278,16 +4283,16 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), "test" });
+        insertRow("roundtrip", new Object[] { 1, "test" });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals((Object)"test", beans.get(0), "avalue");
+        assertEqualsAttr((Object)"test", beans.get(0), "avalue");
     }
 
     /**
@@ -4314,15 +4319,15 @@ public class TestChangeColumn extends TestAgainstLiveDatabaseBase
 
         createDatabase(model1Xml);
 
-        insertRow("roundtrip", new Object[] { new Integer(1), new BigDecimal("12345678.12") });
+        insertRow("roundtrip", new Object[] { 1, new BigDecimal("12345678.12") });
 
         alterDatabase(model2Xml);
 
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
-        assertEquals((Object)"12345678", beans.get(0), "avalue");
+        assertEqualsAttr((Object)"12345678", beans.get(0), "avalue");
     }
 }

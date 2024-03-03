@@ -19,8 +19,6 @@ package org.apache.ddlutils.platform;
  * under the License.
  */
 
-import java.util.Map;
-
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.ddlutils.TestBase;
 import org.apache.ddlutils.dynabean.SqlDynaBean;
@@ -28,6 +26,11 @@ import org.apache.ddlutils.dynabean.SqlDynaClass;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
+
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests the {@link org.apache.ddlutils.PlatformImplBase} (abstract) class.

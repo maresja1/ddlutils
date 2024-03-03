@@ -19,6 +19,14 @@ package org.apache.ddlutils.io;
  * under the License.
  */
 
+import org.apache.commons.beanutils.DynaBean;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.ddlutils.dynabean.SqlDynaBean;
+import org.apache.ddlutils.model.Column;
+import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.Table;
+
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -30,21 +38,16 @@ import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
-import junit.framework.TestCase;
-import org.apache.commons.beanutils.DynaBean;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang.StringUtils;
-import org.apache.ddlutils.dynabean.SqlDynaBean;
-import org.apache.ddlutils.model.Column;
-import org.apache.ddlutils.model.Database;
-import org.apache.ddlutils.model.Table;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Tests the {@link org.apache.ddlutils.io.DataReader} and {@link org.apache.ddlutils.io.DataWriter} classes.
  * 
  * @version $Revision: 289996 $
  */
-public class TestDataReaderAndWriter extends TestCase
+public class TestDataReaderAndWriter
 {
     /**
      * A test data sink. There is no need to call start/end as the don't do anything anyways in this class.
@@ -740,7 +743,7 @@ public class TestDataReaderAndWriter extends TestCase
 
         SqlDynaBean bean = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set("value", testedValue);
 
         roundtripTest(model, bean, "ISO-8859-1",
@@ -769,7 +772,7 @@ public class TestDataReaderAndWriter extends TestCase
 
         SqlDynaBean bean = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set("value", testedValue);
 
         roundtripTest(model, bean, "ISO-8859-1",
@@ -806,7 +809,7 @@ public class TestDataReaderAndWriter extends TestCase
 
         SqlDynaBean  bean = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set("value1", testedValue1);
         bean.set("value2", testedValue2);
         bean.set("value3", testedValue3);
@@ -838,7 +841,7 @@ public class TestDataReaderAndWriter extends TestCase
 
         SqlDynaBean bean = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set("value", testedValue);
 
         roundtripTest(model, bean, "UTF-8",
@@ -867,7 +870,7 @@ public class TestDataReaderAndWriter extends TestCase
 
         SqlDynaBean bean = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set("value", testedValue);
 
         roundtripTest(model, bean, "UTF-8",
@@ -895,7 +898,7 @@ public class TestDataReaderAndWriter extends TestCase
 
         SqlDynaBean bean = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set("value", testedValue);
 
         roundtripTest(model, bean, "UTF-8",
@@ -934,7 +937,7 @@ public class TestDataReaderAndWriter extends TestCase
         SqlDynaBean bean        = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
         String      testedValue = "Some Text";
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set("value", testedValue);
 
         roundtripTest(model, bean, "UTF-8",
@@ -971,7 +974,7 @@ public class TestDataReaderAndWriter extends TestCase
         SqlDynaBean bean        = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
         String      testedValue = "Some Text";
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set("value", testedValue);
 
         roundtripTest(model, bean, "UTF-8",
@@ -1008,7 +1011,7 @@ public class TestDataReaderAndWriter extends TestCase
         SqlDynaBean bean        = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
         String      testedValue = "Some Text";
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set("value", testedValue);
 
         roundtripTest(model, bean, "UTF-8",
@@ -1045,7 +1048,7 @@ public class TestDataReaderAndWriter extends TestCase
         SqlDynaBean bean        = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
         String      testedValue = "Some Text";
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set("value", testedValue);
 
         roundtripTest(model, bean, "UTF-8",
@@ -1078,7 +1081,7 @@ public class TestDataReaderAndWriter extends TestCase
 
         SqlDynaBean bean = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set("value", testedValue);
 
         roundtripTest(model, bean, "UTF-8",
@@ -1106,7 +1109,7 @@ public class TestDataReaderAndWriter extends TestCase
 
         SqlDynaBean bean = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set("value", testedValue);
 
         roundtripTest(model, bean, "UTF-8",
@@ -1134,7 +1137,7 @@ public class TestDataReaderAndWriter extends TestCase
 
         SqlDynaBean bean = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set("value", testedValue);
 
         roundtripTest(model, bean, "UTF-8",
@@ -1163,7 +1166,7 @@ public class TestDataReaderAndWriter extends TestCase
 
         SqlDynaBean bean = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set("the value", testedValue);
 
         roundtripTest(model, bean, "UTF-8",
@@ -1193,7 +1196,7 @@ public class TestDataReaderAndWriter extends TestCase
 
         SqlDynaBean bean = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set("the value", testedValue);
 
         roundtripTest(model, bean, "UTF-8",
@@ -1224,7 +1227,7 @@ public class TestDataReaderAndWriter extends TestCase
 
         SqlDynaBean bean = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set(columnName, testedValue);
 
         roundtripTest(model, bean, "UTF-8",
@@ -1258,7 +1261,7 @@ public class TestDataReaderAndWriter extends TestCase
 
         SqlDynaBean bean = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set(columnName, testedValue);
 
         roundtripTest(model, bean, "UTF-8",
@@ -1292,7 +1295,7 @@ public class TestDataReaderAndWriter extends TestCase
 
         SqlDynaBean bean = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set(columnName, testedValue);
 
         roundtripTest(model, bean, "UTF-8",
@@ -1325,7 +1328,7 @@ public class TestDataReaderAndWriter extends TestCase
 
         SqlDynaBean bean = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set("the value", testedValue);
 
         roundtripTest(model, bean, "UTF-8",
@@ -1356,7 +1359,7 @@ public class TestDataReaderAndWriter extends TestCase
 
         SqlDynaBean bean = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set(columnName, testedValue);
 
         roundtripTest(model, bean, "UTF-8",
@@ -1399,7 +1402,7 @@ public class TestDataReaderAndWriter extends TestCase
         SqlDynaBean bean        = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
         String      testedValue = StringUtils.repeat("the\u0000value", 40);
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set(columnName, testedValue);
 
         roundtripTest(model, bean, "UTF-8",
@@ -1431,7 +1434,7 @@ public class TestDataReaderAndWriter extends TestCase
 
         SqlDynaBean bean = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set("value", testedValue);
 
         roundtripTest(model, bean, "UTF-8",
@@ -1470,7 +1473,7 @@ public class TestDataReaderAndWriter extends TestCase
         SqlDynaBean bean        = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
         String      testedValue = "Some Text";
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set(columnName, testedValue);
 
         roundtripTest(model, bean, "UTF-8",
@@ -1512,7 +1515,7 @@ public class TestDataReaderAndWriter extends TestCase
         SqlDynaBean bean        = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
         String      testedValue = "Some Text";
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set(columnName, testedValue);
 
         roundtripTest(model, bean, "UTF-8",
@@ -1551,7 +1554,7 @@ public class TestDataReaderAndWriter extends TestCase
         SqlDynaBean bean        = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
         String      testedValue = "Some Text";
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set(columnName, testedValue);
 
         roundtripTest(model, bean, "UTF-8",
@@ -1590,7 +1593,7 @@ public class TestDataReaderAndWriter extends TestCase
         SqlDynaBean bean        = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
         String      testedValue = "Some Text";
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set(columnName, testedValue);
 
         roundtripTest(model, bean, "UTF-8",
@@ -1619,7 +1622,7 @@ public class TestDataReaderAndWriter extends TestCase
 
         SqlDynaBean bean = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set("column", testedValue);
 
         roundtripTest(model, bean, "UTF-8",
@@ -1646,7 +1649,7 @@ public class TestDataReaderAndWriter extends TestCase
 
         SqlDynaBean bean = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set("column-name", testedValue);
 
         roundtripTest(model, bean, "UTF-8",
@@ -1673,7 +1676,7 @@ public class TestDataReaderAndWriter extends TestCase
 
         SqlDynaBean bean = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set("table-name", testedValue);
 
         roundtripTest(model, bean, "UTF-8",
@@ -1702,7 +1705,7 @@ public class TestDataReaderAndWriter extends TestCase
 
         SqlDynaBean bean = (SqlDynaBean)model.createDynaBeanFor(model.getTable(0));
 
-        bean.set("id", new Integer(1));
+        bean.set("id", 1);
         bean.set(DatabaseIO.BASE64_ATTR_NAME, testedValue);
 
         roundtripTest(model, bean, "UTF-8",

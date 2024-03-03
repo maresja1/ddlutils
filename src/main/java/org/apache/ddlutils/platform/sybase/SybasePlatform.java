@@ -19,19 +19,6 @@ package org.apache.ddlutils.platform.sybase;
  * under the License.
  */
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Types;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ddlutils.DatabaseOperationException;
 import org.apache.ddlutils.DdlUtilsException;
@@ -51,6 +38,17 @@ import org.apache.ddlutils.model.TypeMap;
 import org.apache.ddlutils.platform.CreationParameters;
 import org.apache.ddlutils.platform.DefaultTableDefinitionChangesPredicate;
 import org.apache.ddlutils.platform.PlatformImplBase;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
+import java.util.Collection;
 
 /**
  * The platform implementation for Sybase.
@@ -241,42 +239,6 @@ public class SybasePlatform extends PlatformImplBase
 		}
 	}
 
-	/**
-     * {@inheritDoc}
-     */
-	public List fetch(Database model, String sql, Collection parameters, Table[] queryHints, int start, int end) throws DatabaseOperationException
-	{
-		setTextSize(MAX_TEXT_SIZE);
-		return super.fetch(model, sql, parameters, queryHints, start, end);
-	}
-
-    /**
-     * {@inheritDoc}
-     */
-	public List fetch(Database model, String sql, Table[] queryHints, int start, int end) throws DatabaseOperationException
-	{
-		setTextSize(MAX_TEXT_SIZE);
-		return super.fetch(model, sql, queryHints, start, end);
-	}
-
-    /**
-     * {@inheritDoc}
-     */
-	public Iterator query(Database model, String sql, Collection parameters, Table[] queryHints) throws DatabaseOperationException
-	{
-		setTextSize(MAX_TEXT_SIZE);
-		return super.query(model, sql, parameters, queryHints);
-	}
-
-    /**
-     * {@inheritDoc}
-     */
-	public Iterator query(Database model, String sql, Table[] queryHints) throws DatabaseOperationException
-	{
-		setTextSize(MAX_TEXT_SIZE);
-		return super.query(model, sql, queryHints);
-	}
-
 
     /**
      * Determines whether we need to use identity override mode for the given table.
@@ -288,7 +250,7 @@ public class SybasePlatform extends PlatformImplBase
     {
         return isIdentityOverrideOn() &&
                getPlatformInfo().isIdentityOverrideAllowed() &&
-               (table.getAutoIncrementColumns().length > 0);
+               (table.getAutoIncrementColumns().findAny().isPresent());
     }
 
     /**
@@ -303,7 +265,7 @@ public class SybasePlatform extends PlatformImplBase
             String        identityInsertOn = builder.getEnableIdentityOverrideSql(table);
             Statement     stmt             = connection.createStatement();
 
-            if (quotationOn.length() > 0)
+            if (!quotationOn.isEmpty())
             {
                 stmt.execute(quotationOn);
             }
@@ -324,7 +286,7 @@ public class SybasePlatform extends PlatformImplBase
             String        identityInsertOff = builder.getDisableIdentityOverrideSql(table);
             Statement     stmt              = connection.createStatement();
 
-            if (quotationOn.length() > 0)
+            if (!quotationOn.isEmpty())
             {
                 stmt.execute(quotationOn);
             }
@@ -390,7 +352,8 @@ public class SybasePlatform extends PlatformImplBase
                 else if (change instanceof ColumnDefinitionChange)
                 {
                     ColumnDefinitionChange columnChange = (ColumnDefinitionChange)change;
-                    Column                 oldColumn    = intermediateTable.findColumn(columnChange.getChangedColumn(), isDelimitedIdentifierModeOn());
+                    Column oldColumn = intermediateTable.findColumn(columnChange.getChangedColumn(), isDelimitedIdentifierModeOn())
+						.orElseThrow();
 
                     // Sybase cannot change the IDENTITY state of a column via ALTER TABLE MODIFY
                     return oldColumn.isAutoIncrement() == columnChange.getNewColumn().isAutoIncrement();
@@ -429,7 +392,8 @@ public class SybasePlatform extends PlatformImplBase
                               RemoveColumnChange change) throws IOException
     {
         Table  changedTable  = findChangedTable(currentModel, change);
-        Column removedColumn = changedTable.findColumn(change.getChangedColumn(), isDelimitedIdentifierModeOn());
+        Column removedColumn = changedTable.findColumn(change.getChangedColumn(), isDelimitedIdentifierModeOn())
+			.orElseThrow();
 
         ((SybaseBuilder)getSqlBuilder()).dropColumn(changedTable, removedColumn);
         change.apply(currentModel, isDelimitedIdentifierModeOn());
@@ -467,7 +431,8 @@ public class SybasePlatform extends PlatformImplBase
                               ColumnDefinitionChange change) throws IOException
     {
         Table         changedTable  = findChangedTable(currentModel, change);
-        Column        changedColumn = changedTable.findColumn(change.getChangedColumn(), isDelimitedIdentifierModeOn());
+        Column        changedColumn = changedTable.findColumn(change.getChangedColumn(), isDelimitedIdentifierModeOn())
+			.orElseThrow();
         Column        newColumn     = change.getNewColumn();
         SybaseBuilder sqlBuilder    = (SybaseBuilder)getSqlBuilder();
 

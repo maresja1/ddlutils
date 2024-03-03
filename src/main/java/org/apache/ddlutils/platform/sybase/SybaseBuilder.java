@@ -19,11 +19,6 @@ package org.apache.ddlutils.platform.sybase;
  * under the License.
  */
 
-import java.io.IOException;
-import java.sql.Types;
-import java.util.Iterator;
-import java.util.Map;
-
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
@@ -32,6 +27,11 @@ import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.SqlBuilder;
 import org.apache.ddlutils.util.StringUtilsExt;
+
+import java.io.IOException;
+import java.sql.Types;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * The SQL Builder for Sybase.
@@ -63,7 +63,7 @@ public class SybaseBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-	protected void writeTableCreationStmtEnding(Table table, Map parameters) throws IOException
+	protected void writeTableCreationStmtEnding(Table table, Map<?, ?> parameters) throws IOException
     {
         if (parameters != null)
         {
@@ -249,13 +249,7 @@ public class SybaseBuilder extends SqlBuilder
      */
     protected String getEnableIdentityOverrideSql(Table table)
     {
-        StringBuffer result = new StringBuffer();
-
-        result.append("SET IDENTITY_INSERT ");
-        result.append(getDelimitedIdentifier(getTableName(table)));
-        result.append(" ON");
-
-        return result.toString();
+		return "SET IDENTITY_INSERT " + getDelimitedIdentifier(getTableName(table)) + " ON";
     }
 
     /**
@@ -266,13 +260,7 @@ public class SybaseBuilder extends SqlBuilder
      */
     protected String getDisableIdentityOverrideSql(Table table)
     {
-        StringBuffer result = new StringBuffer();
-
-        result.append("SET IDENTITY_INSERT ");
-        result.append(getDelimitedIdentifier(getTableName(table)));
-        result.append(" OFF");
-
-        return result.toString();
+		return "SET IDENTITY_INSERT " + getDelimitedIdentifier(getTableName(table)) + " OFF";
     }
 
     /**
@@ -347,17 +335,16 @@ public class SybaseBuilder extends SqlBuilder
     protected void copyData(Table sourceTable, Table targetTable) throws IOException
     {
         // We need to turn on identity override except when the identity column was added to the column
-        Column[] targetAutoIncrCols   = targetTable.getAutoIncrementColumns();
+        var targetAutoIncrCols   = targetTable.getAutoIncrementColumns().toList();
         boolean  needIdentityOverride = false;
 
-        if (targetAutoIncrCols.length > 0)
+        if (!targetAutoIncrCols.isEmpty())
         {
-            needIdentityOverride = true;
-            // Sybase only allows for one identity column per table
-            if (sourceTable.findColumn(targetAutoIncrCols[0].getName(), getPlatform().isDelimitedIdentifierModeOn()) == null)
-            {
-                needIdentityOverride = false;
-            }
+			// Sybase only allows for one identity column per table
+			needIdentityOverride = sourceTable.findColumn(
+				targetAutoIncrCols.get(0).getName(),
+				getPlatform().isDelimitedIdentifierModeOn()
+			).isPresent();
         }
         if (needIdentityOverride)
         {

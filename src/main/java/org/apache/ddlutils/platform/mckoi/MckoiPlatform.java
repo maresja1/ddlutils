@@ -19,15 +19,6 @@ package org.apache.ddlutils.platform.mckoi;
  * under the License.
  */
 
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.ddlutils.DatabaseOperationException;
 import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.alteration.AddColumnChange;
@@ -42,6 +33,15 @@ import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.CreationParameters;
 import org.apache.ddlutils.platform.DefaultTableDefinitionChangesPredicate;
 import org.apache.ddlutils.platform.PlatformImplBase;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * The Mckoi database platform implementation.
@@ -198,7 +198,8 @@ public class MckoiPlatform extends PlatformImplBase
             if (tableChange instanceof ColumnDefinitionChange)
             {
                 ColumnDefinitionChange colChange  = (ColumnDefinitionChange)tableChange;
-                Column                 origColumn = changedTable.findColumn(colChange.getChangedColumn(), isDelimitedIdentifierModeOn());
+                Column                 origColumn = changedTable.findColumn(colChange.getChangedColumn(), isDelimitedIdentifierModeOn())
+					.orElseThrow();
                 Column                 newColumn  = colChange.getNewColumn();
 
                 if (!origColumn.isAutoIncrement() && newColumn.isAutoIncrement())
@@ -229,7 +230,8 @@ public class MckoiPlatform extends PlatformImplBase
             if (tableChange instanceof ColumnDefinitionChange)
             {
                 ColumnDefinitionChange colChange  = (ColumnDefinitionChange)tableChange;
-                Column                 origColumn = changedTable.findColumn(colChange.getChangedColumn(), isDelimitedIdentifierModeOn());
+                Column                 origColumn = changedTable.findColumn(colChange.getChangedColumn(), isDelimitedIdentifierModeOn())
+					.orElseThrow();
                 Column                 newColumn  = colChange.getNewColumn();
 
                 if (origColumn.isAutoIncrement() && !newColumn.isAutoIncrement())
@@ -240,7 +242,8 @@ public class MckoiPlatform extends PlatformImplBase
             else if (tableChange instanceof RemoveColumnChange)
             {
                 RemoveColumnChange removeColumnChange = (RemoveColumnChange)tableChange;
-                Column             removedColumn      = changedTable.findColumn(removeColumnChange.getChangedColumn(), isDelimitedIdentifierModeOn());
+                Column             removedColumn      = changedTable.findColumn(removeColumnChange.getChangedColumn(), isDelimitedIdentifierModeOn())
+					.orElseThrow();
 
                 if (removedColumn.isAutoIncrement())
                 {

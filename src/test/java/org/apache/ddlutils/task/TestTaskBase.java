@@ -19,13 +19,14 @@ package org.apache.ddlutils.task;
  * under the License.
  */
 
-import java.util.Properties;
-
-import javax.sql.DataSource;
-
-import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.ddlutils.TestAgainstLiveDatabaseBase;
 import org.apache.tools.ant.Project;
+
+import java.util.Properties;
+import javax.sql.DataSource;
+
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Base class for ant task tests. 

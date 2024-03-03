@@ -22,6 +22,9 @@ package org.apache.ddlutils.platform;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
@@ -38,7 +41,7 @@ public class DatabaseMetaDataWrapper
     /** The schema(s) to acess in the database. */
     private String _schemaPattern;
     /** The table types to process. */
-    private String[] _tableTypes;
+    private List<String> _tableTypes;
 
     /**
      * Returns the database meta data.
@@ -105,7 +108,7 @@ public class DatabaseMetaDataWrapper
      *
      * @return The table types
      */
-    public String[] getTableTypes()
+    public List<String> getTableTypes()
     {
         if (_tableTypes == null)
         {
@@ -113,10 +116,7 @@ public class DatabaseMetaDataWrapper
         }
         else
         {
-            String[] result = new String[_tableTypes.length];
-
-            System.arraycopy(_tableTypes, 0, result, 0, _tableTypes.length);
-            return result;
+            return new ArrayList<>(_tableTypes);
         }
     }
 
@@ -125,7 +125,7 @@ public class DatabaseMetaDataWrapper
      * 
      * @param types The table types
      */
-    public void setTableTypes(String[] types)
+    public void setTableTypes(List<String> types)
     {
         if (types == null)
         {
@@ -133,9 +133,7 @@ public class DatabaseMetaDataWrapper
         }
         else
         {
-            _tableTypes = new String[types.length];
-
-            System.arraycopy(types, 0, _tableTypes, 0, types.length);
+            _tableTypes = new ArrayList<>(types);
         }
     }
     
@@ -150,7 +148,7 @@ public class DatabaseMetaDataWrapper
     {
         String escape = getMetaData().getSearchStringEscape();
 
-        if (escape == "")
+        if (Objects.equals(escape, ""))
         {
             // No escape string, so nothing to do...
             return literalString;
@@ -158,7 +156,7 @@ public class DatabaseMetaDataWrapper
         else
         {
             // with Java 5, we would just use Matcher.quoteReplacement
-            StringBuffer quotedEscape = new StringBuffer();
+            StringBuilder quotedEscape = new StringBuilder();
 
             for (int idx = 0; idx < escape.length(); idx++)
             {
@@ -193,7 +191,7 @@ public class DatabaseMetaDataWrapper
      */
     public ResultSet getTables(String tableNamePattern) throws SQLException
     {
-        return getMetaData().getTables(getCatalog(), getSchemaPattern(), tableNamePattern, getTableTypes());
+        return getMetaData().getTables(getCatalog(), getSchemaPattern(), tableNamePattern, getTableTypes().toArray(String[]::new));
     }
 
     /**

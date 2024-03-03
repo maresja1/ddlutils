@@ -19,9 +19,9 @@ package org.apache.ddlutils.alteration;
  * under the License.
  */
 
-import java.util.List;
-
 import org.apache.ddlutils.model.Table;
+
+import java.util.List;
 
 /**
  * Defines a predicate that allows platforms to state whether all of the given table definition
@@ -41,5 +41,5 @@ public interface TableDefinitionChangesPredicate
      * @param changes The non-empty list of changes
      * @return <code>true</code> if the current plaform supports them
      */
-    public boolean areSupported(Table intermediateTable, List changes);
+    public boolean areSupported(Table intermediateTable, List<? extends TableChange> changes);
 }

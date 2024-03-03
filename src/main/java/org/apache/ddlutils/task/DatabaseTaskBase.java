@@ -32,6 +32,7 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 
@@ -47,9 +48,9 @@ public abstract class DatabaseTaskBase extends Task
     protected Log _log;
 
     /** The platform configuration. */
-    private PlatformConfiguration _platformConf = new PlatformConfiguration();
+    private final PlatformConfiguration _platformConf = new PlatformConfiguration();
     /** The sub tasks to execute. */
-    private ArrayList _commands = new ArrayList();
+    private final List<Command> _commands = new ArrayList<>();
     /** Whether to use simple logging (that the Ant task configures itself via the {@link #_verbosity} setting. */
     private boolean _simpleLogging = true;
     /** The verbosity of the task's debug output. */
@@ -353,7 +354,7 @@ public abstract class DatabaseTaskBase extends Task
             return;
         }
 
-        ClassLoader sysClassLoader = (ClassLoader)AccessController.doPrivileged(new PrivilegedAction()
+        ClassLoader sysClassLoader = (ClassLoader) AccessController.doPrivileged(new PrivilegedAction()
         {
             public Object run()
             {

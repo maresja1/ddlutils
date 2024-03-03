@@ -19,8 +19,6 @@ package org.apache.ddlutils.platform.sapdb;
  * under the License.
  */
 
-import java.io.IOException;
-
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.alteration.ColumnDefinitionChange;
 import org.apache.ddlutils.model.CascadeActionEnum;
@@ -31,6 +29,9 @@ import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.TypeMap;
 import org.apache.ddlutils.platform.SqlBuilder;
 import org.apache.ddlutils.util.StringUtilsExt;
+
+import java.io.IOException;
+import java.util.List;
 
 /**
  * The SQL Builder for SapDB.
@@ -72,10 +73,10 @@ public class SapDbBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    public void createPrimaryKey(Table table, Column[] primaryKeyColumns) throws IOException
+    public void createPrimaryKey(Table table, List<Column> primaryKeyColumns) throws IOException
     {
         // Note that SapDB does not support the addition of named primary keys
-        if ((primaryKeyColumns.length > 0) && shouldGeneratePrimaryKeys(primaryKeyColumns))
+        if ((!primaryKeyColumns.isEmpty()) && shouldGeneratePrimaryKeys(primaryKeyColumns))
         {
             print("ALTER TABLE ");
             printlnIdentifier(getTableName(table));
@@ -112,12 +113,7 @@ public class SapDbBuilder extends SqlBuilder
      */
     public String getSelectLastIdentityValues(Table table)
     {
-        StringBuffer result = new StringBuffer();
-
-        result.append("SELECT ");
-        result.append(getDelimitedIdentifier(getTableName(table)));
-        result.append(".CURRVAL FROM DUAL");
-        return result.toString();
+		return "SELECT " + getDelimitedIdentifier(getTableName(table)) + ".CURRVAL FROM DUAL";
     }
 
     /**

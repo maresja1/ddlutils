@@ -19,14 +19,15 @@ package org.apache.ddlutils.model;
  * under the License.
  */
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * Test case for DDLUTILS-6.
  * 
  * @version $Revision: 289996 $
  */
-public class TestArrayAccessAtTable extends TestCase
+public class TestArrayAccessAtTable
 {
     /** The tested table. */
     private Table          _testedTable;

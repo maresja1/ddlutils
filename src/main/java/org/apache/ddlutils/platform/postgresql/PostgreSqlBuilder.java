@@ -19,9 +19,6 @@ package org.apache.ddlutils.platform.postgresql;
  * under the License.
  */
 
-import java.io.IOException;
-import java.util.Map;
-
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.alteration.ColumnDefinitionChange;
 import org.apache.ddlutils.model.Column;
@@ -29,6 +26,9 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.SqlBuilder;
+
+import java.io.IOException;
+import java.util.Map;
 
 /**
  * The SQL Builder for PostgresSql.
@@ -66,12 +66,11 @@ public class PostgreSqlBuilder extends SqlBuilder
         print(" CASCADE");
         printEndOfStatement();
 
-        Column[] columns = table.getAutoIncrementColumns();
+        var columns = table.getAutoIncrementColumns().toList();
 
-        for (int idx = 0; idx < columns.length; idx++)
-        {
-            dropAutoIncrementSequence(table, columns[idx]);
-        }
+		for (final Column column : columns) {
+			dropAutoIncrementSequence(table, column);
+		}
     }
 
     /**
@@ -87,7 +86,7 @@ public class PostgreSqlBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    public void createTable(Database database, Table table, Map parameters) throws IOException
+    public void createTable(Database database, Table table, Map<?, ?> parameters) throws IOException
     {
         for (int idx = 0; idx < table.getColumnCount(); idx++)
         {
@@ -142,27 +141,27 @@ public class PostgreSqlBuilder extends SqlBuilder
      */
     public String getSelectLastIdentityValues(Table table)
     {
-        Column[] columns = table.getAutoIncrementColumns();
+        var columns = table.getAutoIncrementColumns().toList();
 
-        if (columns.length == 0)
+        if (columns.isEmpty())
         {
             return null;
         }
         else
         {
-            StringBuffer result = new StringBuffer();
+            StringBuilder result = new StringBuilder();
     
             result.append("SELECT ");
-            for (int idx = 0; idx < columns.length; idx++)
+            for (int idx = 0; idx < columns.size(); idx++)
             {
                 if (idx > 0)
                 {
                     result.append(", ");
                 }
                 result.append("currval('");
-                result.append(getDelimitedIdentifier(getConstraintName(null, table, columns[idx].getName(), "seq")));
+                result.append(getDelimitedIdentifier(getConstraintName(null, table, columns.get(idx).getName(), "seq")));
                 result.append("') AS ");
-                result.append(getDelimitedIdentifier(columns[idx].getName()));
+                result.append(getDelimitedIdentifier(columns.get(idx).getName()));
             }
             return result.toString();
         }

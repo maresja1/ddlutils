@@ -19,9 +19,6 @@ package org.apache.ddlutils.platform.mysql;
  * under the License.
  */
 
-import java.io.IOException;
-import java.sql.Types;
-
 import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.alteration.AddColumnChange;
 import org.apache.ddlutils.alteration.AddPrimaryKeyChange;
@@ -39,6 +36,9 @@ import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.CreationParameters;
 import org.apache.ddlutils.platform.DefaultTableDefinitionChangesPredicate;
 import org.apache.ddlutils.platform.PlatformImplBase;
+
+import java.io.IOException;
+import java.sql.Types;
 
 /**
  * The platform implementation for MySQL.
@@ -151,7 +151,8 @@ public class MySqlPlatform extends PlatformImplBase
                 else if (change instanceof ColumnDefinitionChange)
                 {
                     ColumnDefinitionChange colDefChange = (ColumnDefinitionChange)change;
-                    Column                 sourceColumn = intermediateTable.findColumn(colDefChange.getChangedColumn(), isDelimitedIdentifierModeOn());
+                    Column                 sourceColumn = intermediateTable.findColumn(colDefChange.getChangedColumn(), isDelimitedIdentifierModeOn())
+						.orElseThrow();;
 
                     return !ColumnDefinitionChange.isTypeChanged(getPlatformInfo(), sourceColumn, colDefChange.getNewColumn()) &&
                            !ColumnDefinitionChange.isSizeChanged(getPlatformInfo(), sourceColumn, colDefChange.getNewColumn());
@@ -184,7 +185,8 @@ public class MySqlPlatform extends PlatformImplBase
 
         if (change.getPreviousColumn() != null)
         {
-            prevColumn = changedTable.findColumn(change.getPreviousColumn(), isDelimitedIdentifierModeOn());
+            prevColumn = changedTable.findColumn(change.getPreviousColumn(), isDelimitedIdentifierModeOn())
+				.orElseThrow();
         }
         ((MySqlBuilder)getSqlBuilder()).insertColumn(changedTable, change.getNewColumn(), prevColumn);
         change.apply(currentModel, isDelimitedIdentifierModeOn());
@@ -220,7 +222,8 @@ public class MySqlPlatform extends PlatformImplBase
                               RemoveColumnChange change) throws IOException
     {
         Table  changedTable  = findChangedTable(currentModel, change);
-        Column removedColumn = changedTable.findColumn(change.getChangedColumn(), isDelimitedIdentifierModeOn());
+        Column removedColumn = changedTable.findColumn(change.getChangedColumn(), isDelimitedIdentifierModeOn())
+			.orElseThrow();
 
         ((MySqlBuilder)getSqlBuilder()).dropColumn(changedTable, removedColumn);
         change.apply(currentModel, isDelimitedIdentifierModeOn());
@@ -257,13 +260,10 @@ public class MySqlPlatform extends PlatformImplBase
                               PrimaryKeyChange   change) throws IOException
     {
         Table    changedTable     = findChangedTable(currentModel, change);
-        String[] newPKColumnNames = change.getNewPrimaryKeyColumns();
-        Column[] newPKColumns     = new Column[newPKColumnNames.length];
-
-        for (int colIdx = 0; colIdx < newPKColumnNames.length; colIdx++)
-        {
-            newPKColumns[colIdx] = changedTable.findColumn(newPKColumnNames[colIdx], isDelimitedIdentifierModeOn());
-        }
+        var newPKColumnNames = change.getNewPrimaryKeyColumns();
+        var newPKColumns     = newPKColumnNames.stream()
+			.map(col -> changedTable.findColumn(col, isDelimitedIdentifierModeOn()).orElseThrow())
+			.toList();
         
         ((MySqlBuilder)getSqlBuilder()).dropPrimaryKey(changedTable);
         getSqlBuilder().createPrimaryKey(changedTable, newPKColumns);

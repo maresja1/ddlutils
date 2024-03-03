@@ -19,11 +19,11 @@ package org.apache.ddlutils.platform;
  * under the License.
  */
 
+import org.apache.commons.collections4.map.ListOrderedMap;
+import org.apache.ddlutils.model.Table;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import org.apache.commons.collections.map.ListOrderedMap;
-import org.apache.ddlutils.model.Table;
 
 /**
  * Contains parameters used in the table creation. Note that the definition
@@ -35,7 +35,7 @@ import org.apache.ddlutils.model.Table;
 public class CreationParameters
 {
     /** The parameter maps keyed by the tables. */
-    private Map _parametersPerTable = new HashMap();
+    private final Map<String, Map<Object, Object>> _parametersPerTable = new HashMap<>();
 
     /**
      * Returns the parameters for the given table.
@@ -43,11 +43,11 @@ public class CreationParameters
      * @param table The table
      * @return The parameters
      */
-    public Map getParametersFor(Table table)
+    public Map<Object, Object> getParametersFor(Table table)
     {
-        ListOrderedMap result       = new ListOrderedMap();
-        Map            globalParams = (Map)_parametersPerTable.get(null);
-        Map            tableParams  = (Map)_parametersPerTable.get(table.getName());
+        ListOrderedMap<Object, Object> result       = new ListOrderedMap<>();
+        Map<Object, Object>            globalParams = _parametersPerTable.get(null);
+        Map<Object, Object>            tableParams  = _parametersPerTable.get(table.getName());
 
         if (globalParams != null)
         {
@@ -69,13 +69,13 @@ public class CreationParameters
      */
     public void addParameter(Table table, String paramName, String paramValue)
     {
-        String key    = (table == null ? null : table.getName());
-        Map    params = (Map)_parametersPerTable.get(key);
+        var key = (table == null ? null : table.getName());
+        var params = _parametersPerTable.get(key);
 
         if (params == null)
         {
             // we're using a list orderered map to retain the order
-            params = new ListOrderedMap();
+            params = new ListOrderedMap<>();
             _parametersPerTable.put(key, params);
         }
         params.put(paramName, paramValue);

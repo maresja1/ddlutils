@@ -19,12 +19,6 @@ package org.apache.ddlutils.platform.firebird;
  * under the License.
  */
 
-import java.io.IOException;
-import java.sql.Types;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-
 import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.alteration.AddColumnChange;
 import org.apache.ddlutils.alteration.AddPrimaryKeyChange;
@@ -40,6 +34,12 @@ import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.CreationParameters;
 import org.apache.ddlutils.platform.DefaultTableDefinitionChangesPredicate;
 import org.apache.ddlutils.platform.PlatformImplBase;
+
+import java.io.IOException;
+import java.sql.Types;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * The platform implementation for the Firebird database.
@@ -126,41 +126,31 @@ public class FirebirdPlatform extends PlatformImplBase
     {
         return new DefaultTableDefinitionChangesPredicate()
         {
-            public boolean areSupported(Table intermediateTable, List changes)
+            public boolean areSupported(Table intermediateTable, List<? extends TableChange> changes)
             {
                 // Firebird does support adding a primary key, but only if none of the primary
                 // key columns have been added within the same session
                 if (super.areSupported(intermediateTable, changes))
                 {
-                    HashSet  addedColumns = new HashSet();
-                    String[] pkColNames   = null;
+                    Set<String> addedColumns = new HashSet<>();
+                    List<String> pkColNames   = null;
 
-                    for (Iterator it = changes.iterator(); it.hasNext();)
-                    {
-                        TableChange change = (TableChange)it.next();
-
-                        if (change instanceof AddColumnChange)
-                        {
-                            addedColumns.add(((AddColumnChange)change).getNewColumn().getName());
-                        }
-                        else if (change instanceof AddPrimaryKeyChange)
-                        {
-                            pkColNames = ((AddPrimaryKeyChange)change).getPrimaryKeyColumns();
-                        }
-                        else if (change instanceof PrimaryKeyChange)
-                        {
-                            pkColNames = ((PrimaryKeyChange)change).getNewPrimaryKeyColumns();
-                        }
-                    }
+					for (TableChange change : changes) {
+						if (change instanceof AddColumnChange) {
+							addedColumns.add(((AddColumnChange) change).getNewColumn().getName());
+						} else if (change instanceof AddPrimaryKeyChange) {
+							pkColNames = ((AddPrimaryKeyChange) change).getPrimaryKeyColumns();
+						} else if (change instanceof PrimaryKeyChange) {
+							pkColNames = ((PrimaryKeyChange) change).getNewPrimaryKeyColumns();
+						}
+					}
                     if (pkColNames != null)
                     {
-                        for (int colIdx = 0; colIdx < pkColNames.length; colIdx++)
-                        {
-                            if (addedColumns.contains(pkColNames[colIdx]))
-                            {
-                                return false;
-                            }
-                        }
+						for (String pkColName : pkColNames) {
+							if (addedColumns.contains(pkColName)) {
+								return false;
+							}
+						}
                     }
                     return true;
                 }
@@ -175,11 +165,10 @@ public class FirebirdPlatform extends PlatformImplBase
                 // Firebird cannot add columns to the primary key or drop columns from it but
                 // since we add/drop the primary key with separate changes anyways, this will
                 // no problem here
-                if (change instanceof AddColumnChange)
+                if (change instanceof final AddColumnChange addColumnChange)
                 {
-                    AddColumnChange addColumnChange = (AddColumnChange)change;
 
-                    // Firebird does not apply default values or identity status to existing rows when adding a column
+					// Firebird does not apply default values or identity status to existing rows when adding a column
                     return !addColumnChange.getNewColumn().isAutoIncrement() &&
                            ((addColumnChange.getNewColumn().getDefaultValue() == null) && !addColumnChange.getNewColumn().isRequired());
                 }
@@ -215,7 +204,8 @@ public class FirebirdPlatform extends PlatformImplBase
         {
             if (change.getPreviousColumn() != null)
             {
-                prevColumn = changedTable.findColumn(change.getPreviousColumn(), isDelimitedIdentifierModeOn());
+                prevColumn = changedTable.findColumn(change.getPreviousColumn(), isDelimitedIdentifierModeOn())
+					.orElseThrow();
             }
             ((FirebirdBuilder)getSqlBuilder()).insertColumn(currentModel,
                                                             changedTable,
@@ -238,7 +228,8 @@ public class FirebirdPlatform extends PlatformImplBase
                               RemoveColumnChange change) throws IOException
     {
         Table  changedTable  = findChangedTable(currentModel, change);
-        Column droppedColumn = changedTable.findColumn(change.getChangedColumn(), isDelimitedIdentifierModeOn());
+        Column droppedColumn = changedTable.findColumn(change.getChangedColumn(), isDelimitedIdentifierModeOn())
+			.orElseThrow();
 
         ((FirebirdBuilder)getSqlBuilder()).dropColumn(changedTable, droppedColumn);
         change.apply(currentModel, isDelimitedIdentifierModeOn());

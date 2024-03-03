@@ -19,12 +19,6 @@ package org.apache.ddlutils.platform.mssql;
  * under the License.
  */
 
-import java.io.IOException;
-import java.sql.Types;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.alteration.ColumnDefinitionChange;
@@ -35,6 +29,12 @@ import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.TypeMap;
 import org.apache.ddlutils.platform.SqlBuilder;
+
+import java.io.IOException;
+import java.sql.Types;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Map;
 
 /**
  * The SQL Builder for the Microsoft SQL Server.
@@ -62,7 +62,7 @@ public class MSSqlBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    public void createTable(Database database, Table table, Map parameters) throws IOException
+    public void createTable(Database database, Table table, Map<?, ?> parameters) throws IOException
     {
         turnOnQuotation();
         super.createTable(database, table, parameters);
@@ -326,7 +326,7 @@ public class MSSqlBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    public String getUpdateSql(Table table, Map columnValues, boolean genPlaceholders)
+    public String getUpdateSql(Table table, Map<String, Object> columnValues, boolean genPlaceholders)
     {
         return getQuotationOnStatement() + super.getUpdateSql(table, columnValues, genPlaceholders);
     }
@@ -354,11 +354,16 @@ public class MSSqlBuilder extends SqlBuilder
         // We need to this only if
         // - there is a column in both tables that is auto increment only in the target table, or
         // - there is a column in both tables that is auto increment in both tables
-        Column[] targetIdentityColumns = targetTable.getAutoIncrementColumns();
+        var targetIdentityColumns = targetTable.getAutoIncrementColumns().toList();
 
         // Sql Server allows only one identity column, so let's take a shortcut here
-        boolean needToAllowIdentityInsert = (targetIdentityColumns.length > 0) &&
-                                            (sourceTable.findColumn(targetIdentityColumns[0].getName(), getPlatform().isDelimitedIdentifierModeOn()) != null);
+        boolean needToAllowIdentityInsert = (!targetIdentityColumns.isEmpty()) &&
+			(
+				sourceTable.findColumn(
+					targetIdentityColumns.get(0).getName(),
+					getPlatform().isDelimitedIdentifierModeOn()
+				).isPresent()
+			);
 
         if (needToAllowIdentityInsert)
         {

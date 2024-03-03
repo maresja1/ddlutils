@@ -27,6 +27,8 @@ import org.apache.ddlutils.model.ModelHelper;
 import org.apache.ddlutils.model.Table;
 import org.apache.tools.ant.BuildException;
 
+import java.util.List;
+
 /**
  * Sub task for dropping tables.
  * 
@@ -36,7 +38,7 @@ import org.apache.tools.ant.BuildException;
 public class DropTablesCommand extends DatabaseCommand
 {
     /** The names of the tables to be dropped. */
-    private String[] _tableNames; 
+    private List<String> _tableNames;
     /** The regular expression matching the names of the tables to be dropped. */
     private String _tableNameRegExp;
 
@@ -97,7 +99,7 @@ public class DropTablesCommand extends DatabaseCommand
             targetModel = new CloneHelper().clone(model);
             targetModel.initialize();
 
-            Table[] tables = _tableNames != null ? targetModel.findTables(_tableNames, task.isUseDelimitedSqlIdentifiers())
+            var tables = _tableNames != null ? targetModel.findTables(_tableNames, task.isUseDelimitedSqlIdentifiers())
                                                  : targetModel.findTables(_tableNameRegExp, task.isUseDelimitedSqlIdentifiers());
 
             new ModelHelper().removeForeignKeysToAndFromTables(targetModel, tables);

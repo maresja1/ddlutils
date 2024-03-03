@@ -19,14 +19,15 @@ package org.apache.ddlutils.model;
  * under the License.
  */
 
-import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Iterator;
-
-import org.apache.commons.collections.set.ListOrderedSet;
+import org.apache.commons.collections4.set.ListOrderedSet;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.ddlutils.util.StringUtilsExt;
+
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Iterator;
 
 /**
  * Represents a database foreign key.
@@ -36,7 +37,8 @@ import org.apache.ddlutils.util.StringUtilsExt;
 public class ForeignKey implements Serializable
 {
     /** Unique ID for serialization purposes. */
-    private static final long serialVersionUID = 7833254626253719913L;
+    @Serial
+	private static final long serialVersionUID = 7833254626253719913L;
     /** The name of the foreign key, may be <code>null</code>. */
     private String _name;
     /** The target table. */
@@ -48,7 +50,7 @@ public class ForeignKey implements Serializable
     /** The action to perform when the referenced row is deleted. */
     private CascadeActionEnum _onDelete = CascadeActionEnum.NONE;
     /** The references between local and remote columns. */
-    private ListOrderedSet _references = new ListOrderedSet();
+    private final ListOrderedSet _references = new ListOrderedSet();
     /** Whether this foreign key has an associated auto-generated index. */
     private boolean _autoIndexPresent;
 

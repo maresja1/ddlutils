@@ -19,9 +19,6 @@ package org.apache.ddlutils.platform.sapdb;
  * under the License.
  */
 
-import java.io.IOException;
-import java.sql.Types;
-
 import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.alteration.AddColumnChange;
 import org.apache.ddlutils.alteration.AddPrimaryKeyChange;
@@ -40,6 +37,9 @@ import org.apache.ddlutils.platform.CreationParameters;
 import org.apache.ddlutils.platform.DefaultTableDefinitionChangesPredicate;
 import org.apache.ddlutils.platform.PlatformImplBase;
 import org.apache.ddlutils.util.StringUtilsExt;
+
+import java.io.IOException;
+import java.sql.Types;
 
 /**
  * The SapDB platform implementation.
@@ -162,7 +162,8 @@ public class SapDbPlatform extends PlatformImplBase
 
                     // SapDB has a ALTER TABLE MODIFY COLUMN but it is limited regarding the type conversions
                     // it can perform, so we don't use it here but rather rebuild the table
-                    Column curColumn = intermediateTable.findColumn(colChange.getChangedColumn(), isDelimitedIdentifierModeOn());
+                    Column curColumn = intermediateTable.findColumn(colChange.getChangedColumn(), isDelimitedIdentifierModeOn())
+						.orElseThrow();
                     Column newColumn = colChange.getNewColumn();
 
                     // we can however handle the change if only the default value or the required status was changed
@@ -191,7 +192,8 @@ public class SapDbPlatform extends PlatformImplBase
                               RemoveColumnChange change) throws IOException
     {
         Table  changedTable  = findChangedTable(currentModel, change);
-        Column removedColumn = changedTable.findColumn(change.getChangedColumn(), isDelimitedIdentifierModeOn());
+        Column removedColumn = changedTable.findColumn(change.getChangedColumn(), isDelimitedIdentifierModeOn())
+			.orElseThrow();
 
         ((SapDbBuilder)getSqlBuilder()).dropColumn(changedTable, removedColumn);
         change.apply(currentModel, isDelimitedIdentifierModeOn());
@@ -228,14 +230,11 @@ public class SapDbPlatform extends PlatformImplBase
                               PrimaryKeyChange   change) throws IOException
     {
         Table    changedTable     = findChangedTable(currentModel, change);
-        String[] newPKColumnNames = change.getNewPrimaryKeyColumns();
-        Column[] newPKColumns     = new Column[newPKColumnNames.length];
+		var newPKColumnNames = change.getNewPrimaryKeyColumns();
+		var newPKColumns     = newPKColumnNames.stream()
+			.map(col -> changedTable.findColumn(col, isDelimitedIdentifierModeOn()).orElseThrow())
+			.toList();
 
-        for (int colIdx = 0; colIdx < newPKColumnNames.length; colIdx++)
-        {
-            newPKColumns[colIdx] = changedTable.findColumn(newPKColumnNames[colIdx], isDelimitedIdentifierModeOn());
-        }
-        
         ((SapDbBuilder)getSqlBuilder()).dropPrimaryKey(changedTable);
         getSqlBuilder().createPrimaryKey(changedTable, newPKColumns);
         change.apply(currentModel, isDelimitedIdentifierModeOn());
@@ -254,7 +253,8 @@ public class SapDbPlatform extends PlatformImplBase
                               ColumnDefinitionChange change) throws IOException
     {
         Table  changedTable  = findChangedTable(currentModel, change);
-        Column changedColumn = changedTable.findColumn(change.getChangedColumn(), isDelimitedIdentifierModeOn());
+        Column changedColumn = changedTable.findColumn(change.getChangedColumn(), isDelimitedIdentifierModeOn())
+			.orElseThrow();
 
         if (!StringUtilsExt.equals(changedColumn.getDefaultValue(), change.getNewColumn().getDefaultValue()))
         {

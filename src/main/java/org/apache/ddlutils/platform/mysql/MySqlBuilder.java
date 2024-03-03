@@ -19,11 +19,6 @@ package org.apache.ddlutils.platform.mysql;
  * under the License.
  */
 
-import java.io.IOException;
-import java.sql.Types;
-import java.util.Iterator;
-import java.util.Map;
-
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.alteration.ColumnDefinitionChange;
 import org.apache.ddlutils.model.Column;
@@ -31,6 +26,11 @@ import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.TypeMap;
 import org.apache.ddlutils.platform.SqlBuilder;
+
+import java.io.IOException;
+import java.sql.Types;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * The SQL Builder for MySQL.
@@ -99,9 +99,12 @@ public class MySqlBuilder extends SqlBuilder
     public String getSelectLastIdentityValues(Table table)
     {
         String autoIncrementKeyName = "";
-        if (table.getAutoIncrementColumns().length > 0)
+        if (table.getAutoIncrementColumns().findAny().isPresent())
         {
-            autoIncrementKeyName = table.getAutoIncrementColumns()[0].getName();
+            autoIncrementKeyName = table.getAutoIncrementColumns()
+				.findFirst()
+				.orElseThrow()
+				.getName();
         }
         return "SELECT LAST_INSERT_ID() " + autoIncrementKeyName;
     }
@@ -109,7 +112,7 @@ public class MySqlBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    protected void writeTableCreationStmtEnding(Table table, Map parameters) throws IOException
+    protected void writeTableCreationStmtEnding(Table table, Map<?, ?> parameters) throws IOException
     {
         if (parameters != null)
         {

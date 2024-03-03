@@ -19,6 +19,16 @@ package org.apache.ddlutils.platform.interbase;
  * under the License.
  */
 
+import org.apache.commons.collections4.map.ListOrderedMap;
+import org.apache.ddlutils.Platform;
+import org.apache.ddlutils.model.Column;
+import org.apache.ddlutils.model.ForeignKey;
+import org.apache.ddlutils.model.Index;
+import org.apache.ddlutils.model.Table;
+import org.apache.ddlutils.model.TypeMap;
+import org.apache.ddlutils.platform.DatabaseMetaDataWrapper;
+import org.apache.ddlutils.platform.JdbcModelReader;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -30,16 +40,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.collections.map.ListOrderedMap;
-import org.apache.ddlutils.Platform;
-import org.apache.ddlutils.model.Column;
-import org.apache.ddlutils.model.ForeignKey;
-import org.apache.ddlutils.model.Index;
-import org.apache.ddlutils.model.Table;
-import org.apache.ddlutils.model.TypeMap;
-import org.apache.ddlutils.platform.DatabaseMetaDataWrapper;
-import org.apache.ddlutils.platform.JdbcModelReader;
 
 /**
  * The Jdbc Model Reader for Interbase.
@@ -65,7 +65,7 @@ public class InterbaseModelReader extends JdbcModelReader
     /**
      * {@inheritDoc}
      */
-    protected Table readTable(DatabaseMetaDataWrapper metaData, Map values) throws SQLException
+    protected Table readTable(DatabaseMetaDataWrapper metaData, Map<String, Object> values) throws SQLException
     {
         Table table = super.readTable(metaData, values);
 
@@ -82,13 +82,13 @@ public class InterbaseModelReader extends JdbcModelReader
     /**
      * {@inheritDoc}
      */
-    protected Collection readColumns(DatabaseMetaDataWrapper metaData, String tableName) throws SQLException
+    protected Collection<Column> readColumns(DatabaseMetaDataWrapper metaData, String tableName) throws SQLException
     {
         ResultSet columnData = null;
 
         try
         {
-            List columns = new ArrayList();
+            List<Column> columns = new ArrayList<>();
 
             if (getPlatform().isDelimitedIdentifierModeOn())
             {
@@ -99,7 +99,7 @@ public class InterbaseModelReader extends JdbcModelReader
 
                 while (columnData.next())
                 {
-                    Map values = readColumns(columnData, getColumnsForColumn());
+                    Map<String, Object> values = readColumns(columnData, getColumnsForColumn());
 
                     if (tableName.equals(values.get("TABLE_NAME")))
                     {
@@ -113,7 +113,7 @@ public class InterbaseModelReader extends JdbcModelReader
 
                 while (columnData.next())
                 {
-                    Map values = readColumns(columnData, getColumnsForColumn());
+                    Map<String, Object> values = readColumns(columnData, getColumnsForColumn());
 
                     columns.add(readColumn(metaData, values));
                 }
@@ -151,10 +151,12 @@ public class InterbaseModelReader extends JdbcModelReader
             while (rs.next())
             {
                 String columnName = rs.getString(1).trim();
-                Column column     = table.findColumn(columnName, getPlatform().isDelimitedIdentifierModeOn());
+                var columnOpt = table.findColumn(columnName, getPlatform().isDelimitedIdentifierModeOn());
 
-                if (column != null)
+                if (columnOpt.isPresent())
                 {
+					var column = columnOpt.get();
+
                     String defaultValue = rs.getString(2);
 
                     if (!rs.wasNull() && (defaultValue != null))
@@ -166,7 +168,7 @@ public class InterbaseModelReader extends JdbcModelReader
                         }
                         column.setDefaultValue(defaultValue);
                     }
-                    
+
                     short   precision          = rs.getShort(3);
                     boolean precisionSpecified = !rs.wasNull();
                     short   scale              = rs.getShort(4);
@@ -207,19 +209,17 @@ public class InterbaseModelReader extends JdbcModelReader
         final String query = "SELECT RDB$GENERATOR_NAME FROM RDB$GENERATORS";
 
         InterbaseBuilder builder = (InterbaseBuilder)getPlatform().getSqlBuilder();
-        Column[]         columns = table.getColumns();
-        HashMap          names   = new HashMap();
-        String           name;
+        List<Column> columns = table.getColumns();
+        Map<String, Object> names = new HashMap<>();
+        String name;
 
-        for (int idx = 0; idx < columns.length; idx++)
-        {
-            name = builder.getGeneratorName(table, columns[idx]);
-            if (!getPlatform().isDelimitedIdentifierModeOn())
-            {
-                name = name.toUpperCase();
-            }
-            names.put(name, columns[idx]);
-        }
+		for (Column value : columns) {
+			name = builder.getGeneratorName(table, value);
+			if (!getPlatform().isDelimitedIdentifierModeOn()) {
+				name = name.toUpperCase();
+			}
+			names.put(name, value);
+		}
 
         Statement stmt = null;
 
@@ -253,34 +253,29 @@ public class InterbaseModelReader extends JdbcModelReader
      */
     protected void adjustColumns(Table table)
     {
-        Column[] columns = table.getColumns();
-
-        for (int idx = 0; idx < columns.length; idx++)
-        {
-            if (columns[idx].getTypeCode() == Types.FLOAT)
-            {
-                columns[idx].setTypeCode(Types.REAL);
-            }
-            else if ((columns[idx].getTypeCode() == Types.NUMERIC) || (columns[idx].getTypeCode() == Types.DECIMAL))
-            {
-                if ((columns[idx].getTypeCode() == Types.NUMERIC) && (columns[idx].getSizeAsInt() == 18) && (columns[idx].getScale() == 0))
-                {
-                    columns[idx].setTypeCode(Types.BIGINT);
-                }
-            }
-            else if (TypeMap.isTextType(columns[idx].getTypeCode()))
-            {
-                columns[idx].setDefaultValue(unescape(columns[idx].getDefaultValue(), "'", "''"));
-            }
-        }
+		for (var column : table.getColumns()) {
+			if (column.getTypeCode() == Types.FLOAT) {
+				column.setTypeCode(Types.REAL);
+			} else if ((column.getTypeCode() == Types.NUMERIC) || (column.getTypeCode() == Types.DECIMAL)) {
+				if (
+					(column.getTypeCode() == Types.NUMERIC) &&
+						(column.getSizeAsInt() == 18) &&
+						(column.getScale() == 0)
+				) {
+					column.setTypeCode(Types.BIGINT);
+				}
+			} else if (TypeMap.isTextType(column.getTypeCode())) {
+				column.setDefaultValue(unescape(column.getDefaultValue(), "'", "''"));
+			}
+		}
     }
 
     /**
      * {@inheritDoc}
      */
-    protected Collection readPrimaryKeyNames(DatabaseMetaDataWrapper metaData, String tableName) throws SQLException
+    protected Collection<String> readPrimaryKeyNames(DatabaseMetaDataWrapper metaData, String tableName) throws SQLException
     {
-        List      pks   = new ArrayList();
+        List<String> pks = new ArrayList<>();
         ResultSet pkData = null;
 
         try
@@ -293,7 +288,7 @@ public class InterbaseModelReader extends JdbcModelReader
                 pkData = metaData.getPrimaryKeys(getDefaultTablePattern());
                 while (pkData.next())
                 {
-                    Map values = readColumns(pkData, getColumnsForPK());
+                    Map<String, Object> values = readColumns(pkData, getColumnsForPK());
     
                     if (tableName.equals(values.get("TABLE_NAME")))
                     {
@@ -306,7 +301,7 @@ public class InterbaseModelReader extends JdbcModelReader
                 pkData = metaData.getPrimaryKeys(metaData.escapeForSearch(tableName));
                 while (pkData.next())
                 {
-                    Map values = readColumns(pkData, getColumnsForPK());
+                    Map<String, Object> values = readColumns(pkData, getColumnsForPK());
     
                     pks.add(readPrimaryKeyName(metaData, values));
                 }
@@ -322,9 +317,9 @@ public class InterbaseModelReader extends JdbcModelReader
     /**
      * {@inheritDoc}
      */
-    protected Collection readForeignKeys(DatabaseMetaDataWrapper metaData, String tableName) throws SQLException
+    protected Collection<ForeignKey> readForeignKeys(DatabaseMetaDataWrapper metaData, String tableName) throws SQLException
     {
-        Map       fks    = new ListOrderedMap();
+        Map<String, ForeignKey>       fks    = new ListOrderedMap<>();
         ResultSet fkData = null;
 
         try
@@ -337,8 +332,7 @@ public class InterbaseModelReader extends JdbcModelReader
                 fkData = metaData.getForeignKeys(getDefaultTablePattern());
                 while (fkData.next())
                 {
-                    Map values = readColumns(fkData, getColumnsForFK());
-    
+                    var values = readColumns(fkData, getColumnsForFK());
                     if (tableName.equals(values.get("FKTABLE_NAME")))
                     {
                         readForeignKey(metaData, values, fks);
@@ -350,8 +344,7 @@ public class InterbaseModelReader extends JdbcModelReader
                 fkData = metaData.getForeignKeys(metaData.escapeForSearch(tableName));
                 while (fkData.next())
                 {
-                    Map values = readColumns(fkData, getColumnsForFK());
-    
+                    var values = readColumns(fkData, getColumnsForFK());
                     readForeignKey(metaData, values, fks);
                 }
             }
@@ -456,10 +449,10 @@ public class InterbaseModelReader extends JdbcModelReader
 
             while (!found && tableData.next())
             {
-                Map    values    = readColumns(tableData, getColumnsForTable());
+                var    values    = readColumns(tableData, getColumnsForTable());
                 String tableName = (String)values.get("TABLE_NAME");
 
-                if ((tableName != null) && (tableName.length() > 0))
+                if ((tableName != null) && (!tableName.isEmpty()))
                 {
                     schema = (String)values.get("TABLE_SCHEM");
                     found  = true;
@@ -487,7 +480,7 @@ public class InterbaseModelReader extends JdbcModelReader
                         }
 
                         if (table.findColumn((String)values.get("COLUMN_NAME"),
-                                             getPlatform().isDelimitedIdentifierModeOn()) == null)
+                                             getPlatform().isDelimitedIdentifierModeOn()).isEmpty())
                         {
                             found = false;
                         }
