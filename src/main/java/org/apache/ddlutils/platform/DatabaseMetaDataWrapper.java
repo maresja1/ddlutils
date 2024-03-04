@@ -25,6 +25,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -156,27 +157,9 @@ public class DatabaseMetaDataWrapper
         else
         {
             // with Java 5, we would just use Matcher.quoteReplacement
-            StringBuilder quotedEscape = new StringBuilder();
-
-            for (int idx = 0; idx < escape.length(); idx++)
-            {
-                char c = escape.charAt(idx);
-
-                switch (c)
-                {
-                    case '\\':
-                        quotedEscape.append("\\\\");
-                        break;
-                    case '$':
-                        quotedEscape.append("\\$");
-                        break;
-                    default:
-                        quotedEscape.append(c);
-                }
-            }
-            quotedEscape.append("$0");
-
-            return searchStringPattern.matcher(literalString).replaceAll(quotedEscape.toString());
+            String quotedEscape = Matcher.quoteReplacement(escape) + "$0";
+            return searchStringPattern.matcher(literalString)
+                    .replaceAll(quotedEscape);
         }
     }
 

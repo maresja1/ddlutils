@@ -288,7 +288,7 @@ public class TestIndexComparison extends TestComparisonBase
 
         assertEquals("TableA",
                      indexChange1.getChangedTable());
-        assertEquals(model1.findTable("TableA").getIndex(0),
+        assertEquals(model1.findTable("TableA").orElseThrow().getIndex(0),
                      indexChange1.findChangedIndex(model1, false));
 
         assertEquals("TableA",
@@ -311,7 +311,7 @@ public class TestIndexComparison extends TestComparisonBase
      */
     public void testAddNewColumnsToSingleColumnIndex()
     {
-        final String MODEL1 = 
+        final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TableA'>\n" +
@@ -322,7 +322,7 @@ public class TestIndexComparison extends TestComparisonBase
             "    </unique>\n" +
             "  </table>\n" +
             "</database>";
-        final String MODEL2 = 
+        final String MODEL2 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TABLEA'>\n" +
@@ -352,7 +352,7 @@ public class TestIndexComparison extends TestComparisonBase
 
         assertEquals("TableA",
                      indexChange1.getChangedTable());
-        assertEquals(model1.findTable("TableA").getIndex(0),
+        assertEquals(model1.findTable("TableA").orElseThrow().getIndex(0),
                      indexChange1.findChangedIndex(model1, false));
 
         assertEquals("TableA",
@@ -384,7 +384,7 @@ public class TestIndexComparison extends TestComparisonBase
      */
     public void testAddColumnToMultiColumnIndex()
     {
-        final String MODEL1 = 
+        final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TableA'>\n" +
@@ -398,7 +398,7 @@ public class TestIndexComparison extends TestComparisonBase
             "    </index>\n" +
             "  </table>\n" +
             "</database>";
-        final String MODEL2 = 
+        final String MODEL2 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TABLEA'>\n" +
@@ -426,7 +426,7 @@ public class TestIndexComparison extends TestComparisonBase
 
         assertEquals("TableA",
                      indexChange1.getChangedTable());
-        assertEquals(model1.findTable("TableA").getIndex(0),
+        assertEquals(model1.findTable("TableA").orElseThrow().getIndex(0),
                      indexChange1.findChangedIndex(model1, false));
 
         assertEquals("TableA",
@@ -440,7 +440,7 @@ public class TestIndexComparison extends TestComparisonBase
      */
     public void testAddColumnsToSingleColumnIndex()
     {
-        final String MODEL1 = 
+        final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TableA'>\n" +
@@ -453,7 +453,7 @@ public class TestIndexComparison extends TestComparisonBase
             "    </unique>\n" +
             "  </table>\n" +
             "</database>";
-        final String MODEL2 = 
+        final String MODEL2 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TABLEA'>\n" +
@@ -481,7 +481,7 @@ public class TestIndexComparison extends TestComparisonBase
 
         assertEquals("TableA",
                      indexChange1.getChangedTable());
-        assertEquals(model1.findTable("TableA").getIndex(0),
+        assertEquals(model1.findTable("TableA").orElseThrow().getIndex(0),
                      indexChange1.findChangedIndex(model1, false));
 
         assertEquals("TableA",
@@ -495,7 +495,7 @@ public class TestIndexComparison extends TestComparisonBase
      */
     public void testChangeIndexColumnOrder()
     {
-        final String MODEL1 = 
+        final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TableA'>\n" +
@@ -508,7 +508,7 @@ public class TestIndexComparison extends TestComparisonBase
             "    </unique>\n" +
             "  </table>\n" +
             "</database>";
-        final String MODEL2 = 
+        final String MODEL2 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TableA'>\n" +
@@ -534,21 +534,21 @@ public class TestIndexComparison extends TestComparisonBase
 
         assertEquals("TableA",
                      change1.getChangedTable());
-        assertEquals(model1.findTable("TableA").getIndex(0),
+        assertEquals(model1.findTable("TableA").orElseThrow().getIndex(0),
                      change1.findChangedIndex(model1, false));
 
         assertEquals("TableA",
                      change2.getChangedTable());
-        assertIndex("TestIndex", true, new String[] { "Col2", "Col1" }, 
+        assertIndex("TestIndex", true, new String[] { "Col2", "Col1" },
                      change2.getNewIndex());
     }
-    
+
     /**
      * Tests the recreation of an index because of the addition of an index column.
      */
     public void testAddIndexColumn()
     {
-        final String MODEL1 = 
+        final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TableA'>\n" +
@@ -560,7 +560,7 @@ public class TestIndexComparison extends TestComparisonBase
             "    </index>\n" +
             "  </table>\n" +
             "</database>";
-        final String MODEL2 = 
+        final String MODEL2 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TableA'>\n" +
@@ -586,21 +586,21 @@ public class TestIndexComparison extends TestComparisonBase
 
         assertEquals("TableA",
                      change1.getChangedTable());
-        assertEquals(model1.findTable("TableA").getIndex(0),
+        assertEquals(model1.findTable("TableA").orElseThrow().getIndex(0),
                      change1.findChangedIndex(model1, false));
 
         assertEquals("TableA",
                      change2.getChangedTable());
-        assertIndex("TestIndex", false, new String[] { "Col1", "Col2" }, 
+        assertIndex("TestIndex", false, new String[] { "Col1", "Col2" },
                      change2.getNewIndex());
     }
-   
+
     /**
      * Tests the addition and removal of an index because of the removal of an index column.
      */
     public void testRemoveIndexColumn()
     {
-        final String MODEL1 = 
+        final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TableA'>\n" +
@@ -613,7 +613,7 @@ public class TestIndexComparison extends TestComparisonBase
             "    </index>\n" +
             "  </table>\n" +
             "</database>";
-        final String MODEL2 = 
+        final String MODEL2 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TableA'>\n" +
@@ -638,12 +638,12 @@ public class TestIndexComparison extends TestComparisonBase
 
         assertEquals("TableA",
                      change1.getChangedTable());
-        assertEquals(model1.findTable("TableA").getIndex(0),
+        assertEquals(model1.findTable("TableA").orElseThrow().getIndex(0),
                      change1.findChangedIndex(model1, false));
 
         assertEquals("TableA",
                      change2.getChangedTable());
-        assertIndex("TestIndex", false, new String[] { "Col1" }, 
+        assertIndex("TestIndex", false, new String[] { "Col1" },
                     change2.getNewIndex());
     }
 
@@ -652,7 +652,7 @@ public class TestIndexComparison extends TestComparisonBase
      */
     public void testChangeIndexType()
     {
-        final String MODEL1 = 
+        final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TableA'>\n" +
@@ -665,7 +665,7 @@ public class TestIndexComparison extends TestComparisonBase
             "    </index>\n" +
             "  </table>\n" +
             "</database>";
-        final String MODEL2 = 
+        final String MODEL2 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TableA'>\n" +
@@ -691,12 +691,12 @@ public class TestIndexComparison extends TestComparisonBase
 
         assertEquals("TableA",
                      change1.getChangedTable());
-        assertEquals(model1.findTable("TableA").getIndex(0),
+        assertEquals(model1.findTable("TableA").orElseThrow().getIndex(0),
                      change1.findChangedIndex(model1, false));
 
         assertEquals("TableA",
                      change2.getChangedTable());
-        assertIndex("TestIndex", true, new String[] { "Col1", "Col2" }, 
+        assertIndex("TestIndex", true, new String[] { "Col1", "Col2" },
                     change2.getNewIndex());
     }
 
@@ -705,7 +705,7 @@ public class TestIndexComparison extends TestComparisonBase
      */
     public void testDropColumnFromSingleColumnIndex()
     {
-        final String MODEL1 = 
+        final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TableA'>\n" +
@@ -716,7 +716,7 @@ public class TestIndexComparison extends TestComparisonBase
             "    </index>\n" +
             "  </table>\n" +
             "</database>";
-        final String MODEL2 = 
+        final String MODEL2 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TABLEA'>\n" +
@@ -736,7 +736,7 @@ public class TestIndexComparison extends TestComparisonBase
 
         assertEquals("TableA",
                      indexChange.getChangedTable());
-        assertEquals(model1.findTable("TableA").getIndex(0),
+        assertEquals(model1.findTable("TableA").orElseThrow().getIndex(0),
                      indexChange.findChangedIndex(model1, false));
 
         assertEquals("TableA",
@@ -750,7 +750,7 @@ public class TestIndexComparison extends TestComparisonBase
      */
     public void testDropColumnFromMultiColumnIndex()
     {
-        final String MODEL1 = 
+        final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TableA'>\n" +
@@ -765,7 +765,7 @@ public class TestIndexComparison extends TestComparisonBase
             "    </unique>\n" +
             "  </table>\n" +
             "</database>";
-        final String MODEL2 = 
+        final String MODEL2 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TABLEA'>\n" +
@@ -792,7 +792,7 @@ public class TestIndexComparison extends TestComparisonBase
 
         assertEquals("TableA",
                      indexChange1.getChangedTable());
-        assertEquals(model1.findTable("TableA").getIndex(0),
+        assertEquals(model1.findTable("TableA").orElseThrow().getIndex(0),
                      indexChange1.findChangedIndex(model1, false));
 
         assertEquals("TableA",
@@ -811,7 +811,7 @@ public class TestIndexComparison extends TestComparisonBase
      */
     public void testAddColumnAndChangeIndexColumnOrder()
     {
-        final String MODEL1 = 
+        final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TableA'>\n" +
@@ -824,7 +824,7 @@ public class TestIndexComparison extends TestComparisonBase
             "    </unique>\n" +
             "  </table>\n" +
             "</database>";
-        final String MODEL2 = 
+        final String MODEL2 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TABLEA'>\n" +
@@ -853,7 +853,7 @@ public class TestIndexComparison extends TestComparisonBase
 
         assertEquals("TableA",
                      indexChange1.getChangedTable());
-        assertEquals(model1.findTable("TableA").getIndex(0),
+        assertEquals(model1.findTable("TableA").orElseThrow().getIndex(0),
                      indexChange1.findChangedIndex(model1, false));
 
         assertEquals("TableA",
@@ -876,7 +876,7 @@ public class TestIndexComparison extends TestComparisonBase
      */
     public void testDropColumnAndChangeIndexColumnOrder()
     {
-        final String MODEL1 = 
+        final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TableA'>\n" +
@@ -891,7 +891,7 @@ public class TestIndexComparison extends TestComparisonBase
             "    </unique>\n" +
             "  </table>\n" +
             "</database>";
-        final String MODEL2 = 
+        final String MODEL2 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TABLEA'>\n" +
@@ -918,7 +918,7 @@ public class TestIndexComparison extends TestComparisonBase
 
         assertEquals("TableA",
                      indexChange1.getChangedTable());
-        assertEquals(model1.findTable("TableA").getIndex(0),
+        assertEquals(model1.findTable("TableA").orElseThrow().getIndex(0),
                      indexChange1.findChangedIndex(model1, false));
 
         assertEquals("TableA",
@@ -931,13 +931,13 @@ public class TestIndexComparison extends TestComparisonBase
         assertIndex("TESTINDEX", true, new String[] { "COL1", "COL3" },
                     indexChange2.getNewIndex());
     }
-    
+
     /**
      * Tests the removal of an index.
      */
     public void testDropIndex1()
     {
-        final String MODEL1 = 
+        final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TableA'>\n" +
@@ -948,7 +948,7 @@ public class TestIndexComparison extends TestComparisonBase
             "    </unique>\n" +
             "  </table>\n" +
             "</database>";
-        final String MODEL2 = 
+        final String MODEL2 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TableA'>\n" +
@@ -968,7 +968,7 @@ public class TestIndexComparison extends TestComparisonBase
 
         assertEquals("TableA",
                      change.getChangedTable());
-        assertEquals(model1.findTable("TableA").getIndex(0),
+        assertEquals(model1.findTable("TableA").orElseThrow().getIndex(0),
                      change.findChangedIndex(model1, true));
     }
 
@@ -977,7 +977,7 @@ public class TestIndexComparison extends TestComparisonBase
      */
     public void testDropIndex2()
     {
-        final String MODEL1 = 
+        final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TableA'>\n" +
@@ -992,7 +992,7 @@ public class TestIndexComparison extends TestComparisonBase
             "    </index>\n" +
             "  </table>\n" +
             "</database>";
-        final String MODEL2 = 
+        final String MODEL2 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TABLEA'>\n" +
@@ -1014,16 +1014,16 @@ public class TestIndexComparison extends TestComparisonBase
 
         assertEquals("TableA",
                      indexChange.getChangedTable());
-        assertEquals(model1.findTable("TableA").getIndex(0),
+        assertEquals(model1.findTable("TableA").orElseThrow().getIndex(0),
                      indexChange.findChangedIndex(model1, false));
     }
-    
+
     /**
      * Tests the recreation of an index because of the change of type of the index.
      */
     public void testAddAndDropIndex()
     {
-        final String MODEL1 = 
+        final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TableA'>\n" +
@@ -1034,7 +1034,7 @@ public class TestIndexComparison extends TestComparisonBase
             "    </unique>\n" +
             "  </table>\n" +
             "</database>";
-        final String MODEL2 = 
+        final String MODEL2 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
             "<database xmlns='" + DatabaseIO.DDLUTILS_NAMESPACE + "' name='test'>\n" +
             "  <table name='TableA'>\n" +
@@ -1058,7 +1058,7 @@ public class TestIndexComparison extends TestComparisonBase
 
         assertEquals("TableA",
                      change1.getChangedTable());
-        assertEquals(model1.findTable("TableA").getIndex(0),
+        assertEquals(model1.findTable("TableA").orElseThrow().getIndex(0),
                      change1.findChangedIndex(model1, false));
 
         assertEquals("TableA",

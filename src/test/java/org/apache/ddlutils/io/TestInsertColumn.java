@@ -19,7 +19,6 @@ package org.apache.ddlutils.io;
  * under the License.
  */
 
-import org.apache.commons.beanutils.DynaBean;
 import org.apache.ddlutils.TestAgainstLiveDatabaseBase;
 import org.apache.ddlutils.platform.hsqldb.HsqlDbPlatform;
 import org.apache.ddlutils.platform.maxdb.MaxDbPlatform;
@@ -31,7 +30,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -87,7 +85,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr((Object)null, beans.get(0), "avalue");
     }
@@ -144,7 +142,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         if (isSybase)
         {
@@ -152,7 +150,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         }
         else
         {
-            Object avalue = ((DynaBean)beans.get(0)).get("avalue");
+            Object avalue = (beans.get(0)).get("avalue");
 
             assertTrue((avalue == null) || Objects.equals(1, avalue));
         }
@@ -189,7 +187,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr(new BigDecimal(2), beans.get(0), "avalue");
     }
@@ -228,12 +226,12 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         // we cannot be sure whether the default algorithm is used (which will apply the
         // default value even to existing columns with NULL in it) or the database supports
         // it directly (in which case it might still be NULL)
-        Object avalue = ((DynaBean)beans.get(0)).get("avalue");
+        Object avalue = (beans.get(0)).get("avalue");
 
         assertTrue((avalue == null) || Objects.equals(2, avalue));
     }
@@ -290,7 +288,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         if (isSybase)
         {
@@ -298,7 +296,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         }
         else
         {
-            Object avalue = ((DynaBean)beans.get(0)).get("avalue");
+            Object avalue = (beans.get(0)).get("avalue");
 
             assertTrue((avalue == null) || Objects.equals(1, avalue));
         }
@@ -338,12 +336,12 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         // we cannot be sure whether the default algorithm is used (which will apply the
         // default value even to existing columns with NULL in it) or the database supports
         // it directly (in which case it might still be NULL)
-        Object avalue = ((DynaBean)beans.get(0)).get("avalue");
+        Object avalue = (beans.get(0)).get("avalue");
 
         if (MySqlPlatform.DATABASENAME.equals(getPlatform().getName()) ||
             MySql50Platform.DATABASENAME.equals(getPlatform().getName()) ||
@@ -396,7 +394,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr((Object)null, beans.get(0), "avalue1");
         assertEqualsAttr((Object)null, beans.get(0), "avalue2");
@@ -435,7 +433,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertTrue(beans.isEmpty());
     }
@@ -487,7 +485,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         if (isSybase)
         {
@@ -632,7 +630,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         if (isSybase)
         {
@@ -642,7 +640,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         {
             assertEqualsAttr(-1, beans.get(0), "pk1");
         }
-        assertEquals(2, ((DynaBean)beans.get(0)).get("avalue"));
+        assertEquals(2, (beans.get(0)).get("avalue"));
     }
 
     /**
@@ -726,7 +724,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr((Object)null, beans.get(0), "avalue");
     }
@@ -771,7 +769,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr(1, beans.get(0), "avalue");
     }
@@ -857,7 +855,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr(2, beans.get(0), "avalue");
     }
@@ -902,7 +900,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr(1, beans.get(0), "avalue");
     }
@@ -946,8 +944,8 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List   beans  = getRows("roundtrip");
-        Object avalue = ((DynaBean)beans.get(0)).get("avalue");
+        var beans  = getRows("roundtrip");
+        Object avalue = (beans.get(0)).get("avalue");
 
         if (MySqlPlatform.DATABASENAME.equals(getPlatform().getName()) ||
             MySql50Platform.DATABASENAME.equals(getPlatform().getName()) ||
@@ -1046,7 +1044,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr((Object)null, beans.get(0), "avalue");
     }
@@ -1091,7 +1089,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr(1, beans.get(0), "avalue");
     }
@@ -1177,7 +1175,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr(2, beans.get(0), "avalue");
     }
@@ -1222,7 +1220,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr(1, beans.get(0), "avalue");
     }
@@ -1266,8 +1264,8 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List   beans  = getRows("roundtrip");
-        Object avalue = ((DynaBean)beans.get(0)).get("avalue");
+        var beans  = getRows("roundtrip");
+        Object avalue = (beans.get(0)).get("avalue");
 
         if (MySqlPlatform.DATABASENAME.equals(getPlatform().getName()) ||
             MySql50Platform.DATABASENAME.equals(getPlatform().getName()) ||
@@ -1372,7 +1370,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr(2, beans.get(0), "avalue1");
         assertEqualsAttr((Object)null,   beans.get(0), "avalue2");
@@ -1424,7 +1422,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr(2, beans.get(0), "avalue1");
         assertEqualsAttr(1, beans.get(0), "avalue2");
@@ -1523,7 +1521,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr(2, beans.get(0), "avalue1");
         assertEqualsAttr(2,  beans.get(0), "avalue2");
@@ -1575,7 +1573,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr(2, beans.get(0), "avalue1");
         assertEqualsAttr(1, beans.get(0), "avalue2");
@@ -1626,10 +1624,10 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List   beans   = getRows("roundtrip");
-        Object avalue2 = ((DynaBean)beans.get(0)).get("avalue2");
+        var beans   = getRows("roundtrip");
+        Object avalue2 = (beans.get(0)).get("avalue2");
 
-        assertEqualsAttr(2,  beans.get(0), "avalue1");
+        assertEqualsAttr(2, beans.get(0), "avalue1");
         if (MySqlPlatform.DATABASENAME.equals(getPlatform().getName()) ||
             MySql50Platform.DATABASENAME.equals(getPlatform().getName()) ||
             HsqlDbPlatform.DATABASENAME.equals(getPlatform().getName()) ||
@@ -1739,7 +1737,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr(2, beans.get(0), "avalue1");
         assertEqualsAttr((Object)null,   beans.get(0), "avalue2");
@@ -1791,7 +1789,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr(2, beans.get(0), "avalue1");
         assertEqualsAttr(1, beans.get(0), "avalue2");
@@ -1890,7 +1888,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr(2, beans.get(0), "avalue1");
         assertEqualsAttr(2,  beans.get(0), "avalue2");
@@ -1942,7 +1940,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr(2, beans.get(0), "avalue1");
         assertEqualsAttr(1, beans.get(0), "avalue2");
@@ -1993,8 +1991,8 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List   beans   = getRows("roundtrip");
-        Object avalue2 = ((DynaBean)beans.get(0)).get("avalue2");
+        var beans   = getRows("roundtrip");
+        Object avalue2 = (beans.get(0)).get("avalue2");
 
         assertEqualsAttr(2, beans.get(0), "avalue1");
         if (MySqlPlatform.DATABASENAME.equals(getPlatform().getName()) ||
@@ -2102,8 +2100,8 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
         assertEqualsAttr((Object)"text", beans1.get(0), "pk");
         assertEqualsAttr(1, beans2.get(0), "pk");
@@ -2156,8 +2154,8 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
         assertEqualsAttr(1, beans1.get(0), "pk");
         assertEqualsAttr(2, beans2.get(0), "pk");
@@ -2205,8 +2203,8 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
         assertEqualsAttr(new BigDecimal(1), beans1.get(0), "pk");
         assertTrue(beans2.isEmpty());
@@ -2253,8 +2251,8 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
         assertEqualsAttr(1,  beans1.get(0), "pk");
         assertEqualsAttr(2, beans2.get(0), "pk");
@@ -2307,8 +2305,8 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
         assertEqualsAttr(1, beans1.get(0), "pk");
         assertEqualsAttr(2, beans2.get(0), "pk");
@@ -2356,10 +2354,10 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List   beans1 = getRows("roundtrip1");
-        List   beans2 = getRows("roundtrip2");
-        Object pk1    = ((DynaBean)beans1.get(0)).get("pk");
-        Object avalue = ((DynaBean)beans2.get(0)).get("avalue");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
+        Object pk1    = (beans1.get(0)).get("pk");
+        Object avalue = (beans2.get(0)).get("avalue");
 
         assertEqualsAttr(1, beans2.get(0), "pk");
         if (MySqlPlatform.DATABASENAME.equals(getPlatform().getName()) ||
@@ -2425,8 +2423,8 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
         assertEqualsAttr(1, beans1.get(0), "pk1");
         assertEqualsAttr(2,  beans1.get(0), "pk2");
@@ -2517,8 +2515,8 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
         assertEqualsAttr(1, beans1.get(0), "pk");
         assertEqualsAttr(2, beans1.get(0), "avalue");
@@ -2569,8 +2567,8 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
         assertEqualsAttr(1,  beans1.get(0), "pk");
         assertEqualsAttr(2, beans1.get(0), "avalue");
@@ -2722,8 +2720,8 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
         assertEqualsAttr(1, beans1.get(0), "pk1");
         assertEqualsAttr(1, beans1.get(0), "pk2");
@@ -2828,8 +2826,8 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         alterDatabase(model2Xml);
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
         assertEqualsAttr(1, beans1.get(0), "pk1");
         assertEqualsAttr(2,  beans1.get(0), "pk2");
@@ -2891,8 +2889,8 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
         assertEqualsAttr(1, beans1.get(0), "pk1");
         assertEqualsAttr(1, beans1.get(0), "pk2");
@@ -2946,10 +2944,10 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         alterDatabase(model2Xml);
 
-        List   beans1  = getRows("roundtrip1");
-        List   beans2  = getRows("roundtrip2");
-        Object pk2     = ((DynaBean)beans1.get(0)).get("pk2");
-        Object avalue2 = ((DynaBean)beans2.get(0)).get("avalue2");
+        var beans1  = getRows("roundtrip1");
+        var beans2  = getRows("roundtrip2");
+        Object pk2     = (beans1.get(0)).get("pk2");
+        Object avalue2 = (beans2.get(0)).get("avalue2");
 
         assertEqualsAttr(1, beans1.get(0), "pk1");
         assertEqualsAttr(2, beans2.get(0), "pk");

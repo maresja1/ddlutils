@@ -144,9 +144,9 @@ public class TestForeignKeyComparison extends TestComparisonBase
         assertEquals("TableB",
                      pkChange.getChangedTable());
         assertEquals(1,
-                     pkChange.getPrimaryKeyColumns().length);
+                     pkChange.getPrimaryKeyColumns().size());
         assertEquals("COLPK",
-                     pkChange.getPrimaryKeyColumns()[0]);
+                     pkChange.getPrimaryKeyColumns().get(0));
 
         assertEquals("TableA",
                      fkChange.getChangedTable());
@@ -305,13 +305,13 @@ public class TestForeignKeyComparison extends TestComparisonBase
         assertEquals("TableB",
                      pkChange.getChangedTable());
         assertEquals(3,
-                     pkChange.getNewPrimaryKeyColumns().length);
+                     pkChange.getNewPrimaryKeyColumns().size());
         assertEquals("COLPK1",
-                     pkChange.getNewPrimaryKeyColumns()[0]);
+                     pkChange.getNewPrimaryKeyColumns().get(0));
         assertEquals("COLPK2",
-                     pkChange.getNewPrimaryKeyColumns()[1]);
+                     pkChange.getNewPrimaryKeyColumns().get(1));
         assertEquals("ColPK3",
-                     pkChange.getNewPrimaryKeyColumns()[2]);
+                     pkChange.getNewPrimaryKeyColumns().get(2));
 
         assertEquals("TableA",
                      fkChange.getChangedTable());
@@ -407,13 +407,13 @@ public class TestForeignKeyComparison extends TestComparisonBase
         assertEquals("TableB",
                      pkChange.getChangedTable());
         assertEquals(3,
-                     pkChange.getNewPrimaryKeyColumns().length);
+                     pkChange.getNewPrimaryKeyColumns().size());
         assertEquals("COLPK1",
-                     pkChange.getNewPrimaryKeyColumns()[0]);
+                     pkChange.getNewPrimaryKeyColumns().get(0));
         assertEquals("COLPK2",
-                     pkChange.getNewPrimaryKeyColumns()[1]);
+                     pkChange.getNewPrimaryKeyColumns().get(1));
         assertEquals("ColPK3",
-                     pkChange.getNewPrimaryKeyColumns()[2]);
+                     pkChange.getNewPrimaryKeyColumns().get(2));
 
         assertEquals("TableA",
                      fkChange.getChangedTable());
@@ -581,7 +581,7 @@ public class TestForeignKeyComparison extends TestComparisonBase
 
         assertEquals("TableA",
                      fkChange1.getChangedTable());
-        assertEquals(model1.findTable("TableA").getForeignKey(0),
+        assertEquals(model1.findTable("TableA").orElseThrow().getForeignKey(0),
                      fkChange1.findChangedForeignKey(model1, false));
 
         assertEquals("TableA",
@@ -596,13 +596,13 @@ public class TestForeignKeyComparison extends TestComparisonBase
         assertEquals("TableB",
                      pkChange.getChangedTable());
         assertEquals(3,
-                     pkChange.getNewPrimaryKeyColumns().length);
+                     pkChange.getNewPrimaryKeyColumns().size());
         assertEquals("ColPK1",
-                     pkChange.getNewPrimaryKeyColumns()[0]);
+                     pkChange.getNewPrimaryKeyColumns().get(0));
         assertEquals("ColPK2",
-                     pkChange.getNewPrimaryKeyColumns()[1]);
+                     pkChange.getNewPrimaryKeyColumns().get(1));
         assertEquals("COLPK3",
-                     pkChange.getNewPrimaryKeyColumns()[2]);
+                     pkChange.getNewPrimaryKeyColumns().get(2));
 
         assertEquals("TableA",
                      fkChange2.getChangedTable());
@@ -668,7 +668,7 @@ public class TestForeignKeyComparison extends TestComparisonBase
 
         assertEquals("TableA",
                      fkChange1.getChangedTable());
-        assertEquals(model1.findTable("TableA").getForeignKey(0),
+        assertEquals(model1.findTable("TableA").orElseThrow().getForeignKey(0),
                      fkChange1.findChangedForeignKey(model1, false));
 
         assertEquals("TableB",
@@ -682,13 +682,13 @@ public class TestForeignKeyComparison extends TestComparisonBase
         assertEquals("TableB",
                      pkChange.getChangedTable());
         assertEquals(3,
-                     pkChange.getNewPrimaryKeyColumns().length);
+                     pkChange.getNewPrimaryKeyColumns().size());
         assertEquals("ColPK1",
-                     pkChange.getNewPrimaryKeyColumns()[0]);
+                     pkChange.getNewPrimaryKeyColumns().get(0));
         assertEquals("ColPK2",
-                     pkChange.getNewPrimaryKeyColumns()[1]);
+                     pkChange.getNewPrimaryKeyColumns().get(1));
         assertEquals("COLPK3",
-                     pkChange.getNewPrimaryKeyColumns()[2]);
+                     pkChange.getNewPrimaryKeyColumns().get(2));
 
         assertEquals("TableA",
                      fkChange2.getChangedTable());
@@ -753,7 +753,7 @@ public class TestForeignKeyComparison extends TestComparisonBase
 
         assertEquals("TableA",
                      fkChange1.getChangedTable());
-        assertEquals(model1.findTable("TableA").getForeignKey(0),
+        assertEquals(model1.findTable("TableA").orElseThrow().getForeignKey(0),
                      fkChange1.findChangedForeignKey(model1, false));
 
         assertEquals("TableA",
@@ -792,13 +792,13 @@ public class TestForeignKeyComparison extends TestComparisonBase
         assertEquals("TableB",
                      pkChange.getChangedTable());
         assertEquals(3,
-                     pkChange.getNewPrimaryKeyColumns().length);
+                     pkChange.getNewPrimaryKeyColumns().size());
         assertEquals("ColPK1",
-                     pkChange.getNewPrimaryKeyColumns()[0]);
+                     pkChange.getNewPrimaryKeyColumns().get(0));
         assertEquals("COLPK2",
-                     pkChange.getNewPrimaryKeyColumns()[1]);
+                     pkChange.getNewPrimaryKeyColumns().get(1));
         assertEquals("COLPK3",
-                     pkChange.getNewPrimaryKeyColumns()[2]);
+                     pkChange.getNewPrimaryKeyColumns().get(2));
 
         assertEquals("TableA",
                      fkChange2.getChangedTable());
@@ -853,7 +853,7 @@ public class TestForeignKeyComparison extends TestComparisonBase
 
         Database model1  = parseDatabaseFromString(MODEL1);
         Database model2  = parseDatabaseFromString(MODEL2);
-        List     changes = getPlatform(false).getChanges(model1, model2);
+        var changes = getPlatform(false).getChanges(model1, model2);
 
         assertEquals(3,
                      changes.size());
@@ -864,19 +864,19 @@ public class TestForeignKeyComparison extends TestComparisonBase
 
         assertEquals("TableA",
                      fkChange1.getChangedTable());
-        assertEquals(model1.findTable("TableA").getForeignKey(0),
+        assertEquals(model1.findTable("TableA").orElseThrow().getForeignKey(0),
                      fkChange1.findChangedForeignKey(model1, false));
 
         assertEquals("TableB",
                      pkChange.getChangedTable());
         assertEquals(3,
-                     pkChange.getNewPrimaryKeyColumns().length);
+                     pkChange.getNewPrimaryKeyColumns().size());
         assertEquals("COLPK1",
-                     pkChange.getNewPrimaryKeyColumns()[0]);
+                     pkChange.getNewPrimaryKeyColumns().get(0));
         assertEquals("COLPK2",
-                     pkChange.getNewPrimaryKeyColumns()[1]);
+                     pkChange.getNewPrimaryKeyColumns().get(1));
         assertEquals("COLPK3",
-                     pkChange.getNewPrimaryKeyColumns()[2]);
+                     pkChange.getNewPrimaryKeyColumns().get(2));
 
         assertEquals("TableA",
                      fkChange2.getChangedTable());
@@ -941,19 +941,19 @@ public class TestForeignKeyComparison extends TestComparisonBase
 
         assertEquals("TableA",
                      fkChange1.getChangedTable());
-        assertEquals(model1.findTable("TableA").getForeignKey(0),
+        assertEquals(model1.findTable("TableA").orElseThrow().getForeignKey(0),
                      fkChange1.findChangedForeignKey(model1, false));
 
         assertEquals("TableB",
                      pkChange.getChangedTable());
         assertEquals(3,
-                     pkChange.getNewPrimaryKeyColumns().length);
+                     pkChange.getNewPrimaryKeyColumns().size());
         assertEquals("COLPK1",
-                     pkChange.getNewPrimaryKeyColumns()[0]);
+                     pkChange.getNewPrimaryKeyColumns().get(0));
         assertEquals("COLPK2",
-                     pkChange.getNewPrimaryKeyColumns()[1]);
+                     pkChange.getNewPrimaryKeyColumns().get(1));
         assertEquals("COLPK3",
-                     pkChange.getNewPrimaryKeyColumns()[2]);
+                     pkChange.getNewPrimaryKeyColumns().get(2));
 
         assertEquals("TableA",
                      fkChange2.getChangedTable());
@@ -1066,19 +1066,19 @@ public class TestForeignKeyComparison extends TestComparisonBase
 
         assertEquals("TableA",
                      fkChange1.getChangedTable());
-        assertEquals(model1.findTable("TableA").getForeignKey(0),
+        assertEquals(model1.findTable("TableA").orElseThrow().getForeignKey(0),
                      fkChange1.findChangedForeignKey(model1, false));
 
         assertEquals("TableB",
                      pkChange.getChangedTable());
         assertEquals(3,
-                     pkChange.getNewPrimaryKeyColumns().length);
+                     pkChange.getNewPrimaryKeyColumns().size());
         assertEquals("COLPK1",
-                     pkChange.getNewPrimaryKeyColumns()[0]);
+                     pkChange.getNewPrimaryKeyColumns().get(0));
         assertEquals("COLPK2",
-                     pkChange.getNewPrimaryKeyColumns()[1]);
+                     pkChange.getNewPrimaryKeyColumns().get(1));
         assertEquals("COLPK3",
-                     pkChange.getNewPrimaryKeyColumns()[2]);
+                     pkChange.getNewPrimaryKeyColumns().get(2));
 
         assertEquals("TableA",
                      fkChange2.getChangedTable());
@@ -1144,17 +1144,17 @@ public class TestForeignKeyComparison extends TestComparisonBase
 
         assertEquals("TableA",
                      fkChange1.getChangedTable());
-        assertEquals(model1.findTable("TableA").getForeignKey(0),
+        assertEquals(model1.findTable("TableA").orElseThrow().getForeignKey(0),
                      fkChange1.findChangedForeignKey(model1, false));
 
         assertEquals("TableB",
                      pkChange.getChangedTable());
         assertEquals(2,
-                     pkChange.getNewPrimaryKeyColumns().length);
+                     pkChange.getNewPrimaryKeyColumns().size());
         assertEquals("COLPK1",
-                     pkChange.getNewPrimaryKeyColumns()[0]);
+                     pkChange.getNewPrimaryKeyColumns().get(0));
         assertEquals("COLPK2",
-                     pkChange.getNewPrimaryKeyColumns()[1]);
+                     pkChange.getNewPrimaryKeyColumns().get(1));
 
         assertEquals("TableA",
                      fkChange2.getChangedTable());
@@ -1220,17 +1220,17 @@ public class TestForeignKeyComparison extends TestComparisonBase
 
         assertEquals("TableA",
                      fkChange1.getChangedTable());
-        assertEquals(model1.findTable("TableA").getForeignKey(0),
+        assertEquals(model1.findTable("TableA").orElseThrow().getForeignKey(0),
                      fkChange1.findChangedForeignKey(model1, false));
 
         assertEquals("TableB",
                      pkChange.getChangedTable());
         assertEquals(2,
-                     pkChange.getNewPrimaryKeyColumns().length);
+                     pkChange.getNewPrimaryKeyColumns().size());
         assertEquals("COLPK1",
-                     pkChange.getNewPrimaryKeyColumns()[0]);
+                     pkChange.getNewPrimaryKeyColumns().get(0));
         assertEquals("COLPK2",
-                     pkChange.getNewPrimaryKeyColumns()[1]);
+                     pkChange.getNewPrimaryKeyColumns().get(1));
 
         assertEquals("TableA",
                      fkChange2.getChangedTable());
@@ -1296,7 +1296,7 @@ public class TestForeignKeyComparison extends TestComparisonBase
 
         assertEquals("TableA",
                      fkChange1.getChangedTable());
-        assertEquals(model1.findTable("TableA").getForeignKey(0),
+        assertEquals(model1.findTable("TableA").orElseThrow().getForeignKey(0),
                      fkChange1.findChangedForeignKey(model1, false));
 
         assertEquals("TableA",
@@ -1362,7 +1362,7 @@ public class TestForeignKeyComparison extends TestComparisonBase
 
         assertEquals("TableB",
                      change.getChangedTable());
-        assertEquals(model1.findTable("TableB").getForeignKey(0),
+        assertEquals(model1.findTable("TableB").orElseThrow().getForeignKey(0),
                      change.findChangedForeignKey(model1, false));
     }
 
@@ -1419,7 +1419,7 @@ public class TestForeignKeyComparison extends TestComparisonBase
 
         assertEquals("TableA",
                      fkChange.getChangedTable());
-        assertEquals(model1.findTable("TableA").getForeignKey(0),
+        assertEquals(model1.findTable("TableA").orElseThrow().getForeignKey(0),
                      fkChange.findChangedForeignKey(model1, false));
     }
 
@@ -1469,7 +1469,7 @@ public class TestForeignKeyComparison extends TestComparisonBase
 
         assertEquals("TableB",
                      change1.getChangedTable());
-        assertEquals(model1.findTable("TableB").getForeignKey(0),
+        assertEquals(model1.findTable("TableB").orElseThrow().getForeignKey(0),
                      change1.findChangedForeignKey(model1, true));
 
         assertEquals("TableB",
@@ -1530,7 +1530,7 @@ public class TestForeignKeyComparison extends TestComparisonBase
 
         assertEquals("TableA",
                      change1.getChangedTable());
-        assertEquals(model1.findTable("TableA").getForeignKey(0),
+        assertEquals(model1.findTable("TableA").orElseThrow().getForeignKey(0),
                      change1.findChangedForeignKey(model1, true));
 
         assertEquals("TableA",

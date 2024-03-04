@@ -447,7 +447,7 @@ public class ModelComparator
     {
         return columns.map(
 			column -> intermediateTable.findColumn(column.getName(), _caseSensitive)
-				.orElseThrow()
+				.orElseThrow(() -> new RuntimeException("not present in intermediate " + column.getName()))
 				.getName()
 		);
     }
@@ -639,12 +639,15 @@ public class ModelComparator
 							intermediateTable.getName());
 					}
 
-					RemoveColumnChange change = new RemoveColumnChange(intermediateTable.getName(), sourceColumn.getName());
-
+					var change = new RemoveColumnChange(intermediateTable.getName(), sourceColumn.getName());
 					changes.add(change);
-					change.apply(intermediateModel, _caseSensitive);
 				});
 		}
+
+        for (var change : changes) {
+            change.apply(intermediateModel, _caseSensitive);
+        }
+
         return changes;
     }
 

@@ -347,7 +347,7 @@ public class TestModelComparison extends TestComparisonBase
 
         assertEquals("TableA",
                      fkChange.getChangedTable());
-        assertEquals(model1.findTable("TableA").getForeignKey(0),
+        assertEquals(model1.findTable("TableA").orElseThrow().getForeignKey(0),
                      fkChange.findChangedForeignKey(model1, false));
 
         assertEquals("TableA",
@@ -394,7 +394,7 @@ public class TestModelComparison extends TestComparisonBase
 
         assertEquals("TableB",
                      fkChange.getChangedTable());
-        assertEquals(model1.findTable("TableB").getForeignKey(0),
+        assertEquals(model1.findTable("TableB").orElseThrow().getForeignKey(0),
                      fkChange.findChangedForeignKey(model1, false));
 
         assertEquals("TableA",

@@ -2096,14 +2096,18 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
 	{
 		var table = model.findTable(tableName).orElseThrow();
 
-		var properties = columnValues.keySet()
-			.stream()
-			.map(col -> table.findColumn(col).orElseThrow())
-			.toList();
+		var properties = table.getColumns()
+                .stream()
+                .filter(column -> columnValues.containsKey(column.getName()))
+                .toList();
+
+        if (properties.size() != columnValues.keySet().size()) {
+            throw new DdlUtilsException("Column values contain key that is not a name of a column");
+        }
 
 		var autoIncrColumns = getRelevantIdentityColumns(table, columnValues);
 
-		String insertSql        = _builder.getInsertSql(table, columnValues, false);
+		String insertSql        = _builder.getInsertSql(table, columnValues, true);
 		String queryIdentitySql = null;
 
 		var result = new HashMap<>(columnValues);

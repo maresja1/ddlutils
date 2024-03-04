@@ -29,7 +29,6 @@ import org.apache.ddlutils.platform.sybase.SybasePlatform;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
-import java.util.List;
 import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -97,7 +96,7 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr((Object)"test", beans.get(0), "avalue1");
         assertEqualsAttr((Object)null, beans.get(0), "avalue2");
@@ -173,7 +172,7 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr((Object)"test", beans.get(0), "avalue1");
         assertEqualsAttr((Object)null, beans.get(0), "avalue2");
@@ -255,7 +254,7 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr((Object)"test",  beans.get(0), "avalue1");
         assertEqualsAttr(1,  beans.get(0), "avalue2");
@@ -293,7 +292,7 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr(1, beans.get(0), "pk");
     }
@@ -348,7 +347,7 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr(1, beans.get(0), "pk");
     }
@@ -384,7 +383,7 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr((Object)"test", beans.get(0), "avalue");
     }
@@ -420,7 +419,7 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr((Object)"test", beans.get(0), "avalue");
     }
@@ -455,7 +454,7 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr(1, beans.get(0), "pk");
     }
@@ -502,7 +501,7 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr((Object)null, beans.get(0), "avalue1");
         assertEqualsAttr(2, beans.get(0), "avalue2");
@@ -547,7 +546,7 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr(2, beans.get(0), "avalue");
     }
@@ -589,7 +588,7 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr(2.0, beans.get(0), "avalue1");
         assertEqualsAttr((Object)"test", beans.get(0), "avalue2");
@@ -659,9 +658,9 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
-        List beans3 = getRows("roundtrip3");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
+        var beans3 = getRows("roundtrip3");
 
         assertEqualsAttr(1, beans1.get(0), "pk");
         assertEqualsAttr((Object)"test", beans2.get(0), "pk");
@@ -720,8 +719,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
         assertEqualsAttr(1, beans1.get(0), "pk");
         assertEqualsAttr((Object)"test", beans1.get(0), "avalue");
@@ -774,7 +773,7 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         assertEqualsAttr(2.0, beans.get(0), "avalue1");
         assertEqualsAttr(3, beans.get(0), "avalue2");
@@ -821,8 +820,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
         assertEqualsAttr(1, beans1.get(0), "pk");
         assertEqualsAttr((Object)"2", beans2.get(0), "pk");
@@ -875,8 +874,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
         assertEqualsAttr(1, beans1.get(0), "pk1");
         assertEqualsAttr(2.0, beans1.get(0), "pk2");
@@ -931,8 +930,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("Roundtrip1");
-        List beans2 = getRows("Roundtrip2");
+        var beans1 = getRows("Roundtrip1");
+        var beans2 = getRows("Roundtrip2");
 
         assertEqualsAttr(1, beans1.get(0), "Pk1");
         assertEqualsAttr(2.0, beans1.get(0), "Pk2");
@@ -998,8 +997,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
         assertEqualsAttr(1, beans1.get(0), "pk1");
         assertEqualsAttr(2.0, beans1.get(0), "pk2");
@@ -1069,8 +1068,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
         assertEqualsAttr(1, beans1.get(0), "pk1");
         assertEqualsAttr(2.0, beans1.get(0), "pk2");
@@ -1139,8 +1138,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
         assertEqualsAttr(1, beans1.get(0), "pk1");
         assertEqualsAttr(2.0, beans1.get(0), "pk2");
@@ -1212,8 +1211,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
         assertEqualsAttr(1, beans1.get(0), "pk1");
         assertEqualsAttr(2.0, beans1.get(0), "pk2");
@@ -1292,10 +1291,10 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
-        List beans3 = getRows("roundtrip3");
-        List beans4 = getRows("roundtrip4");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
+        var beans3 = getRows("roundtrip3");
+        var beans4 = getRows("roundtrip4");
 
         assertEqualsAttr(1,  beans1.get(0), "pk");
         assertEqualsAttr(2,  beans2.get(0), "pk");
@@ -1354,8 +1353,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
         assertEqualsAttr(1, beans1.get(0), "pk1");
         assertEqualsAttr(0.0, beans1.get(0), "pk2");
@@ -1411,8 +1410,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
         assertEqualsAttr(1, beans1.get(0), "pk1");
         assertEqualsAttr(2, beans2.get(0), "pk");
@@ -1455,7 +1454,7 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip1");
+        var beans = getRows("roundtrip1");
 
         assertEqualsAttr(1, beans.get(0), "pk");
     }
@@ -1517,8 +1516,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans1 = getRows("roundtrip1");
-        List beans2 = getRows("roundtrip2");
+        var beans1 = getRows("roundtrip1");
+        var beans2 = getRows("roundtrip2");
 
         assertEqualsAttr(1, beans1.get(0), "pk");
         assertEqualsAttr((Object)"test", beans1.get(0), "avalue");
@@ -1575,7 +1574,7 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip1");
+        var beans = getRows("roundtrip1");
 
         assertEqualsAttr((Object)"1", beans.get(0), "pk");
     }
@@ -1614,7 +1613,7 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip1");
+        var beans = getRows("roundtrip1");
 
         assertEqualsAttr(1, beans.get(0), "pk");
     }
@@ -1657,7 +1656,7 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip2");
+        var beans = getRows("roundtrip2");
 
         assertEqualsAttr(1, beans.get(0), "pk");
         assertEqualsAttr((Object)"test", beans.get(0), "avalue");
@@ -1767,7 +1766,7 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
         assertEquals(getAdjustedModel(),
                      readModelFromDatabase("roundtriptest"));
 
-        List beans = getRows("roundtrip");
+        var beans = getRows("roundtrip");
 
         if (MckoiPlatform.DATABASENAME.equals(getPlatform().getName()))
         {

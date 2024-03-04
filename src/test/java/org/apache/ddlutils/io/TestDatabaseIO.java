@@ -101,8 +101,8 @@ public class TestDatabaseIO
         assertEquals(name, table.getName());
         assertEquals(description, table.getDescription());
         assertEquals(numColumns, table.getColumnCount());
-        assertEquals(numPrimaryKeyColumns, table.getPrimaryKeyColumns().length);
-        assertEquals(numAutoIncrementColumns, table.getAutoIncrementColumns().length);
+        assertEquals(numPrimaryKeyColumns, table.getPrimaryKeyColumns().count());
+        assertEquals(numAutoIncrementColumns, table.getAutoIncrementColumns().count());
         assertEquals(numForeignKeys, table.getForeignKeyCount());
         assertEquals(numIndexes, table.getIndexCount());
     }
@@ -544,7 +544,7 @@ public class TestDatabaseIO
         assertEquals("ID", Types.INTEGER, 0, 0, null, null, null, true, false, false,
                      column);
 
-        assertEquals(column, table.getPrimaryKeyColumns()[0]);
+        assertEquals(column, table.getPrimaryKeyColumns().findFirst().get());
         
         assertEquals(
             "<?xml version='1.0' encoding='UTF-8'?>\n" +
@@ -619,7 +619,7 @@ public class TestDatabaseIO
         assertEquals("ID", Types.INTEGER, 0, 0, null, null, null, false, false, true,
                      column);
 
-        assertEquals(column, table.getAutoIncrementColumns()[0]);
+        assertEquals(column, table.getAutoIncrementColumns().toList().get(0));
 
         assertEquals(
             "<?xml version='1.0' encoding='UTF-8'?>\n" +
@@ -2257,7 +2257,7 @@ public class TestDatabaseIO
                      table.getColumn(0));
         assertEquals("when", Types.DATE, 0, 0, null, null, null, false, false, false,
                      table.getColumn(1));
-        assertEquals(table.getColumn(0), table.getAutoIncrementColumns()[0]);
+        assertEquals(table.getColumn(0), table.getAutoIncrementColumns().findFirst().get());
 
         Index index = table.getIndex(0);
 
@@ -2377,7 +2377,7 @@ public class TestDatabaseIO
                      table.getColumn(1));
         assertEquals("name", Types.VARCHAR, 32, 0, null, "The name", null, false, true, false,
                      table.getColumn(2));
-        assertEquals(table.getColumn(0), table.getAutoIncrementColumns()[0]);
+        assertEquals(table.getColumn(0), table.getAutoIncrementColumns().findFirst().get());
 
         ForeignKey fk = table.getForeignKey(0);
 

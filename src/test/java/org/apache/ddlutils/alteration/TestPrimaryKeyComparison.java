@@ -58,7 +58,7 @@ public class TestPrimaryKeyComparison extends TestComparisonBase
 
         Database model1  = parseDatabaseFromString(MODEL1);
         Database model2  = parseDatabaseFromString(MODEL2);
-        List     changes = getPlatform(true).getChanges(model1, model2);
+        var changes = getPlatform(true).getChanges(model1, model2);
 
         assertEquals(2,
                      changes.size());
@@ -74,12 +74,9 @@ public class TestPrimaryKeyComparison extends TestComparisonBase
         assertEquals("ColPK2",
                      colChange.getNextColumn());
 
-        assertEquals("TableA",
-                     pkChange.getChangedTable());
-        assertEquals(1,
-                     pkChange.getPrimaryKeyColumns().length);
-        assertEquals("ColPK1",
-                     pkChange.getPrimaryKeyColumns()[0]);
+        assertEquals("TableA", pkChange.getChangedTable());
+        assertEquals(1, pkChange.getPrimaryKeyColumns().size());
+        assertEquals("ColPK1", pkChange.getPrimaryKeyColumns().get(0));
     }
 
     /**
@@ -104,7 +101,7 @@ public class TestPrimaryKeyComparison extends TestComparisonBase
 
         Database model1  = parseDatabaseFromString(MODEL1);
         Database model2  = parseDatabaseFromString(MODEL2);
-        List     changes = getPlatform(false).getChanges(model1, model2);
+        var changes = getPlatform(false).getChanges(model1, model2);
 
         assertEquals(1,
                      changes.size());
@@ -114,9 +111,9 @@ public class TestPrimaryKeyComparison extends TestComparisonBase
         assertEquals("TableA",
                      change.getChangedTable());
         assertEquals(1,
-                     change.getPrimaryKeyColumns().length);
+                     change.getPrimaryKeyColumns().size());
         assertEquals("ColPK",
-                     change.getPrimaryKeyColumns()[0]);
+                     change.getPrimaryKeyColumns().get(0));
     }
 
     /**
@@ -153,11 +150,11 @@ public class TestPrimaryKeyComparison extends TestComparisonBase
         assertEquals("TableA",
                      change.getChangedTable());
         assertEquals(2,
-                     change.getNewPrimaryKeyColumns().length);
+                     change.getNewPrimaryKeyColumns().size());
         assertEquals("ColPK1",
-                     change.getNewPrimaryKeyColumns()[0]);
+                     change.getNewPrimaryKeyColumns().get(0));
         assertEquals("ColPK2",
-                     change.getNewPrimaryKeyColumns()[1]);
+                     change.getNewPrimaryKeyColumns().get(1));
     }
 
     /**
@@ -197,13 +194,13 @@ public class TestPrimaryKeyComparison extends TestComparisonBase
         assertEquals("TableA",
                      pkChange.getChangedTable());
         assertEquals(3,
-                     pkChange.getNewPrimaryKeyColumns().length);
+                     pkChange.getNewPrimaryKeyColumns().size());
         assertEquals("ColPK2",
-                     pkChange.getNewPrimaryKeyColumns()[0]);
+                     pkChange.getNewPrimaryKeyColumns().get(0));
         assertEquals("ColPK3",
-                     pkChange.getNewPrimaryKeyColumns()[1]);
+                     pkChange.getNewPrimaryKeyColumns().get(1));
         assertEquals("ColPK1",
-                     pkChange.getNewPrimaryKeyColumns()[2]);
+                     pkChange.getNewPrimaryKeyColumns().get(2));
         
         assertEquals("TableA",
                      colChange.getChangedTable());
@@ -253,11 +250,11 @@ public class TestPrimaryKeyComparison extends TestComparisonBase
         assertEquals("TableA",
                      pkChange1.getChangedTable());
         assertEquals(2,
-                     pkChange1.getNewPrimaryKeyColumns().length);
+                     pkChange1.getNewPrimaryKeyColumns().size());
         assertEquals("ColPK3",
-                     pkChange1.getNewPrimaryKeyColumns()[0]);
+                     pkChange1.getNewPrimaryKeyColumns().get(0));
         assertEquals("ColPK1",
-                     pkChange1.getNewPrimaryKeyColumns()[1]);
+                     pkChange1.getNewPrimaryKeyColumns().get(1));
 
         assertEquals("TableA",
                      colChange1.getChangedTable());
@@ -279,13 +276,13 @@ public class TestPrimaryKeyComparison extends TestComparisonBase
         assertEquals("TableA",
                      pkChange2.getChangedTable());
         assertEquals(3,
-                     pkChange2.getNewPrimaryKeyColumns().length);
+                     pkChange2.getNewPrimaryKeyColumns().size());
         assertEquals("ColPK2",
-                     pkChange2.getNewPrimaryKeyColumns()[0]);
+                     pkChange2.getNewPrimaryKeyColumns().get(0));
         assertEquals("ColPK3",
-                     pkChange2.getNewPrimaryKeyColumns()[1]);
+                     pkChange2.getNewPrimaryKeyColumns().get(1));
         assertEquals("ColPK1",
-                     pkChange2.getNewPrimaryKeyColumns()[2]);
+                     pkChange2.getNewPrimaryKeyColumns().get(2));
     }
 
     /**
@@ -330,11 +327,11 @@ public class TestPrimaryKeyComparison extends TestComparisonBase
         assertEquals("TableA",
                      pkChange.getChangedTable());
         assertEquals(2,
-                     pkChange.getNewPrimaryKeyColumns().length);
+                     pkChange.getNewPrimaryKeyColumns().size());
         assertEquals("ColPK3",
-                     pkChange.getNewPrimaryKeyColumns()[0]);
+                     pkChange.getNewPrimaryKeyColumns().get(0));
         assertEquals("ColPK1",
-                     pkChange.getNewPrimaryKeyColumns()[1]);
+                     pkChange.getNewPrimaryKeyColumns().get(1));
         
         assertEquals("TableA",
                      colChange2.getChangedTable());
@@ -381,9 +378,9 @@ public class TestPrimaryKeyComparison extends TestComparisonBase
         assertEquals("TableA",
                      change.getChangedTable());
         assertEquals(1,
-                     change.getNewPrimaryKeyColumns().length);
+                     change.getNewPrimaryKeyColumns().size());
         assertEquals("ColPK2",
-                     change.getNewPrimaryKeyColumns()[0]);
+                     change.getNewPrimaryKeyColumns().get(0));
     }
 
 
@@ -571,10 +568,10 @@ public class TestPrimaryKeyComparison extends TestComparisonBase
         assertEquals("TableA",
                      pkChange.getChangedTable());
         assertEquals(2,
-                     pkChange.getNewPrimaryKeyColumns().length);
+                     pkChange.getNewPrimaryKeyColumns().size());
         assertEquals("ColPK2",
-                     pkChange.getNewPrimaryKeyColumns()[0]);
+                     pkChange.getNewPrimaryKeyColumns().get(0));
         assertEquals("ColPK4",
-                     pkChange.getNewPrimaryKeyColumns()[1]);
+                     pkChange.getNewPrimaryKeyColumns().get(1));
     }
 }

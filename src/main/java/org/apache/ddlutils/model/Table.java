@@ -405,7 +405,7 @@ public class Table implements Serializable
      */
     public Index getIndex(int idx)
     {
-        return (Index)_indices.get(idx);
+        return _indices.get(idx);
     }
 
     /**

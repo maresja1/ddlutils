@@ -19,24 +19,7 @@ package org.apache.ddlutils;
  * under the License.
  */
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
-import javax.sql.DataSource;
-
-import org.apache.commons.beanutils.BeanUtils;
+import jodd.bean.BeanUtil;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
@@ -53,6 +36,22 @@ import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 import org.xml.sax.InputSource;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import javax.sql.DataSource;
 
 /**
  * Creates a test summary snippet that can be put onto the DdlUtils web site.
@@ -295,7 +294,7 @@ public class TestSummaryCreatorTask extends Task
     
                 if (propName.startsWith(TestAgainstLiveDatabaseBase.DATASOURCE_PROPERTY_PREFIX) && !propName.equals(TestAgainstLiveDatabaseBase.DATASOURCE_PROPERTY_PREFIX +"class"))
                 {
-                    BeanUtils.setProperty(dataSource,
+                    BeanUtil.pojo.setProperty(dataSource,
                                           propName.substring(TestAgainstLiveDatabaseBase.DATASOURCE_PROPERTY_PREFIX.length()),
                                           entry.getValue());
                 }
