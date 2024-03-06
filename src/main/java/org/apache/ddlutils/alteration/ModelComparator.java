@@ -471,7 +471,7 @@ public class ModelComparator
                                           Database targetModel,
                                           Table    targetTable)
     {
-        List<RemoveIndexChange>    changes = new ArrayList<>();
+        List<RemoveIndexChange> changes = new ArrayList<>();
         List<Index> indexes = intermediateTable.getIndices();
 
 		for (Index sourceIndex : indexes) {
@@ -483,12 +483,12 @@ public class ModelComparator
 						intermediateTable.getName());
 				}
 
-				RemoveIndexChange change = new RemoveIndexChange(intermediateTable.getName(), sourceIndex);
-
+				var change = new RemoveIndexChange(intermediateTable.getName(), sourceIndex);
 				changes.add(change);
-				change.apply(intermediateModel, _caseSensitive);
 			}
 		}
+
+		changes.forEach(it -> it.apply(intermediateModel, _caseSensitive));
         return changes;
     }
 
