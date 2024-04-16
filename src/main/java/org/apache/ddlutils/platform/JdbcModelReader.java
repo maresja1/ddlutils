@@ -655,36 +655,34 @@ public class JdbcModelReader
     protected void removeInternalForeignKeyIndex(DatabaseMetaDataWrapper metaData, Table table, ForeignKey fk) throws SQLException
     {
         List<String>    columnNames  = new ArrayList<>();
-        boolean mustBeUnique = !getPlatformInfo().isSystemForeignKeyIndicesAlwaysNonUnique();
 
-        for (int columnIdx = 0; columnIdx < fk.getReferenceCount(); columnIdx++)
-        {
-            String name        = fk.getReference(columnIdx).getLocalColumnName();
-            Column localColumn = table.findColumn(name, getPlatform().isDelimitedIdentifierModeOn())
+		boolean nonPrimaryCol = false;
+		for (int columnIdx = 0; columnIdx < fk.getReferenceCount(); columnIdx++)
+		{
+			String name        = fk.getReference(columnIdx).getLocalColumnName();
+			Column localColumn = table.findColumn(name, getPlatform().isDelimitedIdentifierModeOn())
 				.orElseThrow();
 
-            if (mustBeUnique && !localColumn.isPrimaryKey())
-            {
-                mustBeUnique = false;
-            }
-            columnNames.add(name);
-        }
+			if (!nonPrimaryCol && !localColumn.isPrimaryKey())
+			{
+				nonPrimaryCol = true;
+			}
+			columnNames.add(name);
+		}
 
-        for (int indexIdx = 0; indexIdx < table.getIndexCount();)
-        {
-            Index index = table.getIndex(indexIdx);
-
-            if ((!mustBeUnique || index.isUnique()) && matches(index, columnNames) && 
-                isInternalForeignKeyIndex(metaData, table, fk, index))
-            {
-                fk.setAutoIndexPresent(true);
-                table.removeIndex(indexIdx);
-            }
-            else
-            {
-                indexIdx++;
-            }
-        }
+        boolean mustBeUnique = !getPlatformInfo().isSystemForeignKeyIndicesAlwaysNonUnique() && !nonPrimaryCol;
+		table.getIndices()
+			.stream()
+			.sorted(Comparator.comparing(Index::getName).reversed())
+			.filter(
+				index -> (!mustBeUnique || index.isUnique()) && matches(index, columnNames) &&
+					isInternalForeignKeyIndex(metaData, table, fk, index)
+			)
+			.findFirst()
+			.ifPresent(index -> {
+				fk.setAutoIndexPresent(true);
+				table.removeIndex(index);
+			});
     }
 
     /**
@@ -740,7 +738,7 @@ public class JdbcModelReader
      * @param index    The index to check
      * @return <code>true</code> if the index seems to be an internal primary key one
      */
-    protected boolean isInternalForeignKeyIndex(DatabaseMetaDataWrapper metaData, Table table, ForeignKey fk, Index index) throws SQLException
+    protected boolean isInternalForeignKeyIndex(DatabaseMetaDataWrapper metaData, Table table, ForeignKey fk, Index index)
     {
         return false;
     }

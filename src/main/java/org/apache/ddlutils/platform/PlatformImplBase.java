@@ -2059,7 +2059,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
 	 */
 	protected Object getObjectFromResultSet(ResultSet resultSet, String columnName, Table table) throws SQLException
 	{
-		Column column = (table == null ? null : table.findColumn(columnName, isDelimitedIdentifierModeOn()).orElse(null));
+		Column column = (table == null ? null : table.findColumn(columnName, isCaseSensitive()).orElse(null));
 		Object value  = null;
 
 		if (column != null)
@@ -2086,6 +2086,38 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
 		{
 			value = resultSet.getObject(columnName);
 		}
+		return resultSet.wasNull() ? null : value;
+	}
+
+	/**
+	 * Helper method for retrieving the value for a column from the given result set
+	 * using the type code of the column.
+	 *
+	 * @param resultSet The result set
+	 * @param column    The column
+	 * @param idx       The value's index in the result set (starting from 1)
+	 * @return The value
+	 */
+	protected Object getObjectFromResultSet(ResultSet resultSet, Column column, int idx) throws SQLException
+	{
+		int    originalJdbcType = column.getTypeCode();
+		int    targetJdbcType   = getPlatformInfo().getTargetJdbcType(originalJdbcType);
+		int    jdbcType         = originalJdbcType;
+		Object value            = null;
+
+		// in general we're trying to retrieve the value using the original type
+		// but sometimes we also need the target type:
+		if ((originalJdbcType == Types.BLOB) && (targetJdbcType != Types.BLOB))
+		{
+			// we should not use the Blob interface if the database doesn't map to this type
+			jdbcType = targetJdbcType;
+		}
+		if ((originalJdbcType == Types.CLOB) && (targetJdbcType != Types.CLOB))
+		{
+			// we should not use the Clob interface if the database doesn't map to this type
+			jdbcType = targetJdbcType;
+		}
+		value = extractColumnValue(resultSet, null, idx, jdbcType);
 		return resultSet.wasNull() ? null : value;
 	}
 
@@ -2192,11 +2224,12 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
 
 				lastInsertedIds.next();
 
+				var idx = 0;
 				for (Column autoIncrColumn : autoIncrColumns) {
 					// we're using the index rather than the name because we cannot know how
 					// the SQL statement looks like; rather we assume that we get the values
 					// back in the same order as the auto increment columns
-					Object value = getObjectFromResultSet(lastInsertedIds, autoIncrColumn.getName(), table);
+					Object value = getObjectFromResultSet(lastInsertedIds, autoIncrColumn, ++idx);
 					result.put(autoIncrColumn.getName(), value);
 				}
 			}

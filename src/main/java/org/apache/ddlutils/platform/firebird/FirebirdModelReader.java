@@ -355,7 +355,7 @@ public class FirebirdModelReader extends JdbcModelReader
     /**
      * {@inheritDoc}
      */
-    protected boolean isInternalForeignKeyIndex(DatabaseMetaDataWrapper metaData, Table table, ForeignKey fk, Index index) throws SQLException
+    protected boolean isInternalForeignKeyIndex(DatabaseMetaDataWrapper metaData, Table table, ForeignKey fk, Index index)
     {
         final String query =
             "SELECT RDB$CONSTRAINT_NAME FROM RDB$RELATION_CONSTRAINTS " +
@@ -377,9 +377,9 @@ public class FirebirdModelReader extends JdbcModelReader
             ResultSet resultSet = stmt.executeQuery();
 
             return resultSet.next();
-        }
-        finally
-        {
+        } catch (SQLException e) {
+			throw new RuntimeException(e);
+		} finally {
             closeStatement(stmt);
         }
     }

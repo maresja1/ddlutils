@@ -94,10 +94,13 @@ public class HsqlDbModelReader extends JdbcModelReader
      */
     protected boolean isInternalForeignKeyIndex(DatabaseMetaDataWrapper metaData, Table table, ForeignKey fk, Index index)
     {
-        if (getPlatform().isCaseSensitive()) {
-			return Objects.equals(fk.getName(), index.getName());
+		final var expectedName = fk.getName();
+		if (getPlatform().isCaseSensitive()) {
+			return Objects.equals(expectedName + "*", index.getName()) ||
+				Objects.equals(expectedName, index.getName());
 		} else if (index.getName() != null) {
-			return index.getName().equalsIgnoreCase(fk.getName());
+			return index.getName().equalsIgnoreCase(expectedName + "*") ||
+				index.getName().equalsIgnoreCase(expectedName);
 		} else {
 			return false;
 		}
