@@ -430,14 +430,16 @@ public class Column implements Serializable
             {
                 switch (_typeCode)
                 {
-                    case Types.TINYINT,
+					case Types.TINYINT,
 						Types.SMALLINT,
-						Types.REAL,
 						Types.INTEGER,
-						Types.BIGINT,
+						Types.BIGINT:
+						return Long.valueOf(_defaultValue);
+					case
+						Types.REAL,
 						Types.DOUBLE,
 						Types.FLOAT:
-                        return _defaultValue;
+						return Double.valueOf(_defaultValue);
 					case Types.DECIMAL:
                     case Types.NUMERIC:
                         return new BigDecimal(_defaultValue);

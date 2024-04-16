@@ -28,6 +28,7 @@ import org.apache.ddlutils.platform.mysql.MySqlPlatform;
 import org.apache.ddlutils.platform.sybase.SybasePlatform;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Properties;
 
@@ -62,7 +63,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Tests the change of the order of the columns of a table.
      */
-    public void testChangeColumnOrder()
+	@Test
+	public void testChangeColumnOrder()
     {
         final String model1Xml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -107,7 +109,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Test for DDLUTILS-208.
      */
-    public void testChangeColumnOrderWithAutoIncrementPK()
+	@Test
+	public void testChangeColumnOrderWithAutoIncrementPK()
     {
         final String model1Xml; 
         final String model2Xml; 
@@ -183,7 +186,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Test for DDLUTILS-208.
      */
-    public void testChangeColumnOrderWithAutoIncrementColumn()
+	@Test
+	public void testChangeColumnOrderWithAutoIncrementColumn()
     {
         if (!getPlatformInfo().isNonPrimaryKeyIdentityColumnsSupported() ||
             !getPlatformInfo().isMultipleIdentityColumnsSupported())
@@ -265,7 +269,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Tests the removal of a column.
      */
-    public void testDropColumn()
+	@Test
+	public void testDropColumn()
     {
         final String model1Xml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -300,7 +305,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Tests the removal of an auto-increment column.
      */
-    public void testDropAutoIncrementColumn()
+	@Test
+	public void testDropAutoIncrementColumn()
     {
         if (!getPlatformInfo().isNonPrimaryKeyIdentityColumnsSupported())
         {
@@ -355,7 +361,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Tests the addition of a column to the pk.
      */
-    public void testAddColumnToPK()
+	@Test
+	public void testAddColumnToPK()
     {
         final String model1Xml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -391,7 +398,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Tests the removal of a column from the pk.
      */
-    public void testRemoveColumnFromPK()
+	@Test
+	public void testRemoveColumnFromPK()
     {
         final String model1Xml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -427,7 +435,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Tests the removal of a pk column.
      */
-    public void testDropPKColumn()
+	@Test
+	public void testDropPKColumn()
     {
         final String model1Xml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -462,7 +471,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Tests the addition of an index.
      */
-    public void testAddIndex()
+    @Test
+	public void testAddIndex()
     {
         if (!getPlatformInfo().isIndicesSupported())
         {
@@ -510,7 +520,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Tests the addition of an unique index.
      */
-    public void testAddUniqueIndex()
+    @Test
+	public void testAddUniqueIndex()
     {
         if (!getPlatformInfo().isIndicesSupported())
         {
@@ -554,7 +565,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Tests the removal of an unique index.
      */
-    public void testDropUniqueIndex()
+    @Test
+	public void testDropUniqueIndex()
     {
         final String model1Xml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -598,7 +610,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
      * Tests the removal of an index that has column that are also used by foreign keys. This is a
      * test esp. for the handling of http://bugs.mysql.com/bug.php?id=21395.
      */
-    public void testDropIndexOverlappingWithForeignKeys()
+    @Test
+	public void testDropIndexOverlappingWithForeignKeys()
     {
         final String model1Xml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -672,7 +685,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Tests the removal of an index that has column that are also referenced by a remote foreign key. 
      */
-    public void testDropIndexOverlappingWithRemoteForeignKey()
+    @Test
+	public void testDropIndexOverlappingWithRemoteForeignKey()
     {
         final String model1Xml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -731,7 +745,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Tests the removal of a column from an index.
      */
-    public void testRemoveColumnFromUniqueIndex()
+    @Test
+	public void testRemoveColumnFromUniqueIndex()
     {
         if (!getPlatformInfo().isIndicesSupported())
         {
@@ -782,7 +797,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Tests the addition of a foreign key.
      */
-    public void testAddFK()
+    @Test
+	public void testAddFK()
     {
         final String model1Xml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -831,7 +847,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Tests the removal of a foreign key.
      */
-    public void testDropFK()
+    @Test
+	public void testDropFK()
     {
         final String model1Xml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -887,7 +904,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Tests the removal of a foreign key with camel case naming (DDLUTILS-195).
      */
-    public void testDropCamelCaseFK()
+    @Test
+	public void testDropCamelCaseFK()
     {
         final String model1Xml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -943,7 +961,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Tests removing a foreign key and an index that has the same name and same column.
      */
-    public void testDropFKAndCorrespondingIndex()
+    @Test
+	public void testDropFKAndCorrespondingIndex()
     {
         if (!getPlatformInfo().isIndicesSupported() ||
             FirebirdPlatform.DATABASENAME.equals(getPlatform().getName()))
@@ -1010,7 +1029,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Tests removing a foreign key but not the index that has the same name and same column.
      */
-    public void testDropFKButNotCorrespondingIndex()
+    @Test
+	public void testDropFKButNotCorrespondingIndex()
     {
         if (!getPlatformInfo().isIndicesSupported() ||
             FirebirdPlatform.DATABASENAME.equals(getPlatform().getName()))
@@ -1081,7 +1101,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Tests removing a foreign key and an index that has the same name but different columns.
      */
-    public void testDropFKAndDifferentIndexWithSameName()
+    @Test
+	public void testDropFKAndDifferentIndexWithSameName()
     {
         // MySql/InnoDB doesn't allow the creation of a foreign key and index with the same name
         // unless the index can be used as the FK's index
@@ -1151,7 +1172,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Tests removing a foreign key but not the index that has the same name but different columns.
      */
-    public void testDropFKButNotDifferentIndexWithSameName()
+    @Test
+	public void testDropFKButNotDifferentIndexWithSameName()
     {
         // MySql/InnoDB doesn't allow the creation of a foreign key and index with the same name
         // unless the index can be used as the FK's index
@@ -1224,7 +1246,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Tests the removal of several foreign keys. Test for DDLUTILS-150.
      */
-    public void testDropFKs()
+    @Test
+	public void testDropFKs()
     {
         final String model1Xml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -1309,7 +1332,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Tests the addition of a reference to a foreign key.
      */
-    public void testAddReferenceToFK()
+    @Test
+	public void testAddReferenceToFK()
     {
         final String model1Xml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -1366,7 +1390,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Tests the removal of a reference from a foreign key.
      */
-    public void testRemoveReferenceFromFK()
+    @Test
+	public void testRemoveReferenceFromFK()
     {
         final String model1Xml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -1421,7 +1446,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Tests the addition of a table.
      */
-    public void testAddTable1()
+    @Test
+	public void testAddTable1()
     {
         final String model1Xml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -1462,7 +1488,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Tests the addition of a table.
      */
-    public void testAddTable2()
+    @Test
+	public void testAddTable2()
     {
         final String model1Xml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -1527,7 +1554,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Tests the addition of a table with an auto-increment primary key.
      */
-    public void testAddAutoIncrementTable()
+    @Test
+	public void testAddAutoIncrementTable()
     {
         final String model1Xml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -1582,7 +1610,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Tests the removal of a table.
      */
-    public void testRemoveTable1()
+    @Test
+	public void testRemoveTable1()
     {
         final String model1Xml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -1621,7 +1650,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Tests the removal of a table.
      */
-    public void testRemoveTable2()
+    @Test
+	public void testRemoveTable2()
     {
         final String model1Xml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n"+
@@ -1665,7 +1695,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Tests the removal of a table with an auto-increment column.
      */
-    public void testRemoveTable3()
+    @Test
+	public void testRemoveTable3()
     {
         final String model1Xml;
         final String model2Xml = 
@@ -1710,7 +1741,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Test for DDLUTILS-54.
      */
-    public void testIssue54() throws Exception
+    @Test
+	public void testIssue54() throws Exception
     {
         final String modelXml = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -1738,7 +1770,8 @@ public class TestAlteration extends TestAgainstLiveDatabaseBase
     /**
      * Test for DDLUTILS-159.
      */
-    public void testRenamePK() throws Exception
+    @Test
+	public void testRenamePK() throws Exception
     {
         final String model1Xml = 
             "<?xml version='1.0'?>\n" +

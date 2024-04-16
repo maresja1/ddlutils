@@ -30,6 +30,7 @@ import org.apache.ddlutils.platform.JdbcModelReader;
 
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Reads a database model from a HsqlDb database.
@@ -65,8 +66,11 @@ public class HsqlDbModelReader extends JdbcModelReader
             // Since Hsqldb only allows IDENTITY for primary key columns, we restrict
             // our search to those columns
             determineAutoIncrementFromResultSetMetaData(table, table.getPrimaryKeyColumns().toList());
+
+			// reading as IS_NULLABLE yes
+			table.getPrimaryKeyColumns().forEach(it -> it.setRequired(true));
         }
-        
+
         return table;
     }
 
@@ -90,9 +94,13 @@ public class HsqlDbModelReader extends JdbcModelReader
      */
     protected boolean isInternalForeignKeyIndex(DatabaseMetaDataWrapper metaData, Table table, ForeignKey fk, Index index)
     {
-        String name = index.getName();
-
-        return (name != null) && name.startsWith("SYS_IDX_");
+        if (getPlatform().isCaseSensitive()) {
+			return Objects.equals(fk.getName(), index.getName());
+		} else if (index.getName() != null) {
+			return index.getName().equalsIgnoreCase(fk.getName());
+		} else {
+			return false;
+		}
     }
 
     /**
@@ -100,8 +108,20 @@ public class HsqlDbModelReader extends JdbcModelReader
      */
     protected boolean isInternalPrimaryKeyIndex(DatabaseMetaDataWrapper metaData, Table table, Index index)
     {
-        String name = index.getName();
+		final var name = index.getName();
+		if (table.getName() == null || name == null) {
+			return false;
+		}
 
-        return (name != null) && (name.startsWith("SYS_PK_") || name.startsWith("SYS_IDX_"));
+		if(name.startsWith("SYS_PK_") || name.startsWith("SYS_IDX_")) {
+			return true;
+		}
+
+		var expected = table.getName() + "_PK";
+		if (getPlatform().isCaseSensitive()) {
+			return Objects.equals(expected, name);
+		} else {
+			return name.equalsIgnoreCase(expected);
+		}
     }
 }

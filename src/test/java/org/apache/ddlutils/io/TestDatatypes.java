@@ -27,7 +27,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Time;
@@ -118,22 +117,6 @@ public class TestDatatypes extends TestAgainstLiveDatabaseBase
         String alterTablesSql = getAlterTablesSql(modelFromDb).trim();
 
         Assertions.assertEquals(alterTablesSql, "");
-
-        StringWriter   stringWriter = new StringWriter();
-        // TODO commented in refactoring
-//        DatabaseDataIO dataIO       = new DatabaseDataIO();
-
-//        dataIO.writeDataToXML(getPlatform(), getModel(), stringWriter, "UTF-8");
-
-        String dataSql = stringWriter.toString();
-        
-        Assertions.assertTrue((dataSql != null) && (dataSql.length() > 0));
-
-        getPlatform().dropTables(getModel(), false);
-
-        createDatabase(modelXml);
-
-//        dataIO.writeDataToDatabase(getPlatform(), getModel(), new Reader[] { new StringReader(dataSql) });
 
         beans = getRows("roundtrip");
 
@@ -372,7 +355,7 @@ public class TestDatatypes extends TestAgainstLiveDatabaseBase
             "  </table>\n"+
             "</database>";
 
-        performDataTypeTest(modelXml, 12345.6f, 0.0f);
+        performDataTypeTest(modelXml, 12345.6d, 0.0d);
     }
 
     /**
@@ -390,7 +373,7 @@ public class TestDatatypes extends TestAgainstLiveDatabaseBase
             "  </table>\n"+
             "</database>";
 
-        performDataTypeTest(modelXml, 1e+20f, null, -1.01234f);
+        performDataTypeTest(modelXml, 1e+20d, null, -1.01234d);
     }
 
     /**

@@ -19,12 +19,12 @@ package org.apache.ddlutils.alteration;
  * under the License.
  */
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.Table;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The base class for changes affecting indexes.
@@ -35,7 +35,7 @@ public abstract class IndexChangeImplBase extends    TableChangeImplBase
                                           implements IndexChange
 {
     /** The names of the columns in the index. */
-    private List _columnNames = new ArrayList();
+    private final List<String> _columnNames = new ArrayList<>();
 
     /**
      * Creates a new change object.
@@ -71,7 +71,7 @@ public abstract class IndexChangeImplBase extends    TableChangeImplBase
                     for (int colIdx = 0; colIdx < curIndex.getColumnCount(); colIdx++)
                     {
                         String curColName      = curIndex.getColumn(colIdx).getName();
-                        String expectedColName = (String)_columnNames.get(colIdx);
+                        String expectedColName = _columnNames.get(colIdx);
 
                         if ((caseSensitive  && curColName.equals(expectedColName)) ||
                             (!caseSensitive && curColName.equalsIgnoreCase(expectedColName)))

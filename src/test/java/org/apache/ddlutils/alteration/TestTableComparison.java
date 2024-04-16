@@ -21,6 +21,7 @@ package org.apache.ddlutils.alteration;
 
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
+import org.junit.jupiter.api.Test;
 
 import java.sql.Types;
 import java.util.List;
@@ -37,7 +38,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests the addition a column.
      */
-    public void testAddColumn()
+    @Test
+	public void testAddColumn()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -76,7 +78,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests the addition of an auto-increment column.
      */
-    public void testAddAutoIncrementColumn()
+    @Test
+	public void testAddAutoIncrementColumn()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -115,7 +118,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests the addition of a required column.
      */
-    public void testAddRequiredColumn()
+    @Test
+	public void testAddRequiredColumn()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -154,7 +158,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests the addition of a column that has a size spec and a default value.
      */
-    public void testAddColumnWithSizeAndDefaultValue()
+    @Test
+	public void testAddColumnWithSizeAndDefaultValue()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -193,7 +198,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests making a column required.
      */
-    public void testMakeColumnRequired()
+    @Test
+	public void testMakeColumnRequired()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -230,7 +236,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests making a column not required.
      */
-    public void testMakeColumnNotRequired()
+    @Test
+	public void testMakeColumnNotRequired()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -267,7 +274,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests making a column auto-increment.
      */
-    public void testMakeColumnAutoIncrement()
+    @Test
+	public void testMakeColumnAutoIncrement()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -304,7 +312,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests making a column not auto-increment.
      */
-    public void testMakeColumnNotAutoIncrement()
+    @Test
+	public void testMakeColumnNotAutoIncrement()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -341,7 +350,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests changing the data type of a column.
      */
-    public void testChangeColumnDataType1()
+    @Test
+	public void testChangeColumnDataType1()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -378,7 +388,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests changing the data type of a column.
      */
-    public void testChangeColumnDataType2()
+    @Test
+	public void testChangeColumnDataType2()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -415,7 +426,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests changing the data type of a column.
      */
-    public void testChangeColumnDataType3()
+    @Test
+	public void testChangeColumnDataType3()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -452,7 +464,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests changing the data type of a column.
      */
-    public void testChangeColumnDataType4()
+    @Test
+	public void testChangeColumnDataType4()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -489,7 +502,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests changing the data type of a column.
      */
-    public void testChangeColumnDataType5()
+    @Test
+	public void testChangeColumnDataType5()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -526,7 +540,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests changing the data type of a column.
      */
-    public void testChangeColumnDataType6()
+    @Test
+	public void testChangeColumnDataType6()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -563,7 +578,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests changing the data type of a column.
      */
-    public void testChangeColumnDataType7()
+    @Test
+	public void testChangeColumnDataType7()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -600,7 +616,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests changing the data type of a column.
      */
-    public void testChangeColumnDataType8()
+    @Test
+	public void testChangeColumnDataType8()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -637,7 +654,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests changing the size of a column.
      */
-    public void testChangeColumnSize()
+    @Test
+	public void testChangeColumnSize()
     {
         // note that we also have a size for the INTEGER column, but we don't
         // expect a change for it because the size is not relevant for this type
@@ -676,7 +694,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests changing the precision & scale of a column.
      */
-    public void testChangeColumnPrecisionAndScale()
+    @Test
+	public void testChangeColumnPrecisionAndScale()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -713,7 +732,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests changing the scale of a column.
      */
-    public void testChangeColumnScale()
+    @Test
+	public void testChangeColumnScale()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -754,7 +774,8 @@ public class TestTableComparison extends TestComparisonBase
      * The model comparator will filter out these changes depending on the
      * platform info with which the comparator was created. 
      */
-    public void testRemoveUnnecessaryColumnSize()
+    @Test
+	public void testRemoveUnnecessaryColumnSize()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -783,7 +804,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests adding a default value to a column.
      */
-    public void testAddDefaultValue()
+    @Test
+	public void testAddDefaultValue()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -820,7 +842,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests changing the default value of a column.
      */
-    public void testChangeDefaultValue()
+    @Test
+	public void testChangeDefaultValue()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -858,7 +881,8 @@ public class TestTableComparison extends TestComparisonBase
      * Tests that shows that the same default value expressed differently does not
      * result in a change.
      */
-    public void testSameDefaultValueExpressedDifferently()
+    @Test
+	public void testSameDefaultValueExpressedDifferently()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -887,7 +911,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests removing the default value of a column.
      */
-    public void testRemoveDefaultValue()
+    @Test
+	public void testRemoveDefaultValue()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -924,7 +949,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests making a columnb required with a new default value.
      */
-    public void testMakeColumnRequiredWithDefaultValue()
+    @Test
+	public void testMakeColumnRequiredWithDefaultValue()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -961,7 +987,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests making a column not required and removing the default value.
      */
-    public void testMakeColumnNotRequiredWithoutDefaultValue()
+    @Test
+	public void testMakeColumnNotRequiredWithoutDefaultValue()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -998,7 +1025,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests changing the order of the columns in a table.
      */
-    public void testChangeColumnOrder()
+    @Test
+	public void testChangeColumnOrder()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -1043,7 +1071,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests adding a column and changing the order of the existing columns in a table.
      */
-    public void testAddColumnAndChangeColumnOrder()
+    @Test
+	public void testAddColumnAndChangeColumnOrder()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -1095,7 +1124,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests removing a column and changing the order of the existing columns in a table.
      */
-    public void testRemoveColumnAndChangeColumnOrder()
+    @Test
+	public void testRemoveColumnAndChangeColumnOrder()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -1145,7 +1175,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests the removal of a column.
      */
-    public void testDropColumn()
+    @Test
+	public void testDropColumn()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -1181,7 +1212,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests the removal of an auto-increment column.
      */
-    public void testDropAutoIncrementColumn()
+    @Test
+	public void testDropAutoIncrementColumn()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -1217,7 +1249,8 @@ public class TestTableComparison extends TestComparisonBase
     /**
      * Tests the removal of a required column.
      */
-    public void testDropRequiredColumn()
+    @Test
+	public void testDropRequiredColumn()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +

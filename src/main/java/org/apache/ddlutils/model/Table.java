@@ -312,9 +312,9 @@ public class Table implements Serializable
      * 
      * @return The foreign keys
      */
-    public ForeignKey[] getForeignKeys()
+    public List<ForeignKey> getForeignKeys()
     {
-        return _foreignKeys.toArray(new ForeignKey[0]);
+        return _foreignKeys;
     }
 
     /**

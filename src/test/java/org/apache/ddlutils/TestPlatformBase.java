@@ -22,6 +22,9 @@ package org.apache.ddlutils;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.platform.SqlBuilder;
+import org.apache.ddlutils.platform.maxdb.MaxDbPlatform;
+import org.apache.ddlutils.platform.mysql.MySql50Platform;
+import org.apache.ddlutils.platform.mysql.MySqlPlatform;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -262,14 +265,35 @@ public abstract class TestPlatformBase extends TestBase
         return getDatabaseCreationSql(schema);
     }
 
-	protected  <T> void assertEquals(final T columnCount, final T columnCount1)
+	protected  <T> void assertEquals(final T expected, final T actual)
 	{
-		Assertions.assertEquals(columnCount, columnCount1);
+		Assertions.assertEquals(expected, actual);
 	}
 
-	protected <T> void assertEquals(final String s, final T columnCount, final T columnCount1)
+	protected <T> void assertEquals(final String s, final T expected, final T actual)
 	{
-		Assertions.assertEquals(columnCount, columnCount1, s);
+		Assertions.assertEquals(expected, actual, s);
+	}
+
+	protected <T> void assertDefaultEquals(final String s, int size, final T expected, final T actual)
+	{
+		if (expected instanceof String) {
+			if (
+				size == 0 ||
+				MySqlPlatform.DATABASENAME.equals(getPlatform().getName()) ||
+				MySql50Platform.DATABASENAME.equals(getPlatform().getName()) ||
+				MaxDbPlatform.DATABASENAME.equals(getPlatform().getName()))
+			{
+				// Some DBs ignore that the type is CHAR(8) and trim the value
+				assertEquals(expected, actual);
+			}
+			else
+			{
+				assertEquals(expected, ((String)actual).stripTrailing());
+			}
+		} else {
+			Assertions.assertEquals(expected, actual, s);
+		}
 	}
 
 	protected void assertEqualsAttr(@Nullable final Object exp, final Map<String, Object> stringObjectMap, final String property)

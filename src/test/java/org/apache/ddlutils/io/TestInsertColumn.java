@@ -20,7 +20,6 @@ package org.apache.ddlutils.io;
  */
 
 import org.apache.ddlutils.TestAgainstLiveDatabaseBase;
-import org.apache.ddlutils.platform.hsqldb.HsqlDbPlatform;
 import org.apache.ddlutils.platform.maxdb.MaxDbPlatform;
 import org.apache.ddlutils.platform.mysql.MySql50Platform;
 import org.apache.ddlutils.platform.mysql.MySqlPlatform;
@@ -233,7 +232,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         // it directly (in which case it might still be NULL)
         Object avalue = (beans.get(0)).get("avalue");
 
-        assertTrue((avalue == null) || Objects.equals(2, avalue));
+        assertTrue((avalue == null) || Objects.equals(2.0, avalue));
     }
 
     /**
@@ -345,7 +344,6 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         if (MySqlPlatform.DATABASENAME.equals(getPlatform().getName()) ||
             MySql50Platform.DATABASENAME.equals(getPlatform().getName()) ||
-            HsqlDbPlatform.DATABASENAME.equals(getPlatform().getName()) ||
             MaxDbPlatform.DATABASENAME.equals(getPlatform().getName()))
         {
             // Some DBs ignore that the type is CHAR(8) and trim the value
@@ -857,7 +855,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         var beans = getRows("roundtrip");
 
-        assertEqualsAttr(2, beans.get(0), "avalue");
+        assertEqualsAttr(2.0, beans.get(0), "avalue");
     }
 
     /**
@@ -949,7 +947,6 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         if (MySqlPlatform.DATABASENAME.equals(getPlatform().getName()) ||
             MySql50Platform.DATABASENAME.equals(getPlatform().getName()) ||
-            HsqlDbPlatform.DATABASENAME.equals(getPlatform().getName()) ||
             MaxDbPlatform.DATABASENAME.equals(getPlatform().getName()))
         {
             // Some DBs ignore that the type is CHAR(8) and trim the value
@@ -1177,7 +1174,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         var beans = getRows("roundtrip");
 
-        assertEqualsAttr(2, beans.get(0), "avalue");
+        assertEqualsAttr(2.0, beans.get(0), "avalue");
     }
 
     /**
@@ -1269,7 +1266,6 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
 
         if (MySqlPlatform.DATABASENAME.equals(getPlatform().getName()) ||
             MySql50Platform.DATABASENAME.equals(getPlatform().getName()) ||
-            HsqlDbPlatform.DATABASENAME.equals(getPlatform().getName()) ||
             MaxDbPlatform.DATABASENAME.equals(getPlatform().getName()))
         {
                 // Some DBs ignore that the type is CHAR(8) and trim the value
@@ -1524,7 +1520,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         var beans = getRows("roundtrip");
 
         assertEqualsAttr(2, beans.get(0), "avalue1");
-        assertEqualsAttr(2,  beans.get(0), "avalue2");
+        assertEqualsAttr(2.0,  beans.get(0), "avalue2");
     }
 
     /**
@@ -1630,7 +1626,6 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEqualsAttr(2, beans.get(0), "avalue1");
         if (MySqlPlatform.DATABASENAME.equals(getPlatform().getName()) ||
             MySql50Platform.DATABASENAME.equals(getPlatform().getName()) ||
-            HsqlDbPlatform.DATABASENAME.equals(getPlatform().getName()) ||
             MaxDbPlatform.DATABASENAME.equals(getPlatform().getName()))
         {
             // Some DBs ignore that the type is CHAR(8) and trim the value
@@ -1891,7 +1886,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         var beans = getRows("roundtrip");
 
         assertEqualsAttr(2, beans.get(0), "avalue1");
-        assertEqualsAttr(2,  beans.get(0), "avalue2");
+        assertEqualsAttr(2.0,  beans.get(0), "avalue2");
     }
 
     /**
@@ -1997,7 +1992,6 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEqualsAttr(2, beans.get(0), "avalue1");
         if (MySqlPlatform.DATABASENAME.equals(getPlatform().getName()) ||
             MySql50Platform.DATABASENAME.equals(getPlatform().getName()) ||
-            HsqlDbPlatform.DATABASENAME.equals(getPlatform().getName()) ||
             MaxDbPlatform.DATABASENAME.equals(getPlatform().getName()))
         {
                 // Some DBs ignore that the type is CHAR(8) and trim the value
@@ -2254,9 +2248,9 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         var beans1 = getRows("roundtrip1");
         var beans2 = getRows("roundtrip2");
 
-        assertEqualsAttr(1,  beans1.get(0), "pk");
+        assertEqualsAttr(1.0,  beans1.get(0), "pk");
         assertEqualsAttr(2, beans2.get(0), "pk");
-        assertEqualsAttr(1,  beans2.get(0), "avalue");
+        assertEqualsAttr(1.0,  beans2.get(0), "avalue");
     }
 
     /**
@@ -2362,7 +2356,6 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEqualsAttr(1, beans2.get(0), "pk");
         if (MySqlPlatform.DATABASENAME.equals(getPlatform().getName()) ||
             MySql50Platform.DATABASENAME.equals(getPlatform().getName()) ||
-            HsqlDbPlatform.DATABASENAME.equals(getPlatform().getName()) ||
             MaxDbPlatform.DATABASENAME.equals(getPlatform().getName()))
         {
                 // Some DBs ignore that the type is CHAR(8) and trim the value
@@ -2427,7 +2420,7 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         var beans2 = getRows("roundtrip2");
 
         assertEqualsAttr(1, beans1.get(0), "pk1");
-        assertEqualsAttr(2,  beans1.get(0), "pk2");
+        assertEqualsAttr(2.0,  beans1.get(0), "pk2");
         assertTrue(beans2.isEmpty());
     }
 
@@ -2570,10 +2563,10 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         var beans1 = getRows("roundtrip1");
         var beans2 = getRows("roundtrip2");
 
-        assertEqualsAttr(1,  beans1.get(0), "pk");
+        assertEqualsAttr(1.0,  beans1.get(0), "pk");
         assertEqualsAttr(2, beans1.get(0), "avalue");
         assertEqualsAttr(1, beans2.get(0), "pk");
-        assertEqualsAttr(1,  beans2.get(0), "avalue");
+        assertEqualsAttr(1.0,  beans2.get(0), "avalue");
     }
 
     /**
@@ -2830,10 +2823,10 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         var beans2 = getRows("roundtrip2");
 
         assertEqualsAttr(1, beans1.get(0), "pk1");
-        assertEqualsAttr(2,  beans1.get(0), "pk2");
+        assertEqualsAttr(2.0,  beans1.get(0), "pk2");
         assertEqualsAttr(2, beans2.get(0), "pk");
         assertEqualsAttr(1, beans2.get(0), "avalue1");
-        assertEqualsAttr(2,  beans2.get(0), "avalue2");
+        assertEqualsAttr(2.0,  beans2.get(0), "avalue2");
     }
 
     /**
@@ -2954,7 +2947,6 @@ public class TestInsertColumn extends TestAgainstLiveDatabaseBase
         assertEqualsAttr(1, beans2.get(0), "avalue1");
         if (MySqlPlatform.DATABASENAME.equals(getPlatform().getName()) ||
             MySql50Platform.DATABASENAME.equals(getPlatform().getName()) ||
-            HsqlDbPlatform.DATABASENAME.equals(getPlatform().getName()) ||
             MaxDbPlatform.DATABASENAME.equals(getPlatform().getName()))
         {
                 // Some DBs ignore that the type is CHAR(8) and trim the value

@@ -126,14 +126,13 @@ public class ModelBasedResultSetIterator implements Iterator<Map<String, Object>
                     tableOfColumn = tableOfColumn.substring(1, tableOfColumn.length() - 1);
                 }
                 // the JDBC driver gave us enough meta data info
-                table = model.findTable(tableOfColumn, _caseSensitive)
-					.orElseThrow();
+                table = model.findTable(tableOfColumn, _caseSensitive).orElse(null);
             }
             if (table == null)
             {
                 // not enough info in the meta data of the result set, lets try the
                 // user-supplied query hints
-                table         = (Table)_preparedQueryHints.get(_caseSensitive ? columnName : columnName.toLowerCase());
+                table         = _preparedQueryHints.get(_caseSensitive ? columnName : columnName.toLowerCase());
                 tableOfColumn = (table == null ? null : table.getName());
             }
             if (tableName == null)

@@ -33,6 +33,7 @@ import org.apache.ddlutils.util.StringUtilsExt;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
@@ -194,18 +195,15 @@ public class ModelComparator
     {
         List<ForeignKeyChange> changes = new ArrayList<>();
 
-        for (int tableIdx = 0; tableIdx < intermediateModel.getTableCount(); tableIdx++)
-        {
-            Table        intermediateTable = intermediateModel.getTable(tableIdx);
-            Table        targetTable       = targetModel.findTable(intermediateTable.getName(), _caseSensitive)
-				.orElseThrow();
-            ForeignKey[] intermediateFks   = intermediateTable.getForeignKeys();
+		for (var intermediateTable : intermediateModel.getTables()) {
+			var targetTableOpt = targetModel.findTable(intermediateTable.getName(), _caseSensitive);
+			var intermediateFks   = intermediateTable.getForeignKeys();
 
-            // Dropping foreign keys from tables to be removed might not be necessary, but some databases might require it
+			// Dropping foreign keys from tables to be removed might not be necessary, but some databases might require it
 			for (ForeignKey sourceFk : intermediateFks) {
-				ForeignKey targetFk = targetTable == null ? null : findCorrespondingForeignKey(targetTable, sourceFk);
+				var targetFk = targetTableOpt.map(it -> findCorrespondingForeignKey(it, sourceFk));
 
-				if (targetFk == null) {
+				if (targetFk.isEmpty()) {
 					if (_log.isInfoEnabled()) {
 						_log.info("Foreign key " + sourceFk + " needs to be removed from table " +
 							intermediateTable.getName());
@@ -214,11 +212,14 @@ public class ModelComparator
 					RemoveForeignKeyChange fkChange = new RemoveForeignKeyChange(intermediateTable.getName(), sourceFk);
 
 					changes.add(fkChange);
-					fkChange.apply(intermediateModel, _caseSensitive);
 				}
 			}
-        }
-        return changes;
+		}
+
+		for (var fkChange : changes) {
+			fkChange.apply(intermediateModel, _caseSensitive);
+		}
+		return changes;
     }
 
     /**
@@ -283,10 +284,8 @@ public class ModelComparator
         List<Table>                 intermediateTables = intermediateModel.getTables();
 
 		for (Table intermediateTable : intermediateTables) {
-			Table targetTable = targetModel.findTable(intermediateTable.getName(), _caseSensitive)
-				.orElseThrow();
-
-			if (targetTable == null) {
+			var targetTableOpt = targetModel.findTable(intermediateTable.getName(), _caseSensitive);
+			if (targetTableOpt.isEmpty()) {
 				if (_log.isInfoEnabled()) {
 					_log.info("Table " + intermediateTable.getName() + " needs to be removed");
 				}
@@ -294,10 +293,12 @@ public class ModelComparator
 				RemoveTableChange tableChange = new RemoveTableChange(intermediateTable.getName());
 
 				changes.add(tableChange);
-				tableChange.apply(intermediateModel, _caseSensitive);
 			}
 		}
-        return changes;
+		for (RemoveTableChange tableChange : changes) {
+			tableChange.apply(intermediateModel, _caseSensitive);
+		}
+		return changes;
     }
 
     /**
@@ -319,7 +320,7 @@ public class ModelComparator
         {
             Table targetTable       = targetModel.getTable(tableIdx);
             Table intermediateTable = intermediateModel.findTable(targetTable.getName(), _caseSensitive)
-				.orElseThrow();
+				.orElse(null);
 
             if (intermediateTable == null)
             {
@@ -393,13 +394,11 @@ public class ModelComparator
                 // later on anyways
                 // we also don't have to drop indexes on the original table
 
-                ForeignKey[] fks = intermediateTable.getForeignKeys();
+                var fks = intermediateTable.getForeignKeys();
 
+				var localChanges = new ArrayList<TableChange>();
 				for (final ForeignKey fk : fks) {
-					RemoveForeignKeyChange fkChange = new RemoveForeignKeyChange(intermediateTable.getName(), fk);
-
-					changes.add(fkChange);
-					fkChange.apply(intermediateModel, _caseSensitive);
+					localChanges.add(new RemoveForeignKeyChange(intermediateTable.getName(), fk));
 				}
                 for (int tableIdx = 0; tableIdx < intermediateModel.getTableCount(); tableIdx++)
                 {
@@ -407,31 +406,34 @@ public class ModelComparator
 
                     if (curTable != intermediateTable)
                     {
-                        ForeignKey[] curFks = curTable.getForeignKeys();
+                        var curFks = curTable.getForeignKeys();
 
 						for (final ForeignKey curFk : curFks) {
 							if ((_caseSensitive  && curFk.getForeignTableName().equals(intermediateTable.getName())) ||
 								(!_caseSensitive && curFk.getForeignTableName().equalsIgnoreCase(intermediateTable.getName())))
 							{
-								RemoveForeignKeyChange fkChange = new RemoveForeignKeyChange(curTable.getName(), curFk);
-
-								changes.add(fkChange);
-								fkChange.apply(intermediateModel, _caseSensitive);
+								localChanges.add(new RemoveForeignKeyChange(curTable.getName(), curFk));
 							}
 						}
                     }
                 }
 
-                RecreateTableChange tableChange =  new RecreateTableChange(intermediateTable.getName(),
-                                                                           intermediateTable,
-                                                                           new ArrayList<>(tableDefinitionChanges));
-
-                changes.add(tableChange);
-                tableChange.apply(intermediateModel, _caseSensitive);
+				localChanges.add(
+					new RecreateTableChange(
+						intermediateTable.getName(),
+						intermediateTable,
+						new ArrayList<>(tableDefinitionChanges)
+					)
+				);
+				for (TableChange localChange : localChanges) {
+					localChange.apply(intermediateModel, _caseSensitive);
+				}
+				changes.addAll(localChanges);
             }
         }
-        
-        changes.addAll(checkForAddedIndexes(sourceModel, sourceTable, intermediateModel, intermediateTable, targetModel, targetTable));
+
+
+		changes.addAll(checkForAddedIndexes(sourceModel, sourceTable, intermediateModel, intermediateTable, targetModel, targetTable));
 
         return changes;
     }
@@ -471,13 +473,13 @@ public class ModelComparator
                                           Database targetModel,
                                           Table    targetTable)
     {
-        List<RemoveIndexChange>    changes = new ArrayList<>();
+        List<RemoveIndexChange> changes = new ArrayList<>();
         List<Index> indexes = intermediateTable.getIndices();
 
-		for (Index sourceIndex : indexes) {
-			Index targetIndex = findCorrespondingIndex(targetTable, sourceIndex);
+		for (var sourceIndex : indexes) {
+			var targetIndex = findCorrespondingIndex(targetTable, sourceIndex);
 
-			if (targetIndex == null) {
+			if (targetIndex.isEmpty()) {
 				if (_log.isInfoEnabled()) {
 					_log.info("Index " + sourceIndex.getName() + " needs to be removed from table " +
 						intermediateTable.getName());
@@ -486,10 +488,14 @@ public class ModelComparator
 				RemoveIndexChange change = new RemoveIndexChange(intermediateTable.getName(), sourceIndex);
 
 				changes.add(change);
-				change.apply(intermediateModel, _caseSensitive);
 			}
 		}
-        return changes;
+
+		for (var change : changes) {
+			change.apply(intermediateModel, _caseSensitive);
+		}
+
+		return changes;
     }
 
     /**
@@ -515,11 +521,11 @@ public class ModelComparator
 
         for (int indexIdx = 0; indexIdx < targetTable.getIndexCount(); indexIdx++)
         {
-            Index targetIndex       = targetTable.getIndex(indexIdx);
-            Index intermediateIndex = findCorrespondingIndex(intermediateTable, targetIndex);
-            Index sourceIndex       = findCorrespondingIndex(sourceTable, targetIndex);
+            var targetIndex       = targetTable.getIndex(indexIdx);
+            var intermediateIndex = findCorrespondingIndex(intermediateTable, targetIndex);
+			var sourceIndex       = findCorrespondingIndex(sourceTable, targetIndex);
 
-            if ((sourceIndex == null) && (intermediateIndex == null))
+            if ((sourceIndex.isEmpty()) && (intermediateIndex.isEmpty()))
             {
                 if (_log.isInfoEnabled())
                 {
@@ -632,16 +638,16 @@ public class ModelComparator
         List<Column> columns = intermediateTable.getColumns();
 
 		for (Column sourceColumn : columns) {
-			targetTable.findColumn(sourceColumn.getName(), _caseSensitive)
-				.ifPresent(targetColumn -> {
-					if (_log.isInfoEnabled()) {
-						_log.info("Column " + sourceColumn.getName() + " needs to be removed from table " +
-							intermediateTable.getName());
-					}
+			var columnOpt = targetTable.findColumn(sourceColumn.getName(), _caseSensitive);
+			if (columnOpt.isEmpty()) {
+				if (_log.isInfoEnabled()) {
+					_log.info("Column " + sourceColumn.getName() + " needs to be removed from table " +
+						intermediateTable.getName());
+				}
 
-					var change = new RemoveColumnChange(intermediateTable.getName(), sourceColumn.getName());
-					changes.add(change);
-				});
+				var change = new RemoveColumnChange(intermediateTable.getName(), sourceColumn.getName());
+				changes.add(change);
+			}
 		}
 
         for (var change : changes) {
@@ -677,7 +683,7 @@ public class ModelComparator
             Column targetColumn = targetTable.getColumn(columnIdx);
             var sourceColumnOpt = intermediateTable.findColumn(targetColumn.getName(), _caseSensitive);
 
-            if (sourceColumnOpt.isPresent())
+            if (sourceColumnOpt.isEmpty())
             {
                 String          prevColumn   = (columnIdx > 0 ? intermediateTable.getColumn(columnIdx - 1).getName() : null);
                 String          nextColumn   = (columnIdx < intermediateTable.getColumnCount()  ? intermediateTable.getColumn(columnIdx).getName() : null);
@@ -905,18 +911,14 @@ public class ModelComparator
      * @param index The original index
      * @return The corresponding index if found
      */
-    protected Index findCorrespondingIndex(Table table, Index index)
+    protected Optional<Index> findCorrespondingIndex(Table table, Index index)
     {
-        for (int indexIdx = 0; indexIdx < table.getIndexCount(); indexIdx++)
-        {
-            Index curIndex = table.getIndex(indexIdx);
-
-            if ((_caseSensitive  && index.equals(curIndex)) ||
-                (!_caseSensitive && index.equalsIgnoreCase(curIndex)))
-            {
-                return curIndex;
-            }
-        }
-        return null;
+		return table.getIndices()
+			.stream()
+			.filter(curIndex ->
+				(_caseSensitive  && index.equals(curIndex)) ||
+					(!_caseSensitive && index.equalsIgnoreCase(curIndex))
+			)
+			.findFirst();
     }
 }

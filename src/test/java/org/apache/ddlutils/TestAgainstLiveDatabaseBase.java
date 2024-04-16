@@ -36,6 +36,8 @@ import org.apache.ddlutils.platform.DefaultValueHelper;
 import org.apache.ddlutils.platform.firebird.FirebirdPlatform;
 import org.apache.ddlutils.platform.interbase.InterbasePlatform;
 import org.apache.ddlutils.util.StringUtilsExt;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.opentest4j.AssertionFailedError;
 
 import java.io.FileInputStream;
@@ -384,7 +386,8 @@ public abstract class TestAgainstLiveDatabaseBase extends TestPlatformBase
     /**
      * {@inheritDoc}
      */
-    protected void setUp() throws Exception
+	@BeforeEach
+	protected void setUp() throws Exception
     {
 		final var props = readTestProperties();
 		final var dataSource = initDataSourceFromProperties(props);
@@ -400,7 +403,8 @@ public abstract class TestAgainstLiveDatabaseBase extends TestPlatformBase
     /**
      * {@inheritDoc}
      */
-    protected void tearDown() throws Exception
+    @AfterEach
+	protected void tearDown() throws Exception
     {
         try
         {
@@ -511,8 +515,11 @@ public abstract class TestAgainstLiveDatabaseBase extends TestPlatformBase
         for (int idx = 0; (idx < table.getColumnCount()) && (idx < columnValues.length); idx++)
         {
             Column column = table.getColumn(idx);
+			final var columnValue = columnValues[idx];
 
-            data.put(column.getName(), columnValues[idx]);
+			if (columnValue != null || column.getDefaultValue() == null) {
+				data.put(column.getName(), columnValue);
+			}
         }
 		return getPlatform().insert(getModel(), tableName, data);
     }
@@ -1147,7 +1154,8 @@ public abstract class TestAgainstLiveDatabaseBase extends TestPlatformBase
         assertEquals("Type code not the same for column "+actual.getName()+".",
                      expected.getTypeCode(),
                      actual.getTypeCode());
-        assertEquals("Parsed default values do not match for column "+actual.getName()+".",
+        assertDefaultEquals("Parsed default values do not match for column "+actual.getName()+".",
+					 expected.getSizeAsInt(),
                      expected.getParsedDefaultValue(),
                      actual.getParsedDefaultValue());
 

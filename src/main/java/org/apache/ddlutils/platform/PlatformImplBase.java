@@ -19,8 +19,6 @@ package org.apache.ddlutils.platform;
  * under the License.
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.DatabaseOperationException;
 import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.Platform;
@@ -55,6 +53,8 @@ import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.TypeMap;
 import org.apache.ddlutils.util.JdbcSupport;
 import org.apache.ddlutils.util.SqlTokenizer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -91,7 +91,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
     protected static final String MODEL_DEFAULT_NAME = "default";
 
     /** The log for this platform. */
-    private final Log _log = LogFactory.getLog(getClass());
+    private final Logger _log = LogManager.getLogger(getClass());
 
     /** The platform info. */
     private PlatformInfo _info = new PlatformInfo();
@@ -287,7 +287,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
      * 
      * @return The log
      */
-    protected Log getLog()
+    protected Logger getLog()
     {
         return _log;
     }
@@ -1692,7 +1692,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
 				.filter(e -> primaryKeyNames.contains(e.getKey()))
 				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-			String sql = _builder.getDeleteSql(table, pkValues, false);
+			String sql = _builder.getDeleteSql(table, pkValues, true);
 
 			if (_log.isDebugEnabled())
 			{

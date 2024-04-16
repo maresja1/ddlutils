@@ -21,6 +21,7 @@ package org.apache.ddlutils.alteration;
 
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
+import org.junit.jupiter.api.Test;
 
 import java.sql.Types;
 import java.util.List;
@@ -39,7 +40,8 @@ public class TestForeignKeyComparison extends TestComparisonBase
     /**
      * Tests the addition of a single-column foreign key.
      */
-    public void testAddColumnAndForeignKey()
+    @Test
+	public void testAddColumnAndForeignKey()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -93,7 +95,8 @@ public class TestForeignKeyComparison extends TestComparisonBase
     /**
      * Tests the addition of a single-column foreign key.
      */
-    public void testAddColumnAndForeignKeyToIt()
+    @Test
+	public void testAddColumnAndForeignKeyToIt()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -157,7 +160,8 @@ public class TestForeignKeyComparison extends TestComparisonBase
     /**
      * Tests the addition of a multi-column foreign key.
      */
-    public void testAddColumnsAndForeignKey()
+    @Test
+	public void testAddColumnsAndForeignKey()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -237,7 +241,8 @@ public class TestForeignKeyComparison extends TestComparisonBase
     /**
      * Tests the addition of a multi-column foreign key.
      */
-    public void testAddColumnsAndForeignKeyToThem()
+    @Test
+	public void testAddColumnsAndForeignKeyToThem()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -322,7 +327,8 @@ public class TestForeignKeyComparison extends TestComparisonBase
     /**
      * Tests the addition of a multi-column foreign key.
      */
-    public void testAddColumnsAndForeignKeyBetweenThem()
+    @Test
+	public void testAddColumnsAndForeignKeyBetweenThem()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -424,7 +430,8 @@ public class TestForeignKeyComparison extends TestComparisonBase
     /**
      * Tests the addition of a single reference foreign key.
      */
-    public void testAddSingleReferenceForeignKey()
+    @Test
+	public void testAddSingleReferenceForeignKey()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -470,7 +477,8 @@ public class TestForeignKeyComparison extends TestComparisonBase
     /**
      * Tests the addition of a multi-reference foreign key.
      */
-    public void testAddMultiReferenceForeignKey()
+    @Test
+	public void testAddMultiReferenceForeignKey()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -526,7 +534,8 @@ public class TestForeignKeyComparison extends TestComparisonBase
     /**
      * Tests the addition of a column to a multi-reference foreign key.
      */
-    public void testAddLocalColumnToMultiReferenceForeignKey()
+    @Test
+	public void testAddLocalColumnToMultiReferenceForeignKey()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -613,7 +622,8 @@ public class TestForeignKeyComparison extends TestComparisonBase
     /**
      * Tests the addition of a column to a multi-reference foreign key.
      */
-    public void testAddForeignColumnToMultiReferenceForeignKey()
+    @Test
+	public void testAddForeignColumnToMultiReferenceForeignKey()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -699,7 +709,8 @@ public class TestForeignKeyComparison extends TestComparisonBase
     /**
      * Tests the addition of columns to a single-reference foreign key.
      */
-    public void testAddColumnsToSingleReferenceForeignKey()
+    @Test
+	public void testAddColumnsToSingleReferenceForeignKey()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -809,7 +820,8 @@ public class TestForeignKeyComparison extends TestComparisonBase
     /**
      * Tests the addition of a reference to a multi-reference foreign key.
      */
-    public void testAddReferenceToMultiReferenceForeignKey()
+    @Test
+	public void testAddReferenceToMultiReferenceForeignKey()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -887,7 +899,8 @@ public class TestForeignKeyComparison extends TestComparisonBase
     /**
      * Tests the addition of references to a single-reference foreign key.
      */
-    public void testAddReferencesToSingleReferenceForeignKey()
+    @Test
+	public void testAddReferencesToSingleReferenceForeignKey()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -964,7 +977,8 @@ public class TestForeignKeyComparison extends TestComparisonBase
     /**
      * Tests that the order of the references in a foreign key is not important.
      */
-    public void testForeignKeyReferenceOrder()
+    @Test
+	public void testForeignKeyReferenceOrder()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -1011,7 +1025,8 @@ public class TestForeignKeyComparison extends TestComparisonBase
     /**
      * Tests adding a reference to a foreign key and changing the order of references.
      */
-    public void testAddReferenceToForeignKeyAndChangeOrder()
+    @Test
+	public void testAddReferenceToForeignKeyAndChangeOrder()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -1089,7 +1104,8 @@ public class TestForeignKeyComparison extends TestComparisonBase
     /**
      * Tests removing a reference from a foreign key.
      */
-    public void testRemoveReferenceFromForeignKey()
+    @Test
+	public void testRemoveReferenceFromForeignKey()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -1165,7 +1181,8 @@ public class TestForeignKeyComparison extends TestComparisonBase
     /**
      * Tests removing a reference from a foreign key and changing the order of references.
      */
-    public void testRemoveReferenceFromForeignKeyAndChangeOrder()
+    @Test
+	public void testRemoveReferenceFromForeignKeyAndChangeOrder()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -1243,7 +1260,8 @@ public class TestForeignKeyComparison extends TestComparisonBase
     /**
      * Tests dropping columns used in a foreign key.
      */
-    public void testDropColumnsFromForeignKey()
+    @Test
+	public void testDropColumnsFromForeignKey()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -1323,7 +1341,8 @@ public class TestForeignKeyComparison extends TestComparisonBase
     /**
      * Tests the removal of a foreign key.
      */
-    public void testDropSingleReferenceForeignKey()
+    @Test
+	public void testDropSingleReferenceForeignKey()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -1370,7 +1389,8 @@ public class TestForeignKeyComparison extends TestComparisonBase
     /**
      * Tests dropping a multi-reference foreign key.
      */
-    public void testDropMultiReferenceForeignKey()
+    @Test
+	public void testDropMultiReferenceForeignKey()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -1426,7 +1446,8 @@ public class TestForeignKeyComparison extends TestComparisonBase
     /**
      * Tests the addition and removal of a foreign key.
      */
-    public void testAddAndDropForeignKey1()
+    @Test
+	public void testAddAndDropForeignKey1()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -1481,7 +1502,8 @@ public class TestForeignKeyComparison extends TestComparisonBase
     /**
      * Tests the recreation of a foreign key because of a change of the references.
      */
-    public void testAddAndDropForeignKey2()
+    @Test
+	public void testAddAndDropForeignKey2()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +

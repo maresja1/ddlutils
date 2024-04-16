@@ -140,6 +140,10 @@ public interface Platform
      */
     boolean isDelimitedIdentifierModeOn();
 
+	default boolean isCaseSensitive() {
+		return isDelimitedIdentifierModeOn();
+	}
+
     /**
      * Specifies whether delimited identifiers are used or normal SQL92 identifiers.
      *

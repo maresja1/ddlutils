@@ -19,15 +19,16 @@ package org.apache.ddlutils.platform.hsqldb;
  * under the License.
  */
 
-import java.io.IOException;
-
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.alteration.ColumnDefinitionChange;
 import org.apache.ddlutils.model.Column;
+import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.ModelException;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.TypeMap;
 import org.apache.ddlutils.platform.SqlBuilder;
+
+import java.io.IOException;
 
 /**
  * The SQL Builder for the HsqlDb database.
@@ -58,7 +59,18 @@ public class HsqlDbBuilder extends SqlBuilder
         printEndOfStatement();
     }
 
-    /**
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void dropIndex(final Table table, final Index index) throws IOException
+	{
+		print("DROP INDEX ");
+		printIdentifier(getIndexName(index));
+		printEndOfStatement();
+	}
+
+	/**
      * {@inheritDoc}
      */
     public String getSelectLastIdentityValues(Table table) 

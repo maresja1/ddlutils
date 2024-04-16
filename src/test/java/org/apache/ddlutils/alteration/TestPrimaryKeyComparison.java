@@ -21,6 +21,7 @@ package org.apache.ddlutils.alteration;
 
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
+import org.junit.jupiter.api.Test;
 
 import java.sql.Types;
 import java.util.List;
@@ -38,7 +39,8 @@ public class TestPrimaryKeyComparison extends TestComparisonBase
     /**
      * Tests the addition of a column that is the primary key.
      */
-    public void testAddPrimaryKeyColumn()
+    @Test
+	public void testAddPrimaryKeyColumn()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -82,7 +84,8 @@ public class TestPrimaryKeyComparison extends TestComparisonBase
     /**
      * Tests the addition of a single-column primary key.
      */
-    public void testMakeColumnPrimaryKey()
+    @Test
+	public void testMakeColumnPrimaryKey()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -119,7 +122,8 @@ public class TestPrimaryKeyComparison extends TestComparisonBase
     /**
      * Tests the addition of a column to the primary key.
      */
-    public void testAddColumnToPrimaryKey()
+    @Test
+	public void testAddColumnToPrimaryKey()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -160,7 +164,8 @@ public class TestPrimaryKeyComparison extends TestComparisonBase
     /**
      * Tests changing the order of columns in the primary key.
      */
-    public void testChangeColumnOrderInPrimaryKey()
+    @Test
+	public void testChangeColumnOrderInPrimaryKey()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -215,7 +220,8 @@ public class TestPrimaryKeyComparison extends TestComparisonBase
     /**
      * Tests adding a column to and changing the order of columns in the primary key.
      */
-    public void testAddColumnAndChangeColumnOrderInPrimaryKey()
+    @Test
+	public void testAddColumnAndChangeColumnOrderInPrimaryKey()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -288,7 +294,8 @@ public class TestPrimaryKeyComparison extends TestComparisonBase
     /**
      * Tests removing a column from and changing the order of columns in the primary key.
      */
-    public void testRemoveColumnAndChangeColumnOrderInPrimaryKey()
+    @Test
+	public void testRemoveColumnAndChangeColumnOrderInPrimaryKey()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -347,7 +354,8 @@ public class TestPrimaryKeyComparison extends TestComparisonBase
     /**
      * Tests the removal of a column from the primary key.
      */
-    public void testMakeColumnNotPrimaryKey()
+    @Test
+	public void testMakeColumnNotPrimaryKey()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -387,7 +395,8 @@ public class TestPrimaryKeyComparison extends TestComparisonBase
     /**
      * Tests removing the column that is the primary key.
      */
-    public void testDropPrimaryKeyColumn1()
+    @Test
+	public void testDropPrimaryKeyColumn1()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -423,7 +432,8 @@ public class TestPrimaryKeyComparison extends TestComparisonBase
     /**
      * Tests dropping a column that is part of the primary key.
      */
-    public void testDropPrimaryKeyColumn2()
+    @Test
+	public void testDropPrimaryKeyColumn2()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -461,7 +471,8 @@ public class TestPrimaryKeyComparison extends TestComparisonBase
     /**
      * Tests the removal of a primary key.
      */
-    public void testRemovePrimaryKey1()
+    @Test
+	public void testRemovePrimaryKey1()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -494,7 +505,8 @@ public class TestPrimaryKeyComparison extends TestComparisonBase
     /**
      * Tests removing a multi-column primary key.
      */
-    public void testRemovePrimaryKey2()
+    @Test
+	public void testRemovePrimaryKey2()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -531,7 +543,8 @@ public class TestPrimaryKeyComparison extends TestComparisonBase
     /**
      * Tests changing the columns of a primary key.
      */
-    public void testChangePrimaryKeyColumns()
+    @Test
+	public void testChangePrimaryKeyColumns()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +

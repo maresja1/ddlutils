@@ -21,6 +21,7 @@ package org.apache.ddlutils.alteration;
 
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
+import org.junit.jupiter.api.Test;
 
 import java.sql.Types;
 import java.util.List;
@@ -40,7 +41,8 @@ public class TestIndexComparison extends TestComparisonBase
     /**
      * Tests the addition of an index with one column.
      */
-    public void testAddSingleColumnIndex1()
+    @Test
+	public void testAddSingleColumnIndex1()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -80,7 +82,8 @@ public class TestIndexComparison extends TestComparisonBase
     /**
      * Tests the addition of an index with one column.
      */
-    public void testAddSingleColumnIndex2()
+    @Test
+	public void testAddSingleColumnIndex2()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -128,7 +131,8 @@ public class TestIndexComparison extends TestComparisonBase
     /**
      * Tests the addition of an index with multiple columns.
      */
-    public void testAddMultiColumnIndex1()
+    @Test
+	public void testAddMultiColumnIndex1()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -174,7 +178,8 @@ public class TestIndexComparison extends TestComparisonBase
     /**
      * Tests the addition of an index with multiple columns.
      */
-    public void testAddMultiColumnIndex2()
+    @Test
+	public void testAddMultiColumnIndex2()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -244,7 +249,8 @@ public class TestIndexComparison extends TestComparisonBase
     /**
      * Tests the addition of a column into an existing index with multiple columns.
      */
-    public void testAddNewColumnToMultiColumnIndex()
+    @Test
+	public void testAddNewColumnToMultiColumnIndex()
     {
         final String MODEL1 = 
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -309,7 +315,8 @@ public class TestIndexComparison extends TestComparisonBase
     /**
      * Tests the addition of columns to an existing index with a single column.
      */
-    public void testAddNewColumnsToSingleColumnIndex()
+    @Test
+	public void testAddNewColumnsToSingleColumnIndex()
     {
         final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -382,7 +389,8 @@ public class TestIndexComparison extends TestComparisonBase
     /**
      * Tests the addition of a column to an index with multiple columns.
      */
-    public void testAddColumnToMultiColumnIndex()
+    @Test
+	public void testAddColumnToMultiColumnIndex()
     {
         final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -438,7 +446,8 @@ public class TestIndexComparison extends TestComparisonBase
     /**
      * Tests the addition of columns to an index with a single column.
      */
-    public void testAddColumnsToSingleColumnIndex()
+    @Test
+	public void testAddColumnsToSingleColumnIndex()
     {
         final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -493,7 +502,8 @@ public class TestIndexComparison extends TestComparisonBase
     /**
      * Tests the addition and removal of an index because of the change of column order.
      */
-    public void testChangeIndexColumnOrder()
+    @Test
+	public void testChangeIndexColumnOrder()
     {
         final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -546,7 +556,8 @@ public class TestIndexComparison extends TestComparisonBase
     /**
      * Tests the recreation of an index because of the addition of an index column.
      */
-    public void testAddIndexColumn()
+    @Test
+	public void testAddIndexColumn()
     {
         final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -598,7 +609,8 @@ public class TestIndexComparison extends TestComparisonBase
     /**
      * Tests the addition and removal of an index because of the removal of an index column.
      */
-    public void testRemoveIndexColumn()
+    @Test
+	public void testRemoveIndexColumn()
     {
         final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -650,7 +662,8 @@ public class TestIndexComparison extends TestComparisonBase
     /**
      * Tests changing the type of an index.
      */
-    public void testChangeIndexType()
+    @Test
+	public void testChangeIndexType()
     {
         final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -703,7 +716,8 @@ public class TestIndexComparison extends TestComparisonBase
     /**
      * Tests the removal of a column that is the single column in an index.
      */
-    public void testDropColumnFromSingleColumnIndex()
+    @Test
+	public void testDropColumnFromSingleColumnIndex()
     {
         final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -748,7 +762,8 @@ public class TestIndexComparison extends TestComparisonBase
     /**
      * Tests the removal of a column that is part of an index.
      */
-    public void testDropColumnFromMultiColumnIndex()
+    @Test
+	public void testDropColumnFromMultiColumnIndex()
     {
         final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -809,7 +824,8 @@ public class TestIndexComparison extends TestComparisonBase
     /**
      * Tests the addition of a column and changing the order of the columns in an index.
      */
-    public void testAddColumnAndChangeIndexColumnOrder()
+    @Test
+	public void testAddColumnAndChangeIndexColumnOrder()
     {
         final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -874,7 +890,8 @@ public class TestIndexComparison extends TestComparisonBase
     /**
      * Tests the removal of a column and changing the order of the columns in an index.
      */
-    public void testDropColumnAndChangeIndexColumnOrder()
+    @Test
+	public void testDropColumnAndChangeIndexColumnOrder()
     {
         final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -935,7 +952,8 @@ public class TestIndexComparison extends TestComparisonBase
     /**
      * Tests the removal of an index.
      */
-    public void testDropIndex1()
+    @Test
+	public void testDropIndex1()
     {
         final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -975,7 +993,8 @@ public class TestIndexComparison extends TestComparisonBase
     /**
      * Tests the removal of an index.
      */
-    public void testDropIndex2()
+    @Test
+	public void testDropIndex2()
     {
         final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +
@@ -1021,7 +1040,8 @@ public class TestIndexComparison extends TestComparisonBase
     /**
      * Tests the recreation of an index because of the change of type of the index.
      */
-    public void testAddAndDropIndex()
+    @Test
+	public void testAddAndDropIndex()
     {
         final String MODEL1 =
             "<?xml version='1.0' encoding='ISO-8859-1'?>\n" +

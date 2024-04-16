@@ -43,7 +43,6 @@ import java.rmi.server.UID;
 import java.sql.Types;
 import java.text.DateFormat;
 import java.text.NumberFormat;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -72,8 +71,15 @@ public abstract class SqlBuilder
     protected final Log _log = LogFactory.getLog(SqlBuilder.class);
     
     /** The platform that this builder belongs to. */
-    private Platform _platform;
-    /** The current Writer used to output the SQL to. */
+    private final Platform _platform;
+
+	/** Helper object for dealing with default values. */
+	private final DefaultValueHelper _defaultValueHelper = new DefaultValueHelper();
+
+	/** The character sequences that need escaping. */
+	private final Map<String, String> _charSequencesToEscape = new ListOrderedMap<>();
+
+	/** The current Writer used to output the SQL to. */
     private Writer _writer;
     /** The indentation used to indent commands. */
     private String _indent = "    ";
@@ -85,11 +91,6 @@ public abstract class SqlBuilder
     private DateFormat _valueTimeFormat;
     /** The number formatter. */
     private NumberFormat _valueNumberFormat;
-    /** Helper object for dealing with default values. */
-    private DefaultValueHelper _defaultValueHelper = new DefaultValueHelper();
-    /** The character sequences that need escaping. */
-    private Map _charSequencesToEscape = new ListOrderedMap();
-
     //
     // Configuration
     //                
@@ -740,7 +741,7 @@ public abstract class SqlBuilder
             Table table = database.getTable(idx);
 
             if ((table.getName() != null) &&
-                (table.getName().length() > 0))
+                (!table.getName().isEmpty()))
             {
                 dropForeignKeys(table);
             }
@@ -755,7 +756,7 @@ public abstract class SqlBuilder
             Table table = database.getTable(idx);
 
             if ((table.getName() != null) &&
-                (table.getName().length() > 0))
+                (!table.getName().isEmpty()))
             {
                 writeTableComment(table);
                 dropTable(table);
@@ -775,16 +776,14 @@ public abstract class SqlBuilder
         // we're dropping the foreignkeys to the table first
         for (int idx = database.getTableCount() - 1; idx >= 0; idx--)
         {
-            Table        otherTable = database.getTable(idx);
-            ForeignKey[] fks        = otherTable.getForeignKeys();
+            var otherTable = database.getTable(idx);
+            var fks = otherTable.getForeignKeys();
 
-            for (int fkIdx = 0; (fks != null) && (fkIdx < fks.length); fkIdx++)
-            {
-                if (fks[fkIdx].getForeignTable().equals(table))
-                {
-                    dropForeignKey(otherTable, fks[fkIdx]);
-                }
-            }
+			for (final var fk : fks) {
+				if (fk.getForeignTable().equals(table)) {
+					dropForeignKey(otherTable, fk);
+				}
+			}
         }
         // and the foreign keys from the table
         dropForeignKeys(table);
@@ -846,9 +845,9 @@ public abstract class SqlBuilder
      *                        prepared statement
      * @return The insertion sql
      */
-    public String getInsertSql(Table table, Map columnValues, boolean genPlaceholders)
+    public String getInsertSql(Table table, Map<String, Object> columnValues, boolean genPlaceholders)
     {
-        StringBuffer buffer   = new StringBuffer("INSERT INTO ");
+        StringBuilder buffer   = new StringBuilder("INSERT INTO ");
         boolean      addComma = false;
 
         buffer.append(getDelimitedIdentifier(getTableName(table)));
@@ -919,7 +918,7 @@ public abstract class SqlBuilder
      */
     public String getUpdateSql(Table table, Map<String, Object> columnValues, boolean genPlaceholders)
     {
-        StringBuffer buffer = new StringBuffer("UPDATE ");
+        StringBuilder buffer = new StringBuilder("UPDATE ");
         boolean      addSep = false;
 
         buffer.append(getDelimitedIdentifier(getTableName(table)));
@@ -988,9 +987,9 @@ public abstract class SqlBuilder
      *                        prepared statement (both for the pk values and the object values)
      * @return The update sql
      */
-    public String getUpdateSql(Table table, Map oldColumnValues, Map newColumnValues, boolean genPlaceholders)
+    public String getUpdateSql(Table table, Map<String, Object> oldColumnValues, Map<String, Object> newColumnValues, boolean genPlaceholders)
     {
-        StringBuffer buffer = new StringBuffer("UPDATE ");
+        StringBuilder buffer = new StringBuilder("UPDATE ");
         boolean      addSep = false;
 
         buffer.append(getDelimitedIdentifier(getTableName(table)));
@@ -1061,7 +1060,7 @@ public abstract class SqlBuilder
      *                        prepared statement
      * @return The delete sql
      */
-    public String getDeleteSql(Table table, Map pkValues, boolean genPlaceholders)
+    public String getDeleteSql(Table table, Map<String, Object> pkValues, boolean genPlaceholders)
     {
         StringBuffer buffer = new StringBuffer("DELETE FROM ");
         boolean      addSep = false;
@@ -1213,9 +1212,9 @@ public abstract class SqlBuilder
         int delta    = originalLength - desiredLength;
         int startCut = desiredLength / 2;
 
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
 
-        result.append(name.substring(0, startCut));
+        result.append(name, 0, startCut);
         if (((startCut == 0) || (name.charAt(startCut - 1) != '_')) &&
             ((startCut + delta + 1 == originalLength) || (name.charAt(startCut + delta + 1) != '_')))
         {
@@ -1223,7 +1222,7 @@ public abstract class SqlBuilder
             // after the cutting place (which would look odd with an aditional one)
             result.append("_");
         }
-        result.append(name.substring(startCut + delta + 1, originalLength));
+        result.append(name, startCut + delta + 1, originalLength);
         return result.toString();
     }
     
@@ -1271,7 +1270,7 @@ public abstract class SqlBuilder
      * @param table      The table
      * @param parameters Additional platform-specific parameters for the table creation
      */
-    protected void writeTableCreationStmt(Database database, Table table, Map parameters) throws IOException
+    protected void writeTableCreationStmt(Database database, Table table, Map<?, ?> parameters) throws IOException
     {
         print("CREATE TABLE ");
         printlnIdentifier(getTableName(table));
@@ -1395,7 +1394,7 @@ public abstract class SqlBuilder
     protected String getSqlType(Column column, String nativeType)
     {
         int          sizePos = nativeType.indexOf(SIZE_PLACEHOLDER);
-        StringBuffer sqlType = new StringBuffer();
+        StringBuilder sqlType = new StringBuilder();
 
         sqlType.append(sizePos >= 0 ? nativeType.substring(0, sizePos) : nativeType);
 
@@ -1449,7 +1448,7 @@ public abstract class SqlBuilder
      */
     protected String getSizeSpec(Column column)
     {
-        StringBuffer result   = new StringBuffer();
+        StringBuilder result   = new StringBuilder();
         Object       sizeSpec = column.getSize();
         
         if (sizeSpec == null)
@@ -1493,12 +1492,11 @@ public abstract class SqlBuilder
     {
         String result = value;
 
-        for (Iterator it = _charSequencesToEscape.entrySet().iterator(); it.hasNext();)
-        {
-            Map.Entry entry = (Map.Entry)it.next();
+		for (final Object o : _charSequencesToEscape.entrySet()) {
+			Map.Entry entry = (Map.Entry) o;
 
-            result = StringUtils.replace(result, (String)entry.getKey(), (String)entry.getValue());
-        }
+			result = StringUtils.replace(result, (String) entry.getKey(), (String) entry.getValue());
+		}
         return result;
     }
 

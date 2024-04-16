@@ -19,6 +19,9 @@ package org.apache.ddlutils.model;
  * under the License.
  */
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -45,7 +48,8 @@ public class TestArrayAccessAtTable
     /**
      * {@inheritDoc}
      */
-    public void setUp()
+	@BeforeEach
+	public void setUp()
     {
         _testedTable = new Table();
 
@@ -69,7 +73,8 @@ public class TestArrayAccessAtTable
     /**
      * Tests that the primary key columns are correctly extracted.
      */
-    public void testGetPrimaryKeyColumns()
+	@Test
+	public void testGetPrimaryKeyColumns()
     {
         List<Column> primaryKeyColumns = _testedTable.getPrimaryKeyColumns()
                 .toList();
@@ -81,7 +86,8 @@ public class TestArrayAccessAtTable
     /**
      * Tests that the columns are correctly extracted.
      */
-    public void testGetColumns()
+	@Test
+	public void testGetColumns()
     {
         List<Column> columns = _testedTable.getColumns();
 
@@ -94,7 +100,8 @@ public class TestArrayAccessAtTable
     /**
      * Tests that the non-unique indices are correctly extracted.
      */
-    public void testGetNonUniqueIndices()
+	@Test
+	public void testGetNonUniqueIndices()
     {
         List<Index> nonUniqueIndices = _testedTable.getNonUniqueIndices().toList();
 
@@ -105,7 +112,8 @@ public class TestArrayAccessAtTable
     /**
      * Tests that the unique indices are correctly extracted.
      */
-    public void testGetUniqueIndices()
+	@Test
+	public void testGetUniqueIndices()
     {
         List<Index> uniqueIndices = _testedTable.getUniqueIndices().toList();
 

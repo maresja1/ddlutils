@@ -112,34 +112,27 @@ public class MSSqlModelComparator extends ModelComparator
         List<RemoveIndexChange> additionalChanges = new ArrayList<>();
 
         // removing all indexes that are maintained and that use a changed column
-        if (targetIndexes.size() > 0)
+        if (!targetIndexes.isEmpty())
         {
-            List columns = getRelevantChangedColumns(sourceTable, targetTable);
+            var columns = getRelevantChangedColumns(sourceTable, targetTable);
 
             if (!columns.isEmpty())
             {
-                for (int indexIdx = 0; indexIdx < targetIndexes.size(); indexIdx++)
-                {
-                    Index sourceIndex = findCorrespondingIndex(sourceTable, targetIndexes.get(indexIdx));
+				for (Index targetIndex : targetIndexes) {
+					var sourceIndex = findCorrespondingIndex(sourceTable, targetIndex);
 
-                    if (sourceIndex != null)
-                    {
-                        for (Iterator columnIt = columns.iterator(); columnIt.hasNext();)
-                        {
-                            Column targetColumn = (Column)columnIt.next();
-
-                            if (targetIndexes.get(indexIdx).hasColumn(targetColumn))
-                            {
-                                additionalChanges.add(new RemoveIndexChange(intermediateTable.getName(), targetIndexes.get(indexIdx)));
-                                break;
-                            }
-                        }
-                    }
-                }
-                for (Iterator changeIt = additionalChanges.iterator(); changeIt.hasNext();)
-                {
-                    ((RemoveIndexChange)changeIt.next()).apply(intermediateModel, isCaseSensitive());
-                }
+					if (sourceIndex.isPresent()) {
+						for (var column : columns) {
+							if (targetIndex.hasColumn(column)) {
+								additionalChanges.add(new RemoveIndexChange(intermediateTable.getName(), targetIndex));
+								break;
+							}
+						}
+					}
+				}
+				for (final RemoveIndexChange additionalChange : additionalChanges) {
+					additionalChange.apply(intermediateModel, isCaseSensitive());
+				}
                 changes.addAll(additionalChanges);
             }
         }
@@ -161,22 +154,19 @@ public class MSSqlModelComparator extends ModelComparator
         List<AddIndexChange>    additionalChanges = new ArrayList<>();
 
         // re-adding all indexes that are maintained and that use a changed column
-        if (targetIndexes.size() > 0)
+        if (!targetIndexes.isEmpty())
         {
-            for (int indexIdx = 0; indexIdx < targetIndexes.size(); indexIdx++)
-            {
-                Index sourceIndex       = findCorrespondingIndex(sourceTable, targetIndexes.get(indexIdx));
-                Index intermediateIndex = findCorrespondingIndex(intermediateTable, targetIndexes.get(indexIdx));
+			for (Index targetIndex : targetIndexes) {
+				var sourceIndex = findCorrespondingIndex(sourceTable, targetIndex);
+				var intermediateIndex = findCorrespondingIndex(intermediateTable, targetIndex);
 
-                if ((sourceIndex != null) && (intermediateIndex == null))
-                {
-                    additionalChanges.add(new AddIndexChange(intermediateTable.getName(), targetIndexes.get(indexIdx)));
-                }
-            }
-            for (Iterator changeIt = additionalChanges.iterator(); changeIt.hasNext();)
-            {
-                ((AddIndexChange)changeIt.next()).apply(intermediateModel, isCaseSensitive());
-            }
+				if ((sourceIndex.isPresent()) && (intermediateIndex.isEmpty())) {
+					additionalChanges.add(new AddIndexChange(intermediateTable.getName(), targetIndex));
+				}
+			}
+			for (final AddIndexChange additionalChange : additionalChanges) {
+				additionalChange.apply(intermediateModel, isCaseSensitive());
+			}
             changes.addAll(additionalChanges);
         }
         return changes;

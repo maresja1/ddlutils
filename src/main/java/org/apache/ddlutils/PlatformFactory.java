@@ -87,7 +87,7 @@ public class PlatformFactory
 
         try
         {
-            return platformClass != null ? Optional.of(platformClass.newInstance()) : Optional.empty();
+            return platformClass != null ? Optional.of(platformClass.getDeclaredConstructor().newInstance()) : Optional.empty();
         }
         catch (Exception ex)
         {

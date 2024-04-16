@@ -271,7 +271,7 @@ public class TestAddColumn extends TestAgainstLiveDatabaseBase
         var   beans  = getRows("roundtrip");
         Object avalue = (beans.get(0)).get("avalue");
 
-        assertTrue((avalue == null) || Objects.equals(2, avalue));
+        assertTrue((avalue == null) || Objects.equals(2.0, avalue));
     }
 
     /**
@@ -1130,7 +1130,7 @@ public class TestAddColumn extends TestAgainstLiveDatabaseBase
         var beans = getRows("roundtrip");
         Object avalue = (beans.get(0)).get("avalue");
 
-        assertTrue((avalue == null) || Objects.equals(2, avalue));
+        assertTrue((avalue == null) || Objects.equals(2.0, avalue));
     }
 
     /**
@@ -1448,7 +1448,7 @@ public class TestAddColumn extends TestAgainstLiveDatabaseBase
         var beans = getRows("roundtrip");
         Object avalue = (beans.get(0)).get("avalue");
 
-        assertTrue((avalue == null) || Objects.equals(2, avalue));
+        assertTrue((avalue == null) || Objects.equals(2.0, avalue));
     }
 
     /**
@@ -1838,7 +1838,7 @@ public class TestAddColumn extends TestAgainstLiveDatabaseBase
         Object avalue2 = (beans.get(0)).get("avalue2");
 
         assertEqualsAttr(2, beans.get(0), "avalue1");
-        assertTrue((avalue2 == null) || Objects.equals(2, avalue2));
+        assertTrue((avalue2 == null) || Objects.equals(2.0, avalue2));
     }
 
     /**
@@ -2202,7 +2202,7 @@ public class TestAddColumn extends TestAgainstLiveDatabaseBase
         Object avalue2 = (beans.get(0)).get("avalue2");
 
         assertEqualsAttr(2, beans.get(0), "avalue1");
-        assertTrue((avalue2 == null) || Objects.equals(2, avalue2));
+        assertTrue((avalue2 == null) || Objects.equals(2.0, avalue2));
     }
 
     /**
@@ -2620,9 +2620,9 @@ public class TestAddColumn extends TestAgainstLiveDatabaseBase
         var beans2 = getRows("roundtrip2");
         Object avalue = (beans2.get(0)).get("avalue");
 
-        assertEqualsAttr(1,  beans1.get(0), "pk");
+        assertEqualsAttr(1.0,  beans1.get(0), "pk");
         assertEqualsAttr(2, beans2.get(0), "pk");
-        assertTrue((avalue == null) || Objects.equals(1, avalue));
+        assertTrue((avalue == null) || Objects.equals(1.0, avalue));
     }
 
     /**
@@ -2785,7 +2785,7 @@ public class TestAddColumn extends TestAgainstLiveDatabaseBase
         var beans2 = getRows("roundtrip2");
 
         assertEqualsAttr(1, beans1.get(0), "pk1");
-        assertEqualsAttr(2,  beans1.get(0), "pk2");
+        assertEqualsAttr(2.0,  beans1.get(0), "pk2");
         assertTrue(beans2.isEmpty());
     }
 
@@ -2933,10 +2933,10 @@ public class TestAddColumn extends TestAgainstLiveDatabaseBase
         var beans1 = getRows("roundtrip1");
         var beans2 = getRows("roundtrip2");
 
-        assertEqualsAttr(1,  beans1.get(0), "pk");
+        assertEqualsAttr(1.0,  beans1.get(0), "pk");
         assertEqualsAttr(2, beans1.get(0), "avalue");
         assertEqualsAttr(1, beans2.get(0), "pk");
-        assertEqualsAttr(1,  beans2.get(0), "avalue");
+        assertEqualsAttr(1.0,  beans2.get(0), "avalue");
     }
 
     /**
@@ -3190,10 +3190,10 @@ public class TestAddColumn extends TestAgainstLiveDatabaseBase
         Object avalue2 = (beans2.get(0)).get("avalue2");
 
         assertEqualsAttr(1, beans1.get(0), "pk1");
-        assertEqualsAttr(2,  beans1.get(0), "pk2");
+        assertEqualsAttr(2.0,  beans1.get(0), "pk2");
         assertEqualsAttr(2, beans2.get(0), "pk");
         assertEqualsAttr(1, beans2.get(0), "avalue1");
-        assertTrue((avalue2 == null) || Objects.equals(2, avalue2));
+        assertTrue((avalue2 == null) || Objects.equals(2.0, avalue2));
     }
 
     /**

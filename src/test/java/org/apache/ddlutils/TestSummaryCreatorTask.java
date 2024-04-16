@@ -285,7 +285,7 @@ public class TestSummaryCreatorTask extends Task
         try
         {
             String     dataSourceClass = props.getProperty(TestAgainstLiveDatabaseBase.DATASOURCE_PROPERTY_PREFIX + "class", BasicDataSource.class.getName());
-            DataSource dataSource      = (DataSource)Class.forName(dataSourceClass).newInstance();
+            DataSource dataSource      = (DataSource)Class.forName(dataSourceClass).getDeclaredConstructor().newInstance();
     
             for (Iterator it = props.entrySet().iterator(); it.hasNext();)
             {

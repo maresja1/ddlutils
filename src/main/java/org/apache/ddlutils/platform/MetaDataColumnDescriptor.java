@@ -32,11 +32,11 @@ import java.sql.Types;
 public class MetaDataColumnDescriptor
 {
     /** The name of the column. */
-    private String _columnName;
+    private final String _columnName;
     /** The jdbc type to read from the result set. */
-    private int _jdbcType;
+    private final int _jdbcType;
     /** The default value if the column is not present in the result set. */
-    private Object _defaultValue;
+    private final Object _defaultValue;
 
     /**
      * Creates a new descriptor instance.
