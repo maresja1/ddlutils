@@ -485,17 +485,13 @@ public class ModelComparator
 						intermediateTable.getName());
 				}
 
-				RemoveIndexChange change = new RemoveIndexChange(intermediateTable.getName(), sourceIndex);
-
+				var change = new RemoveIndexChange(intermediateTable.getName(), sourceIndex);
 				changes.add(change);
 			}
 		}
 
-		for (var change : changes) {
-			change.apply(intermediateModel, _caseSensitive);
-		}
-
-		return changes;
+		changes.forEach(it -> it.apply(intermediateModel, _caseSensitive));
+        return changes;
     }
 
     /**
